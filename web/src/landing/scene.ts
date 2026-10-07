@@ -28,8 +28,12 @@ const KEYS: [number, Pose][] = [
   [0.12, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.045, tilt: 0, apart: 0, shift: 0 }],
   [0.3, { az: -2.45, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
   [0.36, { az: -2.55, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
+  // the cartridge comes straight up out of the slot first, and only tips and opens once it's clear
+  [0.44, { az: -2.8, el: 0.26, dist: 0.36, tx: 0, ty: 0.09, lift: 0.085, tilt: 0, apart: 0, shift: 0.18 }],
   [0.52, { az: -3.0, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
   [0.6, { az: -3.1, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
+  // and closes up above the console before sliding back in
+  [0.66, { az: -1.9, el: 0.22, dist: 0.38, tx: 0, ty: 0.07, lift: 0.085, tilt: 0, apart: 0, shift: 0.18 }],
   [0.72, { az: -0.4, el: 0.12, dist: 0.46, tx: 0, ty: 0.02, lift: 0, tilt: 0, apart: 0, shift: 0.18 }],
   [0.84, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
   [0.88, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
@@ -44,8 +48,10 @@ const TALL_KEYS: [number, Pose][] = [
   [0.12, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.045, tilt: 0, apart: 0, shift: 0.34 }],
   [0.3, { az: -2.45, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
   [0.36, { az: -2.55, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.44, { az: -2.8, el: 0.3, dist: 0.46, tx: -0.002, ty: 0.09, lift: 0.085, tilt: 0, apart: 0, shift: 0.33 }],
   [0.52, { az: -3.0, el: 0.42, dist: 0.37, tx: -0.004, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.32 }],
   [0.6, { az: -3.1, el: 0.42, dist: 0.37, tx: -0.004, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.32 }],
+  [0.66, { az: -1.9, el: 0.26, dist: 0.46, tx: 0, ty: 0.07, lift: 0.085, tilt: 0, apart: 0, shift: 0.33 }],
   [0.72, { az: -0.4, el: 0.12, dist: 0.5, tx: 0, ty: 0.02, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
   [0.84, { az: 0, el: 0.02, dist: 0.22, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.3 }],
   [0.88, { az: 0, el: 0.02, dist: 0.22, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.3 }],
