@@ -1,6 +1,9 @@
 {
-  "name": "CARTWALLET",
-  "romTitle": "CARTWALLET",
-  "tagline": "A hardware wallet for the original Game Boy",
-  "networks": { "solana": "devnet", "evm": "sepolia" }
+  "name": "KAGIBOY",
+  "romTitle": "KAGIBOY",
+  "tagline": "Your crypto keys, in a Game Boy cartridge",
+  "networks": {
+    "solana": "devnet",
+    "evm": "sepolia"
+  }
 }

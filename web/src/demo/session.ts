@@ -3,7 +3,7 @@ import { CartChip, type Persisted, type Storage } from "../chip/chip";
 import { GameBoy, type Key } from "../emu/gameboy";
 import { Phone } from "../phone/phone";
 
-const STORE_KEY = "cartwallet.secure-element";
+const STORE_KEY = "kagiboy.secure-element";
 
 // Demo only: the "secure element" is localStorage, and it holds testnet keys.
 const browserStorage: Storage = {
@@ -35,7 +35,7 @@ const FRAME_MS = 1000 / 59.7275;
 
 function readMuted() {
   try {
-    return localStorage.getItem("cartwallet.muted") === "1";
+    return localStorage.getItem("kagiboy.muted") === "1";
   } catch {
     return false;
   }
@@ -132,7 +132,7 @@ export class Session {
   toggleMute() {
     this.muted = !this.muted;
     try {
-      localStorage.setItem("cartwallet.muted", this.muted ? "1" : "0");
+      localStorage.setItem("kagiboy.muted", this.muted ? "1" : "0");
     } catch {
       /* ignore */
     }

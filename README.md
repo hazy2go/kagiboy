@@ -1,4 +1,4 @@
-# CARTWALLET
+# kagiboy
 
 A hardware wallet for the original Game Boy. A secure chip inside the cartridge
 holds your Solana and EVM keys, and you approve every transaction on the Game

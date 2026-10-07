@@ -3,7 +3,7 @@
 Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Americas).
 
 ## Waiting on hazy
-- [ ] **Name.** CARTWALLET is a placeholder. Change `brand.json`, then `cd rom && make`.
+- [x] **Name:** kagiboy (KAGIBOY on the label). Check the "-boy" mark with a lawyer before selling.
 - [ ] **AI mockups (Higgsfield).** Cartridge on a DMG, exploded view of the internals (MCU + SE050 + BLE),
       shake-to-generate, phone + Game Boy signing, link-cable backup, packaging. Credits needed.
 - [ ] Deploy to Vercel (hazy's account, check `vercel whoami` first). Then make og:image an absolute URL in web/index.html.
