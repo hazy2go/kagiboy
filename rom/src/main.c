@@ -61,6 +61,192 @@ static uint8_t pin[4];
 static uint8_t frame;
 
 /* ---------- chip mailbox ---------- */
+#ifdef DEMO_CHIP
+/*
+ * `make demo`: an in-ROM stand-in for the key chip, so a flash cart on a real
+ * Game Boy (no chip) can walk through every screen for photos. It serves canned
+ * replies generated from the real browser chip (assets/gen_demo_chip.mts) for
+ * the website's attract-mode wallet. No keys, no signing: testnet demo only.
+ * Nothing persists; every power-on starts with no wallet.
+ */
+#include "demo_chip.h"
+
+#define DEMO_TRIES 5
+static uint8_t demo_state;    /* STATE_NONE / LOCKED / UNLOCKED */
+static uint8_t demo_seeded;   /* words created or restored, PIN not yet set */
+static uint8_t demo_pin[4];
+static uint8_t demo_tries;
+static uint8_t demo_pool[4];
+static uint8_t demo_pending;  /* 0 none, 1 Solana, 2 Ethereum */
+static uint8_t demo_next;     /* which chain the next request is for */
+static uint8_t demo_tx_chain; /* chain of the last signed request, 0 none */
+static uint8_t demo_tx_polls;
+
+static void demo_reply(const uint8_t *src, uint8_t len) {
+    memcpy(resp, src, len);
+    resp_len = len;
+    resp[len] = 0;
+}
+
+static void demo_reply_str(const char *a, const char *b) {
+    /* "a\0b\0" */
+    uint8_t n = strlen(a), m = strlen(b);
+    memcpy(resp, a, n + 1);
+    memcpy(resp + n + 1, b, m + 1);
+    resp_len = n + m + 2;
+}
+
+/* the real chip takes a moment for these; long enough to photograph the screen */
+static void demo_think(void) {
+    uint8_t i;
+    for (i = 0; i < 90; i++) {
+        vsync();
+        anim_tick(++frame);
+    }
+}
+
+static void demo_wipe(void) {
+    demo_state = STATE_NONE;
+    demo_seeded = 0;
+    demo_pending = 0;
+    demo_tx_chain = 0;
+}
+
+static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
+    uint8_t i, n;
+    resp_len = 0;
+    resp[0] = 0;
+    vsync(); /* a real round trip takes at least a frame */
+    anim_tick(++frame);
+    switch (cmd) {
+    case CMD_PING:
+        resp[0] = demo_state;
+        resp_len = 1;
+        return 0;
+    case CMD_ENTROPY:
+        for (i = 0; i < len; i++) {
+            n = demo_pool[i & 3] ^ data[i];
+            demo_pool[i & 3] = (n << 3 | n >> 5) + 0x9D + i;
+        }
+        demo_pool[0] ^= DIV_REG;
+        demo_reply(demo_pool, 4);
+        return 0;
+    case CMD_CREATE:
+        if (demo_state != STATE_NONE) return 1;
+        demo_think();
+        demo_seeded = 1;
+        demo_reply((const uint8_t *)DEMO_MNEMONIC, sizeof(DEMO_MNEMONIC) - 1);
+        return 0;
+    case CMD_WORDS:
+        if (demo_state != STATE_NONE) return 1;
+        /* only the demo phrase's words: enough to restore it */
+        n = 0;
+        resp_len = 1;
+        for (i = 0; i < DEMO_WORD_COUNT && n < 4; i++) {
+            if (len && !memcmp(demo_words[i], data, len)) {
+                uint8_t l = strlen(demo_words[i]);
+                resp[resp_len++] = demo_word_idx[i] >> 8;
+                resp[resp_len++] = demo_word_idx[i] & 0xFF;
+                memcpy(resp + resp_len, demo_words[i], l + 1);
+                resp_len += l + 1;
+                n++;
+            }
+        }
+        resp[0] = n;
+        return 0;
+    case CMD_RESTORE:
+        if (demo_state != STATE_NONE || len != 24) return 1;
+        demo_think();
+        if (memcmp(data, demo_phrase_idx, 24)) return 2;
+        demo_seeded = 1;
+        return 0;
+    case CMD_SET_PIN:
+        if (demo_state != STATE_NONE || !demo_seeded || len != 4) return 1;
+        memcpy(demo_pin, data, 4);
+        demo_tries = DEMO_TRIES;
+        demo_state = STATE_UNLOCKED;
+        return 0;
+    case CMD_UNLOCK:
+        if (demo_state == STATE_NONE) return 3;
+        /* the PIN chosen at setup, or 0000 */
+        if (!memcmp(data, demo_pin, 4) || !(data[0] | data[1] | data[2] | data[3])) {
+            demo_tries = DEMO_TRIES;
+            demo_state = STATE_UNLOCKED;
+            return 0;
+        }
+        if (--demo_tries == 0) {
+            demo_wipe();
+            return 2;
+        }
+        resp[0] = demo_tries;
+        resp_len = 1;
+        return 1;
+    case CMD_ACCOUNT:
+        if (demo_state != STATE_UNLOCKED) return 1;
+        if (arg == CHAIN_SOL) demo_reply(demo_account_sol, sizeof(demo_account_sol));
+        else demo_reply(demo_account_evm, sizeof(demo_account_evm));
+        return 0;
+    case CMD_QR:
+        if (demo_state != STATE_UNLOCKED) return 1;
+        if (arg == CHAIN_SOL) demo_reply(demo_qr_sol, sizeof(demo_qr_sol));
+        else demo_reply(demo_qr_evm, sizeof(demo_qr_evm));
+        return 0;
+    case CMD_PENDING:
+        if (demo_state != STATE_UNLOCKED || !demo_pending) return 1;
+        if (demo_pending == 1) demo_reply(demo_pending_sol, sizeof(demo_pending_sol));
+        else demo_reply(demo_pending_evm, sizeof(demo_pending_evm));
+        return 0;
+    case CMD_SIGN:
+        if (demo_state != STATE_UNLOCKED || !demo_pending) return 1;
+        n = demo_pending;
+        demo_pending = 0;
+        if (arg != 1) return 0;
+        demo_think();
+        demo_tx_chain = n;
+        demo_tx_polls = 0;
+        return 0;
+    case CMD_TXSTATUS:
+        /* what the phone would report: signed, broadcast, then confirmed */
+        if (!demo_tx_chain) {
+            demo_reply_str("", "");
+            return 0;
+        }
+        /* polled every half second: ~1.5 s signed, ~3 s broadcast, then confirmed */
+        n = ++demo_tx_polls;
+        if (n <= 3) demo_reply_str("SIGNED", "");
+        else demo_reply_str(n <= 9 ? "BROADCAST" : "CONFIRMED", demo_tx_chain == 1 ? DEMO_SOL_HASH : DEMO_EVM_HASH);
+        return 0;
+    case CMD_LOCK:
+        if (demo_state == STATE_UNLOCKED) demo_state = STATE_LOCKED;
+        demo_pending = 0;
+        return 0;
+    case CMD_WIPE:
+        demo_wipe();
+        return 0;
+    }
+    return 0xFF;
+}
+
+/* What the phone does in the demo: a held START on the home screen raises a
+ * request, Solana first, then Ethereum, alternating. */
+static void demo_raise(void) {
+    if (demo_state != STATE_UNLOCKED || demo_pending) return;
+    demo_pending = demo_next + 1;
+    demo_next ^= 1;
+}
+
+/* No accelerometer: holding any button "shakes" the cartridge. */
+static int8_t demo_accel(uint8_t keys) {
+    if (!keys) return 0;
+    return (int8_t)((uint8_t)(DIV_REG ^ (frame * 37)) % 25) - 12;
+}
+
+#define chip_present() 1
+#define ACCEL_X() demo_accel(held_keys)
+#define ACCEL_Y() demo_accel(held_keys)
+#define TX_PENDING() (demo_state == STATE_UNLOCKED && demo_pending)
+
+#else
 
 static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
     uint8_t i;
@@ -87,6 +273,11 @@ static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
 static uint8_t chip_present(void) {
     return MB[MB_MAGIC] == CHIP_MAGIC;
 }
+
+#define ACCEL_X() ((int8_t)MB[MB_ACCEL_X])
+#define ACCEL_Y() ((int8_t)MB[MB_ACCEL_Y])
+#define TX_PENDING() (MB[MB_PENDING])
+#endif
 
 /* ---------- sound ---------- */
 
@@ -342,8 +533,8 @@ static void entropy_motion(void) {
     while (energy < SHAKE_TARGET) {
         vsync();
         anim_tick(++frame);
-        x = (int8_t)MB[MB_ACCEL_X];
-        y = (int8_t)MB[MB_ACCEL_Y];
+        x = ACCEL_X();
+        y = ACCEL_Y();
         dx = x - lx;
         dy = y - ly;
         lx = x;
@@ -873,11 +1064,21 @@ static uint8_t menu(void) {
 static void home(void) {
     uint8_t p, r;
     uint16_t refresh = 0;
+#ifdef DEMO_CHIP
+    uint8_t start_held = 0;
+#endif
     home_draw();
     for (;;) {
         vsync();
         anim_tick(++frame);
-        if (MB[MB_PENDING]) {
+#ifdef DEMO_CHIP
+        if (held_keys == J_START) {
+            if (++start_held == 60) demo_raise();
+        } else {
+            start_held = 0;
+        }
+#endif
+        if (TX_PENDING()) {
             sign_request();
             home_draw();
             refresh = 0;
