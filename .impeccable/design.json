@@ -1,0 +1,495 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T11:35:39.156007+00:00",
+  "title": "Design System: kagiboy",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Soft Charcoal Ink",
+        "canonical": "#1f2330",
+        "tonalRamp": [
+          "oklch(15% 0.025 268)",
+          "oklch(27% 0.025 268)",
+          "oklch(39% 0.025 268)",
+          "oklch(51% 0.025 268)",
+          "oklch(63% 0.025 268)",
+          "oklch(75% 0.025 268)",
+          "oklch(86% 0.025 268)",
+          "oklch(95% 0.025 268)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Secondary Ink",
+        "canonical": "#535a6d",
+        "tonalRamp": [
+          "oklch(15% 0.03 268)",
+          "oklch(27% 0.03 268)",
+          "oklch(39% 0.03 268)",
+          "oklch(51% 0.03 268)",
+          "oklch(63% 0.03 268)",
+          "oklch(75% 0.03 268)",
+          "oklch(86% 0.03 268)",
+          "oklch(95% 0.03 268)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Tertiary Ink",
+        "canonical": "#666c80",
+        "tonalRamp": [
+          "oklch(15% 0.03 275)",
+          "oklch(27% 0.03 275)",
+          "oklch(39% 0.03 275)",
+          "oklch(51% 0.03 275)",
+          "oklch(63% 0.03 275)",
+          "oklch(75% 0.03 275)",
+          "oklch(86% 0.03 275)",
+          "oklch(95% 0.03 275)"
+        ]
+      },
+      "print-ink": {
+        "role": "primary",
+        "displayName": "Thermal Print Ink",
+        "canonical": "#2b2f3a",
+        "tonalRamp": [
+          "oklch(15% 0.02 268)",
+          "oklch(27% 0.02 268)",
+          "oklch(39% 0.02 268)",
+          "oklch(51% 0.02 268)",
+          "oklch(63% 0.02 268)",
+          "oklch(75% 0.02 268)",
+          "oklch(86% 0.02 268)",
+          "oklch(95% 0.02 268)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(31, 35, 48, 0.12)",
+        "tonalRamp": [
+          "oklch(15% 0.025 268)",
+          "oklch(27% 0.025 268)",
+          "oklch(39% 0.025 268)",
+          "oklch(51% 0.025 268)",
+          "oklch(63% 0.025 268)",
+          "oklch(75% 0.025 268)",
+          "oklch(86% 0.025 268)",
+          "oklch(95% 0.025 268)"
+        ]
+      },
+      "printer-bed": {
+        "role": "neutral",
+        "displayName": "Printer Bed White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(86% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "haze-blue": {
+        "role": "secondary",
+        "displayName": "Baby Blue Haze",
+        "canonical": "#cfe2ff",
+        "tonalRamp": [
+          "oklch(15% 0.06 258)",
+          "oklch(27% 0.06 258)",
+          "oklch(39% 0.06 258)",
+          "oklch(51% 0.06 258)",
+          "oklch(63% 0.06 258)",
+          "oklch(75% 0.06 258)",
+          "oklch(86% 0.06 258)",
+          "oklch(95% 0.06 258)"
+        ]
+      },
+      "haze-blush": {
+        "role": "secondary",
+        "displayName": "Blush Haze",
+        "canonical": "#ffdce8",
+        "tonalRamp": [
+          "oklch(15% 0.05 355)",
+          "oklch(27% 0.05 355)",
+          "oklch(39% 0.05 355)",
+          "oklch(51% 0.05 355)",
+          "oklch(63% 0.05 355)",
+          "oklch(75% 0.05 355)",
+          "oklch(86% 0.05 355)",
+          "oklch(95% 0.05 355)"
+        ]
+      },
+      "haze-lavender": {
+        "role": "secondary",
+        "displayName": "Lavender Haze",
+        "canonical": "#e6e0ff",
+        "tonalRamp": [
+          "oklch(15% 0.05 290)",
+          "oklch(27% 0.05 290)",
+          "oklch(39% 0.05 290)",
+          "oklch(51% 0.05 290)",
+          "oklch(63% 0.05 290)",
+          "oklch(75% 0.05 290)",
+          "oklch(86% 0.05 290)",
+          "oklch(95% 0.05 290)"
+        ]
+      },
+      "paper-blue": {
+        "role": "secondary",
+        "displayName": "Blue Paper",
+        "canonical": "#dbe9ff",
+        "tonalRamp": [
+          "oklch(15% 0.05 258)",
+          "oklch(27% 0.05 258)",
+          "oklch(39% 0.05 258)",
+          "oklch(51% 0.05 258)",
+          "oklch(63% 0.05 258)",
+          "oklch(75% 0.05 258)",
+          "oklch(86% 0.05 258)",
+          "oklch(95% 0.05 258)"
+        ]
+      },
+      "paper-pink": {
+        "role": "secondary",
+        "displayName": "Pink Paper",
+        "canonical": "#ffe3ec",
+        "tonalRamp": [
+          "oklch(15% 0.04 355)",
+          "oklch(27% 0.04 355)",
+          "oklch(39% 0.04 355)",
+          "oklch(51% 0.04 355)",
+          "oklch(63% 0.04 355)",
+          "oklch(75% 0.04 355)",
+          "oklch(86% 0.04 355)",
+          "oklch(95% 0.04 355)"
+        ]
+      },
+      "paper-lavender": {
+        "role": "secondary",
+        "displayName": "Lavender Paper",
+        "canonical": "#ece7ff",
+        "tonalRamp": [
+          "oklch(15% 0.04 290)",
+          "oklch(27% 0.04 290)",
+          "oklch(39% 0.04 290)",
+          "oklch(51% 0.04 290)",
+          "oklch(63% 0.04 290)",
+          "oklch(75% 0.04 290)",
+          "oklch(86% 0.04 290)",
+          "oklch(95% 0.04 290)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus Blue",
+        "canonical": "#8fb2ff",
+        "tonalRamp": [
+          "oklch(15% 0.12 265)",
+          "oklch(27% 0.12 265)",
+          "oklch(39% 0.12 265)",
+          "oklch(51% 0.12 265)",
+          "oklch(63% 0.12 265)",
+          "oklch(75% 0.12 265)",
+          "oklch(86% 0.12 265)",
+          "oklch(95% 0.12 265)"
+        ]
+      },
+      "live-pink": {
+        "role": "tertiary",
+        "displayName": "Live Pink",
+        "canonical": "#ff6f91",
+        "tonalRamp": [
+          "oklch(15% 0.17 10)",
+          "oklch(27% 0.17 10)",
+          "oklch(39% 0.17 10)",
+          "oklch(51% 0.17 10)",
+          "oklch(63% 0.17 10)",
+          "oklch(75% 0.17 10)",
+          "oklch(86% 0.17 10)",
+          "oklch(95% 0.17 10)"
+        ]
+      },
+      "status-error": {
+        "role": "tertiary",
+        "displayName": "Status Error",
+        "canonical": "#b8304f",
+        "tonalRamp": [
+          "oklch(15% 0.15 10)",
+          "oklch(27% 0.15 10)",
+          "oklch(39% 0.15 10)",
+          "oklch(51% 0.15 10)",
+          "oklch(63% 0.15 10)",
+          "oklch(75% 0.15 10)",
+          "oklch(86% 0.15 10)",
+          "oklch(95% 0.15 10)"
+        ]
+      },
+      "status-pending": {
+        "role": "tertiary",
+        "displayName": "Status Pending",
+        "canonical": "#9a6400",
+        "tonalRamp": [
+          "oklch(15% 0.13 70)",
+          "oklch(27% 0.13 70)",
+          "oklch(39% 0.13 70)",
+          "oklch(51% 0.13 70)",
+          "oklch(63% 0.13 70)",
+          "oklch(75% 0.13 70)",
+          "oklch(86% 0.13 70)",
+          "oklch(95% 0.13 70)"
+        ]
+      },
+      "status-ok": {
+        "role": "tertiary",
+        "displayName": "Status OK",
+        "canonical": "#2f7a52",
+        "tonalRamp": [
+          "oklch(15% 0.09 155)",
+          "oklch(27% 0.09 155)",
+          "oklch(39% 0.09 155)",
+          "oklch(51% 0.09 155)",
+          "oklch(63% 0.09 155)",
+          "oklch(75% 0.09 155)",
+          "oklch(86% 0.09 155)",
+          "oklch(95% 0.09 155)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "One hero headline per page; 40px on mobile."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "One per section, balanced wrap."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sub-heads beside an artifact."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text; 17px under 860px."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "One grey paragraph under a headline (19-20px)."
+      },
+      "print": {
+        "displayName": "Print",
+        "purpose": "Anything the cartridge printed: stamps, receipts, ticket, tape labels. Uppercase, unsmoothed; steps to 24px and 32px only."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions, callout cards, footer, live note (13-15px)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-lift",
+        "value": "drop-shadow(0 14px 22px rgba(70,76,128,0.12)) drop-shadow(0 2px 3px rgba(70,76,128,0.08))",
+        "purpose": "filter on every torn-edge paper element."
+      },
+      {
+        "name": "render-pool",
+        "value": "0 30px 60px -40px rgba(60,70,120,0.45)",
+        "purpose": "Large rounded render tiles."
+      },
+      {
+        "name": "ink-button",
+        "value": "0 8px 22px -10px rgba(31,35,48,0.55)",
+        "purpose": "Primary pill at rest; hover 0 14px 30px -12px."
+      },
+      {
+        "name": "paper-button",
+        "value": "0 6px 18px -12px rgba(60,70,120,0.35)",
+        "purpose": "Secondary pill."
+      },
+      {
+        "name": "app-card",
+        "value": "0 1px 0 rgba(31,35,48,0.04), 0 10px 24px -18px rgba(60,70,120,0.45)",
+        "purpose": "Demo phone cards."
+      },
+      {
+        "name": "phone-shell",
+        "value": "inset 0 0 0 1px rgba(255,255,255,0.9), 0 0 0 1px rgba(31,35,48,0.08), 0 40px 70px -40px rgba(60,70,120,0.55)",
+        "purpose": "Demo companion phone device."
+      },
+      {
+        "name": "frosted-nav",
+        "value": "background rgba(255,255,255,0.62); backdrop-filter blur(14px) saturate(1.4)",
+        "purpose": "Fixed nav glass."
+      }
+    ],
+    "motion": [
+      {
+        "name": "kb-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default ease for button lift, still-image fades, hints."
+      },
+      {
+        "name": "print-feed",
+        "value": "kb-feed 1.5s steps(26, end), stagger calc(var(--i) * 0.14s)",
+        "purpose": "Signature reveal: paper feeds out in print-head steps via clip-path; disabled under reduced motion."
+      },
+      {
+        "name": "button-lift",
+        "value": "translateY(-1px) over 0.35s; active scale(0.985)",
+        "purpose": "Button hover and press."
+      },
+      {
+        "name": "live-pulse",
+        "value": "kb-pulse 2.4s ease-out infinite",
+        "purpose": "Live-pink dot only."
+      },
+      {
+        "name": "scroll-feed",
+        "value": "--feed 0..1 scroll-driven clip-path on slips",
+        "purpose": "Sticky 3D stage slips feeding from the Game Boy's lower edge."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "860px"
+      },
+      {
+        "name": "demo-compact",
+        "value": "980px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Primary pill; one per action group.",
+      "html": "<button class=\"ds-btn-ink\">Try the live demo</button>",
+      "css": ".ds-btn-ink{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:560 17px/1 'Funnel Sans',system-ui,sans-serif;cursor:pointer;transition:transform .35s cubic-bezier(0.16,1,0.3,1),box-shadow .35s cubic-bezier(0.16,1,0.3,1);background:#1f2330;color:#fff;box-shadow:0 8px 22px -10px rgba(31,35,48,0.55);} .ds-btn-ink:hover{transform:translateY(-1px);box-shadow:0 14px 30px -12px rgba(31,35,48,0.55);} .ds-btn-ink:active{transform:scale(0.985);} .ds-btn-ink:focus-visible{outline:3px solid #8fb2ff;outline-offset:3px;}"
+    },
+    {
+      "name": "Paper Button",
+      "kind": "button",
+      "refersTo": "button-paper",
+      "description": "Secondary pill beside the ink pill, often over haze.",
+      "html": "<button class=\"ds-btn-paper\">Join the waitlist</button>",
+      "css": ".ds-btn-paper{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:560 17px/1 'Funnel Sans',system-ui,sans-serif;cursor:pointer;transition:transform .35s cubic-bezier(0.16,1,0.3,1),box-shadow .35s cubic-bezier(0.16,1,0.3,1);background:rgba(255,255,255,0.86);color:#1f2330;border-color:rgba(31,35,48,0.12);box-shadow:0 6px 18px -12px rgba(60,70,120,0.35);} .ds-btn-paper:hover{transform:translateY(-1px);} .ds-btn-paper:active{transform:scale(0.985);} .ds-btn-paper:focus-visible{outline:3px solid #8fb2ff;outline-offset:3px;}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Fixed frosted bar: wordmark, quiet links, ink small pill.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-word\" href=\"#\">kagiboy</a><div class=\"ds-links\"><a href=\"#\">How it works</a><a href=\"#\">Security</a><a href=\"#\" class=\"ds-pill\">Live demo</a></div></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(255,255,255,0.62);backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid rgba(31,35,48,0.06);font-family:'Funnel Sans',system-ui,sans-serif;} .ds-word{font:640 23px/1 'Funnel Display',system-ui,sans-serif;letter-spacing:-0.03em;color:#1f2330;text-decoration:none;} .ds-links{display:flex;align-items:center;gap:24px;font-size:15px;} .ds-links a{color:#535a6d;text-decoration:none;transition:color .2s;} .ds-links a:hover{color:#1f2330;} .ds-links a.ds-pill{display:inline-flex;align-items:center;min-height:38px;padding:0 16px;border-radius:999px;background:#1f2330;color:#fff;font-weight:560;} .ds-links a:focus-visible{outline:3px solid #8fb2ff;outline-offset:3px;border-radius:10px;}"
+    },
+    {
+      "name": "Thermal Strip",
+      "kind": "card",
+      "refersTo": "thermal-strip",
+      "description": "Signature container: torn-edge paper with a pixelated ROM print and a step stamp.",
+      "html": "<figure class=\"ds-strip\"><div class=\"ds-strip-paper\"><div class=\"ds-print\"></div><div class=\"ds-stamp\"><span>STEP 2 OF 3</span><span>12 WORDS</span></div></div><figcaption>Your backup appears once, on the Game Boy.</figcaption></figure>",
+      "css": ".ds-strip{margin:0;width:190px;font-family:'Funnel Sans',system-ui,sans-serif;} .ds-strip-paper{position:relative;background:#dbe9ff;padding:8px 14px 12px;--zz:7px;-webkit-mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;filter:drop-shadow(0 14px 22px rgba(70,76,128,0.12)) drop-shadow(0 2px 3px rgba(70,76,128,0.08));} .ds-print{height:150px;margin:4px 0 12px;background:repeating-linear-gradient(90deg,#2b2f3a 0 2px,transparent 2px 4px),#dbe9ff;opacity:.35;} .ds-stamp{display:grid;gap:2px;padding:10px 0 6px;border-top:2px dashed rgba(43,47,58,0.28);font-family:'Pixel Operator',ui-monospace,monospace;font-size:16px;line-height:1.25;text-transform:uppercase;letter-spacing:0;color:#2b2f3a;-webkit-font-smoothing:none;} .ds-strip figcaption{margin-top:16px;font-size:15px;line-height:1.45;color:#535a6d;}"
+    },
+    {
+      "name": "Receipt",
+      "kind": "card",
+      "refersTo": "receipt",
+      "description": "Long white paper with dotted-leader rows; security facts and parts BOM.",
+      "html": "<div class=\"ds-receipt\"><p class=\"ds-r-title\">KAGIBOY SECURITY</p><ul><li><span>KEYS</span><i></i><span>NEVER LEAVE THE CHIP</span></li><li><span>PIN</span><i></i><span>5 TRIES, THEN WIPE</span></li></ul><p class=\"ds-r-foot\">CHECKED ON EVERY REQUEST</p></div>",
+      "css": ".ds-receipt{position:relative;width:380px;background:#fff;padding:12px 24px 18px;--zz:7px;-webkit-mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;filter:drop-shadow(0 14px 22px rgba(70,76,128,0.12)) drop-shadow(0 2px 3px rgba(70,76,128,0.08));font-family:'Pixel Operator',ui-monospace,monospace;font-size:16px;line-height:1.25;text-transform:uppercase;letter-spacing:0;color:#2b2f3a;-webkit-font-smoothing:none;} .ds-receipt p{margin:0;} .ds-r-title{text-align:center;padding:10px 0 14px;border-bottom:2px dashed rgba(43,47,58,0.28);} .ds-receipt ul{list-style:none;margin:0;padding:16px 0;display:grid;gap:10px;} .ds-receipt li{display:flex;align-items:baseline;} .ds-receipt li i{flex:1;margin:0 8px;border-bottom:2px dotted rgba(43,47,58,0.32);translate:0 -4px;} .ds-r-foot{text-align:center;padding:14px 0 6px;border-top:2px dashed rgba(43,47,58,0.28);}"
+    },
+    {
+      "name": "Waitlist Ticket",
+      "kind": "input",
+      "refersTo": "ticket-input",
+      "description": "Blue paper ticket with a dotted-underline email field and ink submit.",
+      "html": "<form class=\"ds-ticket\"><p class=\"ds-t-head\">KAGIBOY WAITLIST</p><p class=\"ds-t-no\">NO. ----</p><label class=\"ds-t-label\" for=\"ds-email\">EMAIL</label><input id=\"ds-email\" type=\"email\" placeholder=\"you@example.com\"><button type=\"button\">Print my ticket</button></form>",
+      "css": ".ds-ticket{position:relative;width:340px;display:grid;gap:8px;text-align:center;background:#dbe9ff;padding:12px 26px 22px;--zz:7px;-webkit-mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;filter:drop-shadow(0 14px 22px rgba(70,76,128,0.12)) drop-shadow(0 2px 3px rgba(70,76,128,0.08));} .ds-ticket p,.ds-t-label{margin:0;font-family:'Pixel Operator',ui-monospace,monospace;font-size:16px;line-height:1.25;text-transform:uppercase;letter-spacing:0;color:#2b2f3a;-webkit-font-smoothing:none;opacity:.6;} .ds-t-no{font-size:32px !important;opacity:.35 !important;} .ds-t-label{text-align:left;margin-top:6px;} .ds-ticket input{min-height:44px;padding:0 2px;border:0;border-bottom:2px dotted rgba(43,47,58,0.45);border-radius:0;background:transparent;font:400 17px 'Funnel Sans',system-ui,sans-serif;color:#1f2330;} .ds-ticket input::placeholder{color:#666c80;} .ds-ticket input:focus-visible{outline:none;border-bottom-color:#1f2330;} .ds-ticket input[aria-invalid=true]{border-bottom-color:#b8304f;} .ds-ticket button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:999px;border:1px solid transparent;font:560 17px/1 'Funnel Sans',system-ui,sans-serif;cursor:pointer;transition:transform .35s cubic-bezier(0.16,1,0.3,1),box-shadow .35s cubic-bezier(0.16,1,0.3,1);margin-top:8px;background:#1f2330;color:#fff;} .ds-ticket button:hover{transform:translateY(-1px);} .ds-ticket button:focus-visible{outline:3px solid #8fb2ff;outline-offset:3px;}"
+    },
+    {
+      "name": "Road Step",
+      "kind": "card",
+      "refersTo": "road-step-now",
+      "description": "Tear-off roadmap segment; current step on pink paper.",
+      "html": "<div class=\"ds-road\"><span>NOW</span><h3>Software</h3><p>Game Boy software, chip logic and phone app, all testable.</p></div>",
+      "css": ".ds-road{position:relative;width:240px;background:#ffe3ec;padding:22px 20px 26px;font-family:'Funnel Sans',system-ui,sans-serif;--zz:7px;-webkit-mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;mask:linear-gradient(#000 0 0) center/100% calc(100% - 2*var(--zz)) no-repeat,conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) top/calc(2*var(--zz)) var(--zz) repeat-x,conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) bottom/calc(2*var(--zz)) var(--zz) repeat-x;filter:drop-shadow(0 14px 22px rgba(70,76,128,0.12)) drop-shadow(0 2px 3px rgba(70,76,128,0.08));} .ds-road span{font-family:'Pixel Operator',ui-monospace,monospace;font-size:16px;line-height:1.25;text-transform:uppercase;letter-spacing:0;color:#2b2f3a;-webkit-font-smoothing:none;} .ds-road h3{margin:8px 0 0;font:560 21px/1.2 'Funnel Display',system-ui,sans-serif;letter-spacing:-0.01em;color:#1f2330;} .ds-road p{margin:10px 0 0;font-size:16px;color:#535a6d;}"
+    },
+    {
+      "name": "Companion App Card",
+      "kind": "card",
+      "refersTo": "app-card",
+      "description": "Demo phone balance card, washed toward the network's pastel.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-top\"><span>Solana · devnet</span><a href=\"#\">Explorer</a></div><div class=\"ds-amount\">1.0000 <small>SOL</small></div><button class=\"ds-mini\">Airdrop 1 SOL</button></div>",
+      "css": ".ds-card{width:280px;border-radius:20px;padding:14px 16px;background:linear-gradient(150deg,#fff 40%,rgba(207,226,255,0.6));box-shadow:0 1px 0 rgba(31,35,48,0.04),0 10px 24px -18px rgba(60,70,120,0.45);font-family:'Funnel Sans',system-ui,sans-serif;color:#1f2330;} .ds-card-top{display:flex;justify-content:space-between;font-size:12px;color:#535a6d;} .ds-card-top a{color:inherit;text-decoration:none;} .ds-amount{margin:6px 0 10px;font:600 30px/1.1 'Funnel Display',system-ui,sans-serif;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;} .ds-amount small{font:500 13px 'Funnel Sans',system-ui,sans-serif;color:#535a6d;} .ds-mini{padding:7px 14px;border:0;border-radius:999px;background:#1f2330;color:#fff;font-size:12px;font-weight:600;cursor:pointer;} .ds-mini:hover{transform:translateY(-1px);} .ds-mini:focus-visible{outline:3px solid #8fb2ff;outline-offset:3px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Printer Bed",
+    "overview": "**Creative North Star: \"The Printer Bed\"**\n\nThe white page is the bed of a Game Boy Printer. Everything the cartridge approves comes out as a soft pastel thermal slip: white, baby blue, blush or lavender sticker paper with zig-zag tear edges, carrying a 4-shade dithered print of the real ROM screen and a pixel-type stamp. Around the paper, the page is calm, Apple-quiet white with a faint pastel haze. There is exactly one live, lit window: the 3D Game Boy (GLB) running the real ROM. Everything else is quiet paper and ink.\n\nDensity is low and unhurried. Sections open with a short display headline and one grey lede, then hand over to a single dominant artifact (a rail of strips, one long receipt, one exploded render with a parts receipt, a row of tear-off roadmap segments, one waitlist ticket). Motion is the print head: paper feeds out in small stepped increments, never glides. The demo carries the same world into a working rig: the Game Boy beside a pastel companion phone, joined by a pixel-type Bluetooth tape.\n\nThe system rejects dark surfaces, green brand color, CSS imitations of the hardware (real renders and the real GLB only), and the wallet-site hero-plus-feature-grid.",
+    "keyCharacteristics": [
+      "White printer bed with radial pastel haze (blue, blush, lavender) behind the hero and waitlist only.",
+      "Thermal paper as the content container: torn zig-zag top and bottom edges, edge-following drop shadow.",
+      "Two voices: Funnel Display/Sans for the page, Pixel Operator uppercase for anything the cartridge \"printed\".",
+      "Real raster evidence: dithered ROM prints rendered `pixelated`, Blender renders in large rounded tiles.",
+      "Stepped \"feed\" motion, with a static path under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Paper Stock Rule",
+        "body": "Pastels are paper or haze, never text, icon or border colour. Text on any paper is charcoal ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Live Window Rule",
+        "body": "Only the Game Boy screen is lit and animated continuously; the live-pink dot is the only colour that pulses.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status Is Not Brand Rule",
+        "body": "Green, amber and red appear only as transaction-state text and the link dot. No green surfaces, buttons or haze.",
+        "section": "colors"
+      },
+      {
+        "name": "The Printed Voice Rule",
+        "body": "Pixel type means \"the cartridge produced this\". Use it on paper and on hardware-adjacent tape, never for page headings, buttons or navigation.",
+        "section": "typography"
+      },
+      {
+        "name": "The Pixel Integrity Rule",
+        "body": "Pixel Operator is always uppercase, letter-spacing 0, font smoothing off, and dithered prints use `image-rendering: pixelated`. Never scale prints with smoothing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Torn Edge Shadow Rule",
+        "body": "Anything cut from thermal paper takes a drop-shadow filter, never a box-shadow; a box-shadow would draw a rectangle under a zig-zag edge.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** put content that the cartridge produced on thermal paper in Pixel Operator, uppercase, in print-ink.",
+      "**Do** use the four paper stocks (white, blue #dbe9ff, pink #ffe3ec, lavender #ece7ff) as flat fills and rotate them across a set.",
+      "**Do** float paper with the drop-shadow filter and keep shadows blue-violet tinted and diffuse.",
+      "**Do** reveal paper with the stepped print-head feed (`steps(26)`, 1.5s, 0.14s stagger) and give it a static path under `prefers-reduced-motion`.",
+      "**Do** use real evidence only: dithered prints generated from real ROM screens, Blender renders, and the GLB; render prints `pixelated`.",
+      "**Do** keep one ink pill per action group and pair it with a paper pill for the alternative.",
+      "**Do** keep ink-3 (#666c80) as the lightest text value on white or paper."
+    ],
+    "donts": [
+      "**Don't** use dark backgrounds or green as a brand, surface or button colour.",
+      "**Don't** imitate the Game Boy or cartridge in CSS; show the render or the live model.",
+      "**Don't** set headings, buttons or nav in pixel type, or smooth/scale the pixel font.",
+      "**Don't** apply gradients to paper stock or pastel colour to text.",
+      "**Don't** add a second lit or colour-pulsing element beside the live Game Boy screen and its live-pink dot.",
+      "**Don't** lay sections out as a grid of feature cards; give each section one dominant artifact.",
+      "**Don't** put a box-shadow on torn-edge paper."
+    ]
+  }
+}
