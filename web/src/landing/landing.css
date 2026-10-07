@@ -564,7 +564,9 @@
   justify-content: space-between;
   padding: 14px 0 4px;
   border-top: 2px solid var(--kb-print);
-  font-size: 24px;
+  font-size: 19px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* status: tear-off segments */

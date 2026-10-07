@@ -44,13 +44,12 @@ const PROMISES = [
 ] as const;
 
 const BOM = [
-  ["RP2350 MCU", "1.10"],
-  ["NXP SE050C", "3.00"],
-  ["CYW43439 BLE", "4.00"],
-  ["LIS3DH", "0.80"],
-  ["3x TXB0108", "1.50"],
-  ["4MB FLASH", "0.40"],
-  ["PCB + SHELL", "3.00"],
+  ["RP2350", "TALKS TO GAME BOY"],
+  ["NXP SE050", "HOLDS KEYS"],
+  ["CYW43439", "PHONE LINK"],
+  ["LIS3DH", "SHAKE = RNG"],
+  ["LEVEL SHIFTERS", "5V <> 3V3"],
+  ["4MB FLASH", "FIRMWARE"],
 ] as const;
 
 const ROADMAP = [
@@ -361,7 +360,7 @@ export function Landing() {
 
           <div className="ch ch-apart" ref={(el) => void (chapterRefs.current.apart = el)}>
             <h2>Four small chips do the work.</h2>
-            <p>About $14 of parts at a hundred units, all of them on distributor shelves today.</p>
+            <p>All of them off-the-shelf parts, on distributor shelves today.</p>
             <ul className="chip-list">
               {CALLOUTS.map((c) => (
                 <li key={c.part}>
@@ -503,21 +502,21 @@ export function Landing() {
           />
           <div className="receipt bom paper-blue print-in">
             <div className="perf" aria-hidden />
-            <p className="px receipt-title">PARTS, PER CARTRIDGE</p>
+            <p className="px receipt-title">WHAT'S INSIDE</p>
             <ul>
               {BOM.map(([k, v]) => (
                 <li key={k} className="px">
                   <span>{k}</span>
                   <i aria-hidden />
-                  <span>${v}</span>
+                  <span>{v}</span>
                 </li>
               ))}
             </ul>
             <p className="px total">
-              <span>TOTAL</span>
-              <span>$14</span>
+              <span>4 CHIPS</span>
+              <span>0 SECRETS OUT</span>
             </p>
-            <p className="px faint">ABOUT, AT 100 UNITS</p>
+            <p className="px faint">ALL OFF-THE-SHELF PARTS</p>
             <div className="perf bottom" aria-hidden />
           </div>
         </div>
