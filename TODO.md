@@ -1,12 +1,34 @@
 # TODO
 
-Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Americas).
+Deadline: **Crypto World's Fair (Colosseum) closes Oct 12 2026, 11:59pm PT** (Oct 13 06:59 UTC / 15:59 JST).
+Judging: functionality, potential impact, novelty, UX, open-source, business plan.
+Live: https://kagiboy.vercel.app · repo hazy2go/kagiboy (private) · deploy = push to main (Vercel root dir `web`).
 
-## Waiting on hazy
-- [x] **Name:** kagiboy (KAGIBOY on the label). Check the "-boy" mark with a lawyer before selling.
-- [ ] **AI mockups (Higgsfield).** Cartridge on a DMG, exploded view of the internals (MCU + SE050 + BLE),
-      shake-to-generate, phone + Game Boy signing, link-cable backup, packaging. Credits needed.
-- [ ] Deploy to Vercel (hazy's account, check `vercel whoami` first). Then make og:image an absolute URL in web/index.html.
+## Submission checklist (in order)
+- [ ] Full audit of website + software (2026-10-07) → fix findings
+- [ ] README (what it is, run it, architecture, security model, honest limits) + MIT LICENSE + secrets scan of git history
+- [ ] **hazy:** approve making the repo public (open-source criterion)
+- [ ] Business plan (unit cost, price, limited editions, collector market, path to first batch) → docs + site section + deck slide
+- [ ] Pitch deck (story → problem → demo → security → roadmap → business → team)
+- [ ] Video script + storyboard (pitch video + technical demo); record screen demos
+- [ ] **hazy:** real Game Boy photos for /about → flip PLACEHOLDER_PHOTOS
+- [ ] **hazy:** register team on colosseum.com, check whether one project can enter several tracks
+- [ ] **hazy:** decide "5 TRIES, THEN WIPE" vs "then locked" (SE050 may only lock)
+- [ ] **hazy:** profile.jpg on the PLAYER 1 card? (optional)
+
+## Done since the redesign (2026-10-07)
+- [x] Thermal Print site, real 3D model (Blender) with KAGIBOY face print + new label, phone re-staged (TALL_KEYS), About story page
+- [x] Flash-cart demo ROM (`make demo`, battery save) confirmed on a real DMG via EverDrive
+- [x] Security + functionality audits (docs/audit-*.md), all fixed; ROADMAP.md researched
+- [x] Deployed to Vercel, CSP/headers, waitlist live on Upstash, git-push deploys
+- [x] Copy rewritten from hazy's story, AI-pattern audit, devnet labels removed, Bluetooth = cartridge only
+- [x] Performance: render-on-change, adaptive resolution, no nav blur; Safari sound fix
+- [x] Six chains: Solana devnet + Ethereum/Base/Arbitrum/HyperEVM/Robinhood Chain testnets (networks.ts allowlist)
+
+## Later / nice to have
+- [ ] Tempo track: decode TIP-20/ERC-20 token transfers on the cartridge ("SEND 5 USD")
+- [ ] Custom boot logo via RP2350 cart (first read kagiboy, second read Nintendo) — hardware phase
+- [ ] Link-cable backup (hardware phase)
 
 ## Loop backlog
 ### UI/UX
