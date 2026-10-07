@@ -32,6 +32,6 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 
 ### Bugs / hardening
 - [ ] Landing page uses real ROM screenshots from public/screens; regenerate them after any ROM UI change
-- [ ] Wrong-PIN wipe flow end-to-end test
-- [ ] EVM sign path in the browser
-- [ ] Power off mid-signing
+- [x] Wrong-PIN wipe flow end-to-end test (smoke: 5 wrong PINs → WIPED, storage erased)
+- [x] EVM sign path (smoke: approved ETH tx recovers to the wallet address)
+- [x] Power off mid-signing (smoke: pending request resolves as rejected)

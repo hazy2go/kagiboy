@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
 import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { parseEther } from "viem";
+import { parseEther, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
 import { CartChip, type Persisted, type SignResult } from "../src/chip/chip";
 
@@ -152,7 +152,31 @@ await frames(60);
 snap("eth-request");
 await press("B");
 await frames(10);
-console.log("eth approved:", ethResult && (ethResult as SignResult).approved);
+console.log("eth rejected:", ethResult && !(ethResult as SignResult).approved);
+await frames(100); // "REJECTED" screen, then home
+
+// ETH approved: the async signing path; the signature must recover to our address
+let ethSigned: SignResult | null = null;
+chip
+  .requestSignature({
+    chain: "evm",
+    tx: { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: parseEther("0.01"), nonce: 0, gas: 21000n, maxFeePerGas: 2n, maxPriorityFeePerGas: 1n, type: "eip1559" },
+  })
+  .then((r) => (ethSigned = r));
+await frames(30);
+gb.setKey("A", true);
+await frames(70);
+gb.setKey("A", false);
+await frames(20);
+const signedEth = ethSigned as SignResult | null;
+if (signedEth?.approved && signedEth.chain === "evm") {
+  const signer = await recoverTransactionAddress({ serializedTransaction: signedEth.signed as never });
+  console.log("eth signer matches:", signer === chip.addresses!.evm);
+} else console.log("eth approve FAILED:", signedEth);
+chip.setTxStatus("CONFIRMED", "0x" + "ab".repeat(32));
+await frames(40);
+await press("A");
+await frames(20);
 
 // power cycle: keys survive, RAM does not
 gb = new GameBoy(rom);
@@ -172,4 +196,28 @@ await press("A"); // 1200
 await frames(140);
 snap("unlocked-home");
 console.log("state after power cycle:", chip.state);
-console.log(chip.log.slice(-6));
+
+// power off while a request waits on the Game Boy: the phone must hear "rejected"
+let cut: SignResult | null = null;
+const cutTx = new Transaction({ feePayer: from, recentBlockhash: Keypair.generate().publicKey.toBase58() }).add(
+  SystemProgram.transfer({ fromPubkey: from, toPubkey: Keypair.generate().publicKey, lamports: 1 }),
+);
+chip.requestSignature({ chain: "sol", tx: cutTx }).then((r) => (cut = r));
+await frames(30);
+gb = new GameBoy(rom);
+chip.reset();
+await tick();
+console.log("power cut resolves as rejected:", cut !== null && !(cut as SignResult).approved);
+
+// five wrong PINs wipe the cartridge
+await frames(120);
+await press("START");
+await frames(10);
+for (let i = 0; i < 5; i++) {
+  await press("A"); // 0000 is wrong
+  await frames(10);
+  if (i < 4) await press("A"); // "A: TRY AGAIN"
+}
+await frames(10);
+snap("wiped");
+console.log("state after 5 wrong PINs:", chip.state, "storage:", saved === null ? "erased" : "STILL THERE");
