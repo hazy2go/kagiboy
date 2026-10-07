@@ -405,6 +405,8 @@ export function Landing() {
       </section>
 
       <section className="origin" aria-labelledby="origin-title">
+        <FleaMarketGameBoy />
+        <div className="origin-copy">
         <p className="px eyebrow">HOW IT STARTED</p>
         <h2 id="origin-title">My dad found it at a flea market.</h2>
         <p>
@@ -417,6 +419,7 @@ export function Landing() {
         <Link to="/about" className="origin-link">
           Read the whole story <span aria-hidden>→</span>
         </Link>
+        </div>
       </section>
 
       <section className="setup" id="setup">
@@ -577,5 +580,47 @@ export function Landing() {
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>
     </div>
+  );
+}
+
+/** The origin story on a Game Boy screen: an original pixel loop, played only while it's in view. */
+function FleaMarketGameBoy() {
+  const lcd = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = lcd.current;
+    if (!canvas) return;
+    let loop: import("./fleaLoop").FleaLoop | null = null;
+    let visible = false;
+    let gone = false;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    import("./fleaLoop").then(({ FleaLoop }) => {
+      if (gone) return;
+      loop = new FleaLoop(canvas);
+      loop.still();
+      if (visible && !reduced) loop.start();
+    });
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (!loop || reduced) return;
+      if (visible) loop.start();
+      else loop.stop();
+    });
+    io.observe(canvas);
+    return () => {
+      gone = true;
+      io.disconnect();
+      loop?.stop();
+    };
+  }, []);
+  return (
+    <figure className="origin-gb">
+      <img src="/renders/front-ortho.webp" alt="" loading="lazy" />
+      <canvas
+        ref={lcd}
+        className="origin-lcd"
+        role="img"
+        aria-label="Pixel animation: a kid walks through a flea market, finds a Game Boy on a table and holds it up as music plays"
+      />
+    </figure>
   );
 }

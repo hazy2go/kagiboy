@@ -23,16 +23,6 @@
 .why,
 .me,
 .gallery,
-.gallery-grid .mock {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--kb-ink);
-  color: #fff;
-  font-size: 10px;
-}
-
 .about-cta {
   max-width: 1120px;
   margin: 0 auto;
@@ -328,4 +318,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.gallery-grid .mock {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--kb-ink);
+  color: #fff;
+  font-size: 10px;
 }

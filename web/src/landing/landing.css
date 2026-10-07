@@ -275,7 +275,8 @@
 /* feeds downward out of the console's bottom edge: the paper is revealed from the edge down */
 .slip-sign {
   left: var(--edge-x, 58%);
-  top: var(--edge-y, 70%);
+  /* a hand's breadth below the console, so the paper's torn top edge shows instead of tucking under it */
+  top: calc(var(--edge-y, 70%) + 14px);
   bottom: auto;
   translate: -50% 0;
   rotate: none;
@@ -1313,6 +1314,42 @@
   max-width: 1120px;
   margin: 0 auto;
   padding: clamp(110px, 16vh, 180px) var(--kb-gutter) 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(32px, 6vw, 96px);
+}
+
+/* the console sits right of the story, its screen playing the flea-market loop */
+.origin-gb {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  width: clamp(220px, 24vw, 320px);
+  aspect-ratio: 900 / 1600;
+  margin: 0;
+  filter: drop-shadow(0 30px 40px rgba(60, 70, 120, 0.18));
+}
+
+.origin-gb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* the LCD's place in front-ortho.webp (x 221..674, y 350..760 of 900x1600) */
+.origin-lcd {
+  position: absolute;
+  left: 24.56%;
+  top: 21.88%;
+  width: 50.44%;
+  height: 25.69%;
+  image-rendering: pixelated;
+}
+
+.origin-copy {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .origin .eyebrow {
@@ -1357,6 +1394,18 @@
 
   .origin h2 {
     font-size: 36px;
+  }
+
+  .origin {
+    grid-template-columns: 1fr;
+  }
+
+  .origin-gb {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+    width: min(230px, 60vw);
+    filter: none;
   }
 
   .origin p:not(.eyebrow) {
