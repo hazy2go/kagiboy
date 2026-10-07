@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import qrcode from "qrcode-generator";
 import brand from "../../../brand.json";
 import type { Chain } from "../chip/protocol";
 import { explorer, type Activity } from "../phone/phone";
@@ -105,20 +106,41 @@ function Balances({ sol, evm, addr }: { sol: number | null; evm: number | null; 
 
 function Copy({ text }: { text: string }) {
   const [done, setDone] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const svg = useMemo(() => {
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  }, [text]);
+
   return (
-    <button
-      className="addr"
-      title="Copy address"
-      onClick={() => {
-        navigator.clipboard?.writeText(text).then(() => {
-          setDone(true);
-          setTimeout(() => setDone(false), 1200);
-        });
-      }}
-    >
-      <code>{text.slice(0, 6)}…{text.slice(-6)}</code>
-      <span>{done ? "Copied" : "Copy"}</span>
-    </button>
+    <>
+      <div className="addr-row">
+        <button
+          className="addr"
+          title="Copy address"
+          onClick={() => {
+            navigator.clipboard?.writeText(text).then(() => {
+              setDone(true);
+              setTimeout(() => setDone(false), 1200);
+            });
+          }}
+        >
+          <code>
+            {text.slice(0, 6)}…{text.slice(-6)}
+          </code>
+          <span>{done ? "Copied" : "Copy"}</span>
+        </button>
+        <button className="qr-toggle" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr}>
+          QR
+        </button>
+      </div>
+      {showQr && (
+        // generated locally from the address, so injecting the SVG is safe
+        <div className="qr" role="img" aria-label={`QR code for ${text}`} dangerouslySetInnerHTML={{ __html: svg }} />
+      )}
+    </>
   );
 }
 

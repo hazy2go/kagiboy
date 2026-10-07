@@ -33,6 +33,7 @@ export const CMD = {
   WIPE: 0x09,
   TXSTATUS: 0x0a,
   LOCK: 0x0b,
+  QR: 0x0c,
 } as const;
 
 export const CMD_NAME: Record<number, string> = Object.fromEntries(

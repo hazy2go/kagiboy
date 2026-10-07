@@ -1,6 +1,7 @@
 import { SystemInstruction, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { formatEther, type TransactionSerializableEIP1559 } from "viem";
 import { sha256 } from "@noble/hashes/sha2.js";
+import qrcode from "qrcode-generator";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
 import { concat, newMnemonic, walletFromMnemonic, type Wallet } from "./keys";
 
@@ -270,6 +271,11 @@ export class CartChip {
         return this.sign(this.wallet, p).then(() => ({ status: 0 }));
       }
 
+      case CMD.QR: {
+        if (!this.unlocked || !this.addresses) return { status: 1 };
+        return { status: 0, data: qrBits(this.addresses[arg === 0 ? "sol" : "evm"]) };
+      }
+
       case CMD.TXSTATUS:
         return { status: 0, data: `${this.txStatus.state}\0${this.txStatus.sig}\0` };
 
@@ -340,6 +346,27 @@ function describe(req: SignRequest): { to: string; amount: string } {
   if (!req.tx.to) throw new Error("contract deployment is not supported");
   if (req.tx.data && req.tx.data !== "0x") throw new Error("only plain ETH transfers can be shown on the Game Boy yet");
   return { to: req.tx.to, amount: `${fmt(Number(formatEther(req.tx.value ?? 0n)))} ETH` };
+}
+
+/**
+ * The address as a QR code, small enough for the Game Boy to draw:
+ * byte 0 is the side length, then the modules row by row, 1 bit each (1 = dark).
+ * A 44-character Solana address fits version 3 (29×29) at error level L.
+ */
+export function qrBits(text: string): Uint8Array {
+  const qr = qrcode(0, "L");
+  qr.addData(text);
+  qr.make();
+  const n = qr.getModuleCount();
+  if (n > 29) throw new Error(`QR too big for the screen (${n} modules)`);
+  const out = new Uint8Array(1 + Math.ceil((n * n) / 8));
+  out[0] = n;
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++) {
+      const i = r * n + c;
+      if (qr.isDark(r, c)) out[1 + (i >> 3)] |= 0x80 >> (i & 7);
+    }
+  return out;
 }
 
 function fmt(n: number) {

@@ -40,6 +40,7 @@
 #define CMD_WIPE 0x09
 #define CMD_TXSTATUS 0x0A
 #define CMD_LOCK 0x0B
+#define CMD_QR 0x0C
 
 #define ST_TIMEOUT 0xFE
 
@@ -410,17 +411,74 @@ static void home_draw(void) {
     at(0, 16, "WAITING FOR PHONE..");
 }
 
+/* ---------- QR codes ---------- */
+
+/* 16 tiles, one for each 2x2 block of QR modules (bit 3 = top-left .. bit 0 = bottom-right).
+ * They sit at the top of tile memory, past the ASCII font. */
+#define QR_TILE0 0xF0
+static uint8_t qr_tiles_ready;
+
+static void qr_load_tiles(void) {
+    uint8_t t, r, b, l, rt;
+    uint8_t tile[16];
+    for (t = 0; t < 16; t++) {
+        for (r = 0; r < 8; r++) {
+            l = r < 4 ? (t & 8) : (t & 2);
+            rt = r < 4 ? (t & 4) : (t & 1);
+            b = (l ? 0xF0 : 0) | (rt ? 0x0F : 0);
+            tile[r * 2] = b; /* both bitplanes set = darkest shade */
+            tile[r * 2 + 1] = b;
+        }
+        set_bkg_data(QR_TILE0 + t, 1, tile);
+    }
+    qr_tiles_ready = 1;
+}
+
+/* resp holds: size, then size*size bits row by row */
+static uint8_t qr_dark(uint8_t r, uint8_t c) {
+    uint8_t n = (uint8_t)resp[0];
+    uint16_t i;
+    if (r >= n || c >= n) return 0;
+    i = (uint16_t)r * n + c;
+    return ((uint8_t)resp[1 + (i >> 3)] >> (7 - (i & 7))) & 1;
+}
+
+/* 29 modules -> 15x15 tiles at 4px per module. The light screen around it is the quiet zone. */
+static void qr_draw(uint8_t x0, uint8_t y0) {
+    uint8_t tx, ty, r, c;
+    uint8_t row[15];
+    if (!qr_tiles_ready) qr_load_tiles();
+    for (ty = 0; ty < 15; ty++) {
+        r = ty * 2;
+        for (tx = 0; tx < 15; tx++) {
+            c = tx * 2;
+            row[tx] = QR_TILE0 | (qr_dark(r, c) << 3) | (qr_dark(r, c + 1) << 2) | (qr_dark(r + 1, c) << 1) |
+                      qr_dark(r + 1, c + 1);
+        }
+        set_bkg_tiles(x0, y0 + ty, 15, 1, row);
+    }
+}
+
 static void receive(void) {
-    uint8_t chain = CHAIN_SOL, p;
+    uint8_t chain = CHAIN_SOL, as_text = 0, p;
     for (;;) {
-        header("RECEIVE");
-        at(0, 3, chain == CHAIN_SOL ? "< SOLANA DEVNET  >" : "< ETH SEPOLIA     >");
-        if (chip_call(CMD_ACCOUNT, chain, 0, 0) == 0) wrap(1, 6, 18, resp);
-        center(13, "SEND ONLY TESTNET");
-        center(14, "FUNDS TO THIS");
-        at(0, 17, "LEFT/RIGHT  B:BACK");
+        cls();
+        /* rows 1 and 17 stay blank in QR view: phone cameras need a quiet zone */
+        at(0, 0, chain == CHAIN_SOL ? "< SOLANA >" : "<  ETH   >");
+        at(12, 0, as_text ? "SEL:QR" : "SEL:TEXT");
+        if (as_text) {
+            at(0, 1, "====================");
+            at(1, 3, chain == CHAIN_SOL ? "SOLANA DEVNET" : "ETHEREUM SEPOLIA");
+            if (chip_call(CMD_ACCOUNT, chain, 0, 0) == 0) wrap(1, 5, 18, resp);
+            center(11, "SEND ONLY TESTNET");
+            center(12, "FUNDS TO THIS");
+            at(0, 17, "B: BACK");
+        } else if (chip_call(CMD_QR, chain, 0, 0) == 0) {
+            qr_draw(2, 2);
+        }
         p = wait_press();
         if (p & (J_LEFT | J_RIGHT)) chain ^= 1;
+        if (p & J_SELECT) as_text ^= 1;
         if (p & J_B) return;
     }
 }

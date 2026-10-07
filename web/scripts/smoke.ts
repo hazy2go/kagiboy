@@ -2,6 +2,7 @@
 // usage: pnpm smoke [out-dir]
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PNG } from "pngjs";
+import jsQR from "jsqr";
 import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { parseEther } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
@@ -88,6 +89,37 @@ chip.setBalance("evm", "0.0500 ETH");
 await frames(130);
 snap("home");
 console.log("addresses", chip.addresses);
+
+// receive: QR codes must decode back to the chip's addresses
+function scanScreen() {
+  const px = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
+  gb.draw(px);
+  // phone cameras see a scaled-up screen, so upscale before decoding
+  const k = 4;
+  const big = new Uint8ClampedArray(WIDTH * k * HEIGHT * k * 4);
+  for (let y = 0; y < HEIGHT * k; y++)
+    for (let x = 0; x < WIDTH * k; x++) {
+      const s = (Math.floor(y / k) * WIDTH + Math.floor(x / k)) * 4;
+      big.set(px.subarray(s, s + 4), (y * WIDTH * k + x) * 4);
+    }
+  return jsQR(big, WIDTH * k, HEIGHT * k)?.data ?? null;
+}
+await press("A");
+await frames(20);
+snap("receive-sol-qr");
+const solScan = scanScreen();
+await press("RIGHT");
+await frames(20);
+snap("receive-eth-qr");
+const evmScan = scanScreen();
+await press("SELECT");
+await frames(10);
+snap("receive-eth-text");
+await press("B");
+await frames(20);
+snap("home-after-receive");
+console.log("qr sol:", solScan === chip.addresses!.sol ? "OK" : `MISMATCH ${solScan}`);
+console.log("qr evm:", evmScan === chip.addresses!.evm ? "OK" : `MISMATCH ${evmScan}`);
 
 // phone asks for a signature
 const from = new PublicKey(chip.addresses!.sol);

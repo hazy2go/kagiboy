@@ -15,7 +15,7 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [ ] Phone: latest transaction status is below the fold after sending; show it next to the form
 - [ ] First-run guidance: point at the Game Boy, highlight the next action
 - [ ] Mobile layout pass (390px): Game Boy first, phone below, sticky controls
-- [ ] Receive screen QR code on the Game Boy (air-gapped receive)
+- [x] Receive screen QR code on the Game Boy (air-gapped receive), scanned in the smoke test with jsQR; QR toggle in the phone app too
 - [ ] Sound: Web Audio beeps mirroring the ROM's
 
 ### Performance
@@ -24,11 +24,12 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 
 ### Features
 - [ ] Real marketing landing page (problem, how it works, hardware spec, security model, roadmap)
-- [ ] docs/hardware.md: parts list, BOM cost, tamper model, link-cable backup
+- [x] docs/hardware.md: parts list, BOM cost, tamper model, link-cable backup
 - [ ] Restore from 12 words
 - [ ] Link-cable backup simulation (two cartridges)
 
 ### Bugs / hardening
+- [ ] Landing page uses real ROM screenshots from public/screens; regenerate them after any ROM UI change
 - [ ] Wrong-PIN wipe flow end-to-end test
 - [ ] EVM sign path in the browser
 - [ ] Power off mid-signing
