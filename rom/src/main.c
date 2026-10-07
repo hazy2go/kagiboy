@@ -661,7 +661,7 @@ static void tx_result(void) {
 }
 
 static void sign_request(void) {
-    uint8_t held = 0, shown = 0, k;
+    uint8_t held = 0, shown = 0, k, st;
     uint16_t hold_start = 0, elapsed;
     char *to, *amount, *fee, *network;
     if (chip_call(CMD_PENDING, 0, 0, 0) != 0) return;
@@ -723,7 +723,19 @@ static void sign_request(void) {
     header("SIGNING");
     center(8, "SECURE CHIP IS");
     center(9, "SIGNING...");
-    if (chip_call(CMD_SIGN, 1, 0, 0) != 0) {
+    st = chip_call(CMD_SIGN, 1, 0, 0);
+    if (st == ST_TIMEOUT) {
+        /* the chip may still finish and hand the signature to the phone */
+        header("NO ANSWER");
+        center(7, "THE CHIP DIDN'T");
+        center(8, "ANSWER IN TIME");
+        center(10, "CHECK YOUR PHONE");
+        center(16, "A: OK");
+        flush_input();
+        while (!(wait_press() & J_A)) {}
+        return;
+    }
+    if (st != 0) {
         header("NOT SIGNED");
         center(7, "THE CHIP COULD NOT");
         center(8, "SIGN THIS REQUEST");

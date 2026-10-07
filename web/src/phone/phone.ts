@@ -1,5 +1,6 @@
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { createPublicClient, formatUnits, http, isAddress, parseUnits } from "viem";
+import { createPublicClient, formatUnits, http, isAddress, keccak256, parseUnits } from "viem";
+import bs58 from "bs58";
 import { sepolia } from "viem/chains";
 import type { CartChip, FailReason, SignResult } from "../chip/chip";
 import type { Chain } from "../chip/protocol";
@@ -134,9 +135,14 @@ export class Phone {
     this.refreshBalances();
   }
 
-  /** After the cartridge signs: broadcast, then follow it to confirmation. */
+  /**
+   * After the cartridge signs: broadcast, then follow it to confirmation.
+   * `knownHash` is computed from the signed bytes, so we can point at the
+   * explorer even if the broadcast call itself errors.
+   */
   private async track(
     id: number,
+    knownHash: string,
     update: (p: Partial<Activity>) => void,
     broadcast: () => Promise<string>,
     confirm: (hash: string) => Promise<void>,
@@ -145,7 +151,12 @@ export class Phone {
     try {
       hash = await broadcast();
     } catch (e) {
-      // the network refused it, so it can't land; safe to call it failed
+      if (!isDefiniteRejection(e)) {
+        // a timeout or dropped connection: the node may already have it, so don't invite a resend
+        update({ state: "unknown", hash: knownHash, error: "We couldn't tell if it was sent. Check the explorer before trying again." });
+        this.chip.setTxStatus(id, "UNKNOWN", { reason: "CHECK_EXPLORER" });
+        return;
+      }
       const { short, long } = explainError(e);
       update({ state: "failed", error: long });
       this.chip.setTxStatus(id, "FAILED", { reason: short });
@@ -180,6 +191,7 @@ export class Phone {
     if (!signed.approved || signed.chain !== "sol") return update(rejection(signed));
     await this.track(
       id,
+      bs58.encode(signed.signed.signature!),
       update,
       () => this.sol.sendRawTransaction(signed.signed.serialize()),
       async (sig) => {
@@ -211,6 +223,7 @@ export class Phone {
     if (!signed.approved || signed.chain !== "evm") return update(rejection(signed));
     await this.track(
       id,
+      keccak256(signed.signed),
       update,
       () => this.evm.sendRawTransaction({ serializedTransaction: signed.signed }),
       async (hash) => {
@@ -252,6 +265,16 @@ function isSolAddress(a: string) {
   } catch {
     return false;
   }
+}
+
+/**
+ * True only when the node itself answered "no" (bad funds, nonce, blockhash,
+ * failed simulation). Timeouts, HTTP errors and dropped connections are not
+ * definite: the transaction may have arrived anyway.
+ */
+function isDefiniteRejection(e: unknown) {
+  const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+  return /insufficient|prior credit|nonce too low|blockhash not found|simulation failed|replacement transaction underpriced|intrinsic gas|exceeds block gas limit/.test(msg);
 }
 
 /** Turns RPC errors into a fixed reason for the Game Boy and a sentence for the phone. */

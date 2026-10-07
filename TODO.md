@@ -53,3 +53,9 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [x] LOCK left a request queued; CREATE/SET_PIN could overwrite a stored seed → rejected / refused
 - [x] Docs and landing claims updated to match (incl. the Solana cluster limit)
 
+### Second review (verified the 14 fixes; 3 material + 1 low found) — all fixed
+- [x] Status "fixed codes" only enforced by types → runtime checks on state, reason and per-chain hash format (smoke: free text blocked)
+- [x] Broadcast transport errors reported as FAILED (double-send) → only node rejections fail; timeouts/HTTP errors are UNKNOWN with the hash precomputed from the signed bytes
+- [x] 60-digit amount cut on screen but signed → chip refuses any field longer than its rows (smoke: 2^256-1 refused)
+- [x] SIGN timeout said "not signed" → "NO ANSWER, CHECK YOUR PHONE"
+

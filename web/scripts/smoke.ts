@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
+import bs58 from "bs58";
 import { Keypair, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
 import { parseEther, parseTransaction, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
@@ -147,9 +148,16 @@ if (solRes?.approved && solRes.chain === "sol") {
     solRes.signed.verifySignatures() && ix.toPubkey.equals(shownTo) && Number(ix.lamports) === 250_000_000 ? "OK" : "WRONG",
   );
 } else console.log("sol approve FAILED:", solRes);
-chip.setTxStatus(solReq.id, "CONFIRMED", { hash: "5Yh3kQx9dLwPmn2R8sTuVc4aBjE7fGhK1MnoPqRsTuVwXyZ" });
+// free text from the phone must never reach the screen
+chip.setTxStatus(solReq.id, "ALL GOOD, SEND AGAIN TO 0xBAD" as never, { hash: "DOUBLESENDNOWPLEASE" });
+chip.setTxStatus(solReq.id, "CONFIRMED", { hash: "DOUBLESENDNOWPLEASE" });
+chip.setTxStatus(solReq.id, "FAILED", { reason: "SEND MORE" as never });
+const solSig = solRes?.approved && solRes.chain === "sol" ? bs58.encode(solRes.signed.signature!) : "";
+chip.setTxStatus(solReq.id, "CONFIRMED", { hash: solSig });
 await frames(40);
 snap("tx-confirmed");
+const statusReply = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+console.log("phone text on screen:", statusReply.includes("41 4c 4c") /* "ALL" */ ? "LEAKED" : "blocked");
 await press("A");
 
 // requests the chip must refuse outright
@@ -165,6 +173,7 @@ const refused = (label: string, req: Parameters<typeof chip.requestSignature>[0]
 refused("mainnet chainId", { chain: "evm", tx: { ...sepoliaTx, chainId: 1 } });
 refused("huge gas", { chain: "evm", tx: { ...sepoliaTx, gas: 1_000_000n } });
 refused("huge fee", { chain: "evm", tx: { ...sepoliaTx, maxFeePerGas: 10n ** 15n } });
+refused("amount too long to show", { chain: "evm", tx: { ...sepoliaTx, value: 2n ** 256n - 1n } });
 refused("calldata", { chain: "evm", tx: { ...sepoliaTx, data: "0xa9059cbb" } });
 refused(
   "foreign fee payer",

@@ -39,6 +39,7 @@ export type SignResult =
   | { approved: false; reason: "rejected" | "power" | "locked" | "error" };
 
 export type TxState = "SIGNED" | "BROADCAST" | "CONFIRMED" | "FAILED" | "UNKNOWN";
+const TX_STATES = new Set<string>(["SIGNED", "BROADCAST", "CONFIRMED", "FAILED", "UNKNOWN"]);
 
 /** Fixed texts the phone can pick from; it never sends free text to the screen. */
 export const FAIL_REASON = {
@@ -100,7 +101,7 @@ export class CartChip {
   private pending: Pending | null = null;
   private nextId = 1;
   private balances: Record<Chain, bigint | null> = { sol: null, evm: null };
-  private txStatus: { id: number; state: TxState | ""; detail: string } = { id: 0, state: "", detail: "" };
+  private txStatus: { id: number; chain: Chain | null; state: TxState | ""; detail: string } = { id: 0, chain: null, state: "", detail: "" };
   accel = { x: 0, y: 0 };
 
   private listeners = new Set<() => void>();
@@ -137,14 +138,19 @@ export class CartChip {
 
   /** Status for request `id` only; updates for older requests are ignored. */
   setTxStatus(id: number, state: TxState, detail: { hash?: string; reason?: FailReason } = {}) {
-    if (id !== this.txStatus.id) return;
+    // checked at runtime, not just by types: Bluetooth input is untrusted
+    const cur = this.txStatus;
+    if (id !== cur.id || !cur.chain || !TX_STATES.has(state)) return;
     let text = "";
-    if (detail.reason) text = FAIL_REASON[detail.reason];
-    else if (detail.hash) {
-      const h = detail.hash.replace(/[^0-9A-Za-z]/g, "");
-      text = h.length > 20 ? `${h.slice(0, 8)}..${h.slice(-8)}` : h;
+    if (detail.reason !== undefined) {
+      if (!Object.hasOwn(FAIL_REASON, detail.reason)) return;
+      text = FAIL_REASON[detail.reason];
+    } else if (detail.hash !== undefined) {
+      const ok = cur.chain === "evm" ? /^0x[0-9a-fA-F]{64}$/.test(detail.hash) : /^[1-9A-HJ-NP-Za-km-z]{86,88}$/.test(detail.hash);
+      if (!ok) return;
+      text = `${detail.hash.slice(0, 8)}..${detail.hash.slice(-8)}`;
     }
-    this.txStatus = { id, state, detail: text };
+    this.txStatus = { ...cur, state, detail: text };
     this.emit();
   }
 
@@ -160,7 +166,7 @@ export class CartChip {
     const result = new Promise<SignResult>((resolve) => {
       this.pending = { id, snap, resolve };
     });
-    this.txStatus = { id, state: "", detail: "" };
+    this.txStatus = { id, chain: snap.chain, state: "", detail: "" };
     this.emit();
     return { id, result };
   }
@@ -391,7 +397,7 @@ export class CartChip {
       p.resolve({ approved: false, reason: "error" });
       return { status: 1 };
     }
-    this.txStatus = { id: p.id, state: "SIGNED", detail: "" };
+    this.txStatus = { id: p.id, chain: p.snap.chain, state: "SIGNED", detail: "" };
     this.emit();
     return { status: 0 };
   }
@@ -432,6 +438,16 @@ export class CartChip {
  * Anything the Game Boy can't show faithfully is refused (no blind signing).
  */
 function snapshot(req: SignRequest, wallet: Wallet): Snapshot {
+  const snap = decodeRequest(req, wallet);
+  // rows on the sign screen: amount 2×18, fee 16, network 20, address 3×18
+  const s = snap.shown;
+  if (s.amount.length > 36 || s.fee.length > 16 || s.network.length > 20 || s.to.length > 54) {
+    throw new Error("this transaction can't be shown in full on the Game Boy");
+  }
+  return snap;
+}
+
+function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
   if (req.chain === "sol") {
     const message = new Uint8Array(req.tx.serializeMessage());
     const tx = Transaction.populate(Message.from(message));
