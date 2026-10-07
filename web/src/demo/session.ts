@@ -156,6 +156,9 @@ export class Session {
 
 export const session = new Session();
 
+// lets the headless e2e script drive the phone side
+if (import.meta.env.DEV) (window as unknown as { __session: Session }).__session = session;
+
 /** Re-render whenever the chip, phone or power state changes. */
 export function useSession() {
   useSyncExternalStore(session.subscribe, session.getVersion);

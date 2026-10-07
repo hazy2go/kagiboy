@@ -1,13 +1,23 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import brand from "../../brand.json";
-import { DemoPage } from "./demo/DemoPage";
+
+// the emulator and both chain SDKs only load on /demo
+const DemoPage = lazy(() => import("./demo/DemoPage").then((m) => ({ default: m.DemoPage })));
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/demo" element={<DemoPage />} />
+        <Route
+          path="/demo"
+          element={
+            <Suspense fallback={<p className="loading">Inserting cartridge…</p>}>
+              <DemoPage />
+            </Suspense>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -1,3 +1,4 @@
+import "../polyfill"; // must run before @solana/web3.js loads
 import { Link } from "react-router-dom";
 import brand from "../../../brand.json";
 import { BusMonitor } from "./BusMonitor";

@@ -22,6 +22,7 @@ export function PhoneApp() {
             <i /> {s.powered ? "Cartridge linked" : "No cartridge"}
           </span>
         </header>
+        <div className="app-body">
 
         {state === "off" && <Empty title="Switch on your Game Boy" body="The app pairs with the cartridge over Bluetooth once it's powered." />}
         {state === "none" && <Empty title="Set up on the Game Boy" body="Mash buttons, shake it, write down your 12 words, choose a PIN. Keys are made inside the cartridge and never come to this phone." />}
@@ -34,6 +35,7 @@ export function PhoneApp() {
             <ActivityList items={s.phone.activity} />
           </>
         )}
+        </div>
       </div>
     </div>
   );

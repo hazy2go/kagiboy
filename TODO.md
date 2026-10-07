@@ -10,17 +10,17 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 
 ## Loop backlog
 ### UI/UX
-- [ ] Phone app header sits under the notch
-- [ ] Failed tx: show the reason (e.g. "no funds") on the Game Boy and phone
-- [ ] Phone activity scrolls out of view while a request is pending
+- [x] Phone app header sits under the notch
+- [x] Failed tx: show the reason (e.g. "no funds") on the Game Boy and phone; phone validates address/amount/balance first
+- [ ] Phone: latest transaction status is below the fold after sending; show it next to the form
 - [ ] First-run guidance: point at the Game Boy, highlight the next action
 - [ ] Mobile layout pass (390px): Game Boy first, phone below, sticky controls
 - [ ] Receive screen QR code on the Game Boy (air-gapped receive)
 - [ ] Sound: Web Audio beeps mirroring the ROM's
 
 ### Performance
-- [ ] Code-split /demo (1 MB bundle); landing should load fast
-- [ ] Emulator: pause when the tab is hidden
+- [x] Code-split /demo (landing 83 kB gz, demo chunk 213 kB gz)
+- [x] Emulator: pause when the tab is hidden (requestAnimationFrame already stops; catch-up is capped at 4 frames)
 
 ### Features
 - [ ] Real marketing landing page (problem, how it works, hardware spec, security model, roadmap)

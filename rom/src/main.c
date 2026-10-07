@@ -426,24 +426,30 @@ static void receive(void) {
 }
 
 static void tx_result(void) {
-    char *sig;
-    uint8_t ticks = 0;
+    char *detail;
+    uint8_t ticks = 0, failed;
     header("SIGNED");
     center(4, "SIGNATURE SENT");
     center(5, "TO PHONE");
     for (;;) {
         if (chip_call(CMD_TXSTATUS, 0, 0, 0) == 0) {
-            sig = resp + strlen(resp) + 1;
+            detail = resp + strlen(resp) + 1;
+            failed = !strcmp(resp, "FAILED");
             clear_row(8);
             center(8, resp);
-            if (*sig) {
-                at(1, 10, "TX:");
-                wrap(1, 11, 18, sig);
+            if (*detail) {
+                /* on failure the chip sends a reason instead of a signature */
+                at(1, 10, failed ? "WHY:" : "TX: ");
+                wrap(1, 11, 18, detail);
             }
-            if (!strcmp(resp, "CONFIRMED") || !strcmp(resp, "FAILED")) break;
+            if (failed || !strcmp(resp, "CONFIRMED")) break;
         }
         wait_frames(30);
-        if (++ticks > 40) break;
+        if (++ticks > 120) {
+            center(15, "STILL CONFIRMING.");
+            center(16, "CHECK YOUR PHONE");
+            break;
+        }
     }
     center(17, "A: DONE");
     while (!(wait_press() & J_A)) {}

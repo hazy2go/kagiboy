@@ -101,8 +101,10 @@ export class CartChip {
     this.balances[chain] = text;
   }
 
-  setTxStatus(state: string, sig = "") {
-    this.txStatus = { state, sig: sig.length > 20 ? `${sig.slice(0, 8)}..${sig.slice(-8)}` : sig };
+  /** `detail` is a signature/hash (shortened for the screen) or, on failure, a short reason. */
+  setTxStatus(state: string, detail = "") {
+    const isHash = !detail.includes(" ") && detail.length > 20;
+    this.txStatus = { state, sig: isHash ? `${detail.slice(0, 8)}..${detail.slice(-8)}` : detail.slice(0, 36) };
     this.emit();
   }
 

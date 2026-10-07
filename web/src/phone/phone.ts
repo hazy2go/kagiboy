@@ -84,7 +84,13 @@ export class Phone {
     const a = this.chip.addresses;
     if (!a) throw new Error("unlock the cartridge first");
     const value = Number(amount);
-    if (!(value > 0)) throw new Error("enter an amount");
+    if (!(value > 0)) throw new Error("Enter an amount above zero.");
+    if (chain === "sol" && !isSolAddress(to)) throw new Error("That isn't a Solana address.");
+    if (chain === "evm" && !isAddress(to)) throw new Error("That isn't an EVM address (0x…).");
+    const balance = this.balances[chain];
+    if (balance != null && value > balance) {
+      throw new Error(`You only have ${balance.toFixed(4)} ${chain === "sol" ? "SOL" : "ETH"}.`);
+    }
 
     const item: Activity = { id: crypto.randomUUID(), chain, to, amount: `${amount} ${chain === "sol" ? "SOL" : "ETH"}`, state: "waiting" };
     this.activity.unshift(item);
@@ -98,9 +104,9 @@ export class Phone {
       if (chain === "sol") await this.sendSol(a.sol, to, value, update);
       else await this.sendEth(a.evm as `0x${string}`, to, amount, update);
     } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      update({ state: "failed", error });
-      this.chip.setTxStatus("FAILED");
+      const { short, long } = explainError(e);
+      update({ state: "failed", error: long });
+      this.chip.setTxStatus("FAILED", short);
     }
     this.refreshBalances();
   }
@@ -163,4 +169,31 @@ export class Phone {
     update({ state: "confirmed" });
     this.chip.setTxStatus("CONFIRMED", hash);
   }
+}
+
+function isSolAddress(a: string) {
+  try {
+    new PublicKey(a);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Turns RPC errors into something a person (and a 20-column screen) can read. */
+export function explainError(e: unknown): { short: string; long: string } {
+  const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+  if (msg.includes("prior credit") || msg.includes("insufficient")) {
+    return { short: "NOT ENOUGH FUNDS", long: "Not enough funds to cover the amount and the fee." };
+  }
+  if (msg.includes("blockhash") || msg.includes("expired")) {
+    return { short: "TOOK TOO LONG", long: "The transaction expired before it landed. Try again." };
+  }
+  if (msg.includes("not a solana address") || msg.includes("not an evm address")) {
+    return { short: "BAD ADDRESS", long: e instanceof Error ? e.message : String(e) };
+  }
+  if (msg.includes("fetch") || msg.includes("network") || msg.includes("429")) {
+    return { short: "NETWORK ERROR", long: "Couldn't reach the network. Check your connection and try again." };
+  }
+  return { short: "NETWORK REJECTED IT", long: e instanceof Error ? e.message.split("\n")[0] : String(e) };
 }
