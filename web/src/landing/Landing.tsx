@@ -247,6 +247,7 @@ export function Landing() {
           <a href="#setup">How it works</a>
           <a href="#security">Security</a>
           <a href="#inside">Inside</a>
+          <Link to="/about">About</Link>
           <Link to="/demo" className="btn btn-ink btn-sm">
             Live demo
           </Link>
@@ -272,6 +273,7 @@ export function Landing() {
           <a href="#security">Security</a>
           <a href="#inside">Inside</a>
           <a href="#waitlist">Waitlist</a>
+          <Link to="/about">About</Link>
         </nav>
         <div className="menu-actions">
           <Link to="/demo" className="btn btn-ink">

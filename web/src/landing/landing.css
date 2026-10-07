@@ -1244,3 +1244,19 @@
     border-radius: 24px;
   }
 }
+
+/* iOS: the toolbar collapses on scroll and the viewport grows. The backdrop and the 3D
+ * cover the large viewport so no white strip appears; the words stay above the toolbar
+ * by keeping clear of the difference between the large and small viewports. */
+@supports (height: 100lvh) {
+  @media (max-width: 860px) {
+    .stage-sticky {
+      height: 100lvh;
+    }
+
+    .ch,
+    .ch-hero {
+      bottom: calc(100lvh - 100svh + 26px + env(safe-area-inset-bottom));
+    }
+  }
+}
