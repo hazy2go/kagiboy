@@ -33,7 +33,7 @@ export function DemoPage() {
         <Link to="/" className="kb-word" aria-label="kagiboy home">
           kagiboy
         </Link>
-        <span className="net">Live demo · Solana devnet · Ethereum Sepolia</span>
+        <span className="net">Live demo · test networks</span>
       </nav>
 
       <header className="demo-intro">
@@ -127,7 +127,7 @@ function MobileDemo() {
           <Link to="/" className="kb-word" aria-label="kagiboy home">
             kagiboy
           </Link>
-          <span className="net">devnet · Sepolia</span>
+          <span className="net">testnets</span>
         </div>
         <p className="next-step" aria-live="polite">
           <span className="px">NEXT</span>

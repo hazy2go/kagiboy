@@ -955,3 +955,20 @@ html.demo-app-root body {
   line-height: 1.4;
   color: var(--kb-ink-3);
 }
+
+/* EVM network picker in the card's corner */
+.net-pick {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 26px 4px 10px;
+  margin-left: -6px;
+  font: 560 13px/1.2 var(--kb-sans);
+  color: var(--kb-ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f2330' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E")
+      no-repeat right 10px center / 9px 6px,
+    rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 1px var(--kb-line);
+}

@@ -3,9 +3,9 @@ import qrcode from "qrcode-generator";
 import type { Chain } from "../chip/protocol";
 import { formatUnits } from "viem";
 import { explorer, type Activity } from "../phone/phone";
+import { EVM_NETWORKS } from "../chip/networks";
 import { useSession } from "./session";
 
-const SEPOLIA_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
 const SOLANA_FAUCET = "https://faucet.solana.com";
 
 /** The companion app. `bare` drops the drawn phone so it can be the real screen on a phone. */
@@ -100,22 +100,34 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
       </article>
       <article className="card evm">
         <div className="card-top">
-          <span>Ethereum</span>
-          <a href={explorer.evmAddr(addr.evm)} target="_blank" rel="noreferrer">
+          {/* one key and one address on every EVM network; the cartridge names the network on each request */}
+          <select
+            className="net-pick"
+            aria-label="EVM network"
+            value={s.phone.evmNet.id}
+            onChange={(e) => s.phone.setEvmNetwork(Number(e.target.value))}
+          >
+            {EVM_NETWORKS.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.name === "Robinhood" ? "Robinhood Chain" : n.name}
+              </option>
+            ))}
+          </select>
+          <a href={explorer.evmAddr(addr.evm, s.phone.evmNet.id)} target="_blank" rel="noreferrer">
             Explorer <Out />
           </a>
         </div>
-        <div className="amount">{show(evm, 18)} <small>ETH</small></div>
+        <div className="amount">{show(evm, 18)} <small>{s.phone.evmNet.symbol}</small></div>
         <Copy text={addr.evm} />
         <div className="card-actions">
           <a
-            href={SEPOLIA_FAUCET}
+            href={s.phone.evmNet.faucet}
             target="_blank"
             rel="noreferrer"
             className="faucet-btn"
             onClick={() => navigator.clipboard?.writeText(addr.evm).catch(() => {})}
           >
-            Get test ETH <Out />
+            Get test {s.phone.evmNet.symbol} <Out />
           </a>
         </div>
       </article>
@@ -192,7 +204,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
           {latest.hash && (
             <>
               {" · "}
-              <a href={explorer[latest.chain](latest.hash)} target="_blank" rel="noreferrer">
+              <a href={explorer[latest.chain](latest.hash, latest.net)} target="_blank" rel="noreferrer">
                 View <Out />
               </a>
             </>
@@ -209,7 +221,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
           <div className="seg" role="tablist">
             {(["sol", "evm"] as const).map((c) => (
               <button type="button" key={c} className={chain === c ? "on" : ""} onClick={() => setChain(c)}>
-                {c === "sol" ? "SOL" : "ETH"}
+                {c === "sol" ? "SOL" : s.phone.evmNet.symbol}
               </button>
             ))}
           </div>
@@ -260,7 +272,7 @@ function ActivityList({ items }: { items: Activity[] }) {
             <div className="right">
               <span className="state">{label(a)}</span>
               {a.hash && (
-                <a href={explorer[a.chain](a.hash)} target="_blank" rel="noreferrer">
+                <a href={explorer[a.chain](a.hash, a.net)} target="_blank" rel="noreferrer">
                   View <Out />
                 </a>
               )}

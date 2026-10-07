@@ -1,9 +1,9 @@
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { createPublicClient, formatUnits, http, isAddress, keccak256, parseUnits } from "viem";
 import bs58 from "bs58";
-import { sepolia } from "viem/chains";
 import type { CartChip, FailReason, SignResult } from "../chip/chip";
 import type { Chain } from "../chip/protocol";
+import { DEFAULT_EVM, evmNetwork, type EvmNetwork } from "../chip/networks";
 
 /**
  * The companion app. It has the network connection the Game Boy lacks, so it
@@ -12,16 +12,14 @@ import type { Chain } from "../chip/protocol";
  */
 
 const SOL_RPC = import.meta.env?.VITE_SOLANA_RPC ?? "https://api.devnet.solana.com";
-const EVM_RPC = import.meta.env?.VITE_SEPOLIA_RPC ?? "https://ethereum-sepolia-rpc.publicnode.com";
 
 export const DECIMALS: Record<Chain, number> = { sol: 9, evm: 18 };
-export const SYMBOL: Record<Chain, string> = { sol: "SOL", evm: "ETH" };
 
 export const explorer = {
   sol: (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`,
-  evm: (hash: string) => `https://sepolia.etherscan.io/tx/${hash}`,
+  evm: (hash: string, net = DEFAULT_EVM.id) => `${(evmNetwork(net) ?? DEFAULT_EVM).explorer}/tx/${hash}`,
   solAddr: (a: string) => `https://explorer.solana.com/address/${a}?cluster=devnet`,
-  evmAddr: (a: string) => `https://sepolia.etherscan.io/address/${a}`,
+  evmAddr: (a: string, net = DEFAULT_EVM.id) => `${(evmNetwork(net) ?? DEFAULT_EVM).explorer}/address/${a}`,
 };
 
 export interface Activity {
@@ -33,11 +31,15 @@ export interface Activity {
   state: "waiting" | "rejected" | "broadcast" | "confirmed" | "failed" | "unknown";
   hash?: string;
   error?: string;
+  /** EVM network id the send went to */
+  net?: number;
 }
 
 export class Phone {
   readonly sol = new Connection(SOL_RPC, "confirmed");
-  readonly evm = createPublicClient({ chain: sepolia, transport: http(EVM_RPC) });
+  /** which EVM network the app is looking at; same key and address on all of them */
+  evmNet: EvmNetwork = DEFAULT_EVM;
+  evm = createPublicClient({ transport: http(DEFAULT_EVM.rpc) });
   /** Base units (lamports / wei); null until fetched. */
   balances: Record<Chain, bigint | null> = { sol: null, evm: null };
   activity: Activity[] = [];
@@ -58,6 +60,21 @@ export class Phone {
     for (const fn of this.listeners) fn();
   }
 
+  setEvmNetwork(id: number) {
+    const net = evmNetwork(id);
+    if (!net || net.id === this.evmNet.id) return;
+    this.evmNet = net;
+    this.evm = createPublicClient({ transport: http(net.rpc) });
+    this.balances.evm = null;
+    this.chip.setEvmNetwork(id);
+    this.emit();
+    this.refreshBalances();
+  }
+
+  symbol(chain: Chain) {
+    return chain === "sol" ? "SOL" : this.evmNet.symbol;
+  }
+
   /** Forget everything tied to the previous wallet (power cycle, lock, wipe). */
   clearBalances() {
     this.balances = { sol: null, evm: null };
@@ -67,6 +84,7 @@ export class Phone {
   async refreshBalances() {
     const a = this.chip.addresses;
     if (!a) return;
+    const net = this.evmNet.id;
     const [sol, evm] = await Promise.allSettled([
       this.sol.getBalance(new PublicKey(a.sol)),
       this.evm.getBalance({ address: a.evm as `0x${string}` }),
@@ -78,7 +96,7 @@ export class Phone {
       this.balances.sol = BigInt(sol.value);
       this.chip.setBalance("sol", this.balances.sol);
     }
-    if (evm.status === "fulfilled") {
+    if (evm.status === "fulfilled" && net === this.evmNet.id) {
       this.balances.evm = evm.value;
       this.chip.setBalance("evm", this.balances.evm);
     }
@@ -105,7 +123,7 @@ export class Phone {
     if (chain === "evm" && !isAddress(to)) throw new Error("That isn't an EVM address (0x…).");
     const balance = this.balances[chain];
     if (balance != null && units > balance) {
-      throw new Error(`You only have ${formatUnits(balance, DECIMALS[chain])} ${SYMBOL[chain]}.`);
+      throw new Error(`You only have ${formatUnits(balance, DECIMALS[chain])} ${this.symbol(chain)}.`);
     }
     // a SOL transfer costs 5000 lamports; leave room for it before asking the Game Boy
     if (chain === "sol" && balance != null && units + SOL_FEE > balance) {
@@ -117,7 +135,8 @@ export class Phone {
       id: crypto.randomUUID(),
       chain,
       to,
-      amount: `${formatUnits(units, DECIMALS[chain])} ${SYMBOL[chain]}`,
+      amount: `${formatUnits(units, DECIMALS[chain])} ${this.symbol(chain)}`,
+      net: chain === "evm" ? this.evmNet.id : undefined,
       state: "waiting",
     };
     this.activity.unshift(item);
@@ -206,23 +225,28 @@ export class Phone {
   }
 
   private async sendEth(from: `0x${string}`, to: `0x${string}`, wei: bigint, update: (p: Partial<Activity>) => void) {
-    const [nonce, fees] = await Promise.all([
-      this.evm.getTransactionCount({ address: from, blockTag: "pending" }),
-      this.evm.estimateFeesPerGas(),
+    const net = this.evmNet;
+    const client = this.evm;
+    const [nonce, fees, estimate] = await Promise.all([
+      client.getTransactionCount({ address: from, blockTag: "pending" }),
+      client.estimateFeesPerGas(),
+      client.estimateGas({ account: from, to, value: wei }).catch(() => 21000n),
     ]);
-    const maxCost = wei + 21000n * fees.maxFeePerGas;
+    // rollups bill their L1 cost as gas, so leave them some headroom; plain L1 sends use exactly 21000
+    const gas = estimate > 21000n ? (estimate * 12n) / 10n : 21000n;
+    const maxCost = wei + gas * fees.maxFeePerGas;
     if (this.balances.evm != null && maxCost > this.balances.evm) {
-      throw new Error(`With the network fee this needs up to ${formatUnits(maxCost, 18)} ETH.`);
+      throw new Error(`With the network fee this needs up to ${formatUnits(maxCost, 18)} ${net.symbol}.`);
     }
     const { id, result } = this.chip.requestSignature({
       chain: "evm",
       tx: {
         type: "eip1559",
-        chainId: sepolia.id,
+        chainId: net.id,
         to,
         value: wei,
         nonce,
-        gas: 21000n,
+        gas,
         maxFeePerGas: fees.maxFeePerGas,
         maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
       },
@@ -233,9 +257,9 @@ export class Phone {
       id,
       keccak256(signed.signed),
       update,
-      () => this.evm.sendRawTransaction({ serializedTransaction: signed.signed }),
+      () => client.sendRawTransaction({ serializedTransaction: signed.signed }),
       async (hash) => {
-        const receipt = await this.evm.waitForTransactionReceipt({ hash: hash as `0x${string}`, timeout: 180_000 });
+        const receipt = await client.waitForTransactionReceipt({ hash: hash as `0x${string}`, timeout: 180_000 });
         if (receipt.status !== "success") throw new OnChainError("Reverted on-chain.");
       },
     );

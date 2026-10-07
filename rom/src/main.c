@@ -970,22 +970,26 @@ static uint8_t unlock(void) {
 /* last balance line drawn per chain; the 2 s refresh only repaints a box when it changed,
  * since clearing and redrawing an unchanged box shows as a blink */
 static char shown_bal[2][24];
+static char shown_name[2][14];
 
 static void draw_account(uint8_t chain, uint8_t y) {
-    char *bal, *unit;
-    uint8_t w;
-    char *last = shown_bal[chain == CHAIN_SOL ? 0 : 1];
+    char *bal, *unit, *name;
+    uint8_t w, k = chain == CHAIN_SOL ? 0 : 1;
     if (chip_call(CMD_ACCOUNT, chain, 0, 0) != 0) return;
     bal = next_field(resp);
-    if (!strncmp(last, bal, sizeof shown_bal[0] - 1)) return;
-    strncpy(last, bal, sizeof shown_bal[0] - 1);
-    last[sizeof shown_bal[0] - 1] = 0;
+    /* third field: the network's name (the phone picks which EVM network to show) */
+    name = next_field(bal);
+    if (name >= RESP_END || !*name) name = chain == CHAIN_SOL ? "Solana" : "Ethereum";
+    if (!strncmp(shown_bal[k], bal, sizeof shown_bal[0] - 1) && !strncmp(shown_name[k], name, sizeof shown_name[0] - 1)) return;
+    strncpy(shown_bal[k], bal, sizeof shown_bal[0] - 1);
+    shown_bal[k][sizeof shown_bal[0] - 1] = 0;
+    strncpy(shown_name[k], name, sizeof shown_name[0] - 1);
+    shown_name[k][sizeof shown_name[0] - 1] = 0;
     unit = bal;
     while (*unit && *unit != ' ') unit++;
     fill_bkg_rect(2, y + 1, 16, 4, T_FONT_INK);
     icon(2, y + 1, chain == CHAIN_SOL ? T_ICON_SOL_0 : T_ICON_ETH_0);
-    if (chain == CHAIN_SOL) txt(5, y + 1, "Solana");
-    else txt(5, y + 1, "Ethereum");
+    txt_n(5, y + 1, shown_name[k], 12);
     w = big_width(bal);
     if (w > 11) w = 11;
     big(2, y + 3, bal);
@@ -1063,10 +1067,10 @@ static uint8_t receive(void) {
         screen_begin();
         if (as_text) {
             cap(0, 0, "<");
-            txtc(0, chain == CHAIN_SOL ? "Solana" : "Ethereum");
+            txtc(0, chain == CHAIN_SOL ? "Solana" : "EVM");
             cap(19, 0, ">");
             rule(1);
-            capc(3, "YOUR ADDRESS");
+            capc(3, chain == CHAIN_SOL ? "YOUR ADDRESS" : "ANY EVM NETWORK");
             box(1, 5, 18, 5);
             if (chip_call(CMD_ACCOUNT, chain, 0, 0) == 0) wrap(2, 6, 16, resp, 3);
             capc(12, "SEND TESTNET FUNDS");
@@ -1077,7 +1081,7 @@ static uint8_t receive(void) {
             /* rows 1 and 17 stay blank in QR view: phone cameras need a quiet
              * zone, so the title moves left to make room for the B hint */
             cap(0, 0, "<");
-            cap(txt(2, 0, chain == CHAIN_SOL ? "Solana" : "Ethereum") + 3, 0, ">");
+            cap(txt(2, 0, chain == CHAIN_SOL ? "Solana" : "EVM") + 3, 0, ">");
             hint(14, 0, BTN_B, "BACK");
             if (chip_call(CMD_QR, chain, 0, 0) == 0) qr_draw(2, 2);
         }

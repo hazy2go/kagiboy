@@ -39,7 +39,7 @@ const PROMISES = [
   ["SIGNS", "EXACTLY WHAT IT SHOWS"],
   ["REFUSES", "WHAT IT CAN'T SHOW"],
   ["PIN", "5 TRIES, THEN WIPE"],
-  ["ETHEREUM", "PLAIN SENDS, FEE CAP"],
+  ["EVM", "5 NETWORKS, NAMED ON SCREEN"],
   ["BLUETOOTH", "PUBLIC DATA ONLY"],
 ] as const;
 
@@ -300,7 +300,7 @@ export function Landing() {
           <div className="ch ch-hero" ref={(el) => void (chapterRefs.current.hero = el)}>
             <h1>Your keys, in a Game Boy cartridge.</h1>
             <p className="lede">
-              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. Your keys live in a chip inside the cartridge, and nothing gets signed until you hold A.
+              kagiboy turns the original Game Boy into a hardware wallet for Solana and EVM chains: Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. Your keys live in a chip inside the cartridge, and nothing gets signed until you hold A.
             </p>
             <div className="hero-aside">
               <div className="actions">

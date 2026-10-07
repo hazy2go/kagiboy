@@ -4,6 +4,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import qrcode from "qrcode-generator";
 import bs58 from "bs58";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
+import { DEFAULT_EVM, evmNetwork, type EvmNetwork } from "./networks";
 import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemonic, type Wallet } from "./keys";
 
 /**
@@ -83,9 +84,10 @@ interface Pending {
 }
 
 const MAX_TRIES = 5;
-const SEPOLIA_CHAIN_ID = 11155111;
 const PLAIN_TRANSFER_GAS = 21000n;
-const MAX_EVM_FEE_WEI = 10n ** 16n; // 0.01 ETH: anything above that is refused
+// rollups (Arbitrum, Robinhood Chain) count their L1 cost in gas, so a plain send can need more than 21000
+const MAX_TRANSFER_GAS = 600_000n;
+const MAX_EVM_FEE_WEI = 10n ** 16n; // 0.01 of the network's coin: anything above that is refused
 const SOL_FEE_PER_SIGNATURE = 5000n;
 
 const SECRET_CMDS = new Set<number>([CMD.CREATE, CMD.SET_PIN, CMD.UNLOCK, CMD.WORDS, CMD.RESTORE]);
@@ -133,6 +135,31 @@ export class CartChip {
   }
 
   /** Balances arrive as base units (lamports / wei); the chip formats them itself. */
+  /** What the Game Boy's home screen gets for one account: address, balance, network name. */
+  accountReply(chain: Chain): string {
+    const a = this.addresses;
+    if (!a) return "";
+    const sym = chain === "sol" ? "SOL" : this.evmNet.symbol;
+    const name = chain === "sol" ? "Solana" : this.evmNet.name;
+    return `${a[chain]}\0${balanceText(chain, this.balances[chain], sym)}\0${name}\0`;
+  }
+
+  /** The decoded request waiting on the Game Boy, exactly as it will be drawn (read-only). */
+  get pendingShown() {
+    return this.pending ? { ...this.pending.snap.shown } : null;
+  }
+
+  /** The EVM network the phone is showing; the Game Boy's home screen names it and uses its coin. */
+  private evmNet: EvmNetwork = DEFAULT_EVM;
+
+  setEvmNetwork(id: number) {
+    const net = evmNetwork(id);
+    if (!net) return;
+    this.evmNet = net;
+    this.balances.evm = null;
+    this.emit();
+  }
+
   setBalance(chain: Chain, baseUnits: bigint | null) {
     this.balances[chain] = baseUnits;
   }
@@ -331,7 +358,7 @@ export class CartChip {
         const a = this.addresses;
         if (!a) return { status: 1 };
         const chain: Chain = arg === 0 ? "sol" : "evm";
-        return { status: 0, data: `${a[chain]}\0${balanceText(chain, this.balances[chain])}\0` };
+        return { status: 0, data: this.accountReply(chain) };
       }
 
       case CMD.PENDING: {
@@ -480,21 +507,24 @@ function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
 
   // round-trip through the wire format so later edits to the phone's object can't leak in
   const tx = parseTransaction(serializeTransaction({ ...req.tx, type: "eip1559" })) as TransactionSerializableEIP1559;
-  if (tx.chainId !== SEPOLIA_CHAIN_ID) throw new Error("this cartridge only signs on Sepolia");
+  const net = evmNetwork(tx.chainId);
+  if (!net) throw new Error("this cartridge doesn't sign on that network");
   if (!tx.to) throw new Error("contract deployment is not supported");
-  if (tx.data && tx.data !== "0x") throw new Error("only plain ETH transfers can be shown on the Game Boy yet");
+  if (tx.data && tx.data !== "0x") throw new Error("only plain transfers can be shown on the Game Boy yet");
   if (tx.accessList?.length) throw new Error("access lists are not supported");
-  if (tx.gas !== PLAIN_TRANSFER_GAS) throw new Error("a plain transfer uses exactly 21000 gas");
-  const maxFee = PLAIN_TRANSFER_GAS * (tx.maxFeePerGas ?? 0n);
-  if (maxFee > MAX_EVM_FEE_WEI) throw new Error("the fee is above the cartridge's 0.01 ETH limit");
+  const gas = tx.gas ?? 0n;
+  if (gas < PLAIN_TRANSFER_GAS || gas > MAX_TRANSFER_GAS) throw new Error("that gas limit doesn't fit a plain transfer");
+  const maxFee = gas * (tx.maxFeePerGas ?? 0n);
+  if (maxFee > MAX_EVM_FEE_WEI) throw new Error(`the fee is above the cartridge's 0.01 ${net.symbol} limit`);
   return {
     chain: "evm",
     tx,
     shown: {
       to: getAddress(tx.to), // checksummed, so the mixed case can be compared with the phone
-      amount: `${exact(tx.value ?? 0n, 18)} ETH`,
-      fee: `MAX ${ceilDecimals(maxFee, 18, 6)} ETH`,
-      network: "ETHEREUM",
+      amount: `${exact(tx.value ?? 0n, 18)} ${net.symbol}`,
+      // the fee line holds 16 characters: longer coin names get fewer decimals, still rounded up
+      fee: `MAX ${ceilDecimals(maxFee, 18, Math.min(6, 9 - net.symbol.length))} ${net.symbol}`,
+      network: net.label,
     },
   };
 }
@@ -532,8 +562,7 @@ function ceilDecimals(units: bigint, decimals: number, places: number) {
 }
 
 /** Home-screen balance, at most 18 characters. */
-function balanceText(chain: Chain, units: bigint | null) {
-  const sym = chain === "sol" ? "SOL" : "ETH";
+function balanceText(chain: Chain, units: bigint | null, sym: string) {
   if (units === null) return `-- ${sym}`;
   const [whole, frac = ""] = formatUnits(units, chain === "sol" ? 9 : 18).split(".");
   const text = `${whole}.${frac.padEnd(4, "0").slice(0, 4)} ${sym}`;

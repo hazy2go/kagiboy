@@ -19,6 +19,17 @@ console.log = (...args: unknown[]) => {
   if (/WRONG|NOT REFUSED|MISMATCH|FAILED|LEAKED|STILL THERE|: false|: null/.test(args.map(String).join(" "))) failed = true;
   log(...args);
 };
+// a crash is a failure too, not a silent early exit
+process.on("uncaughtException", (e) => {
+  failed = true;
+  log("CRASHED:", e);
+  process.exit(1);
+});
+process.on("unhandledRejection", (e) => {
+  failed = true;
+  log("CRASHED:", e);
+  process.exit(1);
+});
 process.on("exit", () => {
   if (failed) {
     log("\nSMOKE: FAILED");
@@ -242,6 +253,35 @@ const realStatus = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chi
 console.log("real hash on screen:", realStatus.includes("43 4f 4e 46") /* "CONF" */ ? "OK" : "WRONG");
 await step("A");
 await frames(20);
+
+// other EVM networks: same key, the network and its coin are named on the Game Boy
+refused("rollup gas above the cap", { chain: "evm", tx: { ...sepoliaTx, chainId: 421614, gas: 900_000n } });
+chip.setEvmNetwork(998);
+chip.setBalance("evm", 3_000_000_000_000_000_000n);
+await frames(140); // the home screen refreshes every 2 s
+snap("home-hyperevm");
+const acct = chip.accountReply("evm");
+console.log("home names HyperEVM:", acct.includes("\0HyperEVM\0") && acct.includes("3.0000 HYPE") ? "OK" : "WRONG");
+const hypeReq = chip.requestSignature({ chain: "evm", tx: { ...sepoliaTx, chainId: 998, nonce: 7 } });
+hypeReq.result.then(() => {});
+await frames(40);
+snap("hyperevm-request");
+const shown = chip.pendingShown;
+console.log("approve screen says HYPEREVM:", shown?.network === "HYPEREVM" && shown.amount === "0.01 HYPE" && shown.fee.endsWith(" HYPE") ? "OK" : "WRONG", shown?.fee);
+await step("B");
+await frames(30);
+// Arbitrum-style gas (L1 cost billed as gas) is accepted, then dropped
+try {
+  const arb = chip.requestSignature({ chain: "evm", tx: { ...sepoliaTx, chainId: 421614, gas: 250_000n, nonce: 8 } });
+  arb.result.then(() => {});
+  console.log("arbitrum gas accepted: OK");
+  await frames(40);
+  await step("B");
+  await frames(30);
+} catch (e) {
+  console.log("arbitrum gas accepted: WRONG", (e as Error).message);
+}
+chip.setEvmNetwork(11155111);
 
 // power cycle: keys survive, RAM does not
 gb = new GameBoy(rom);
