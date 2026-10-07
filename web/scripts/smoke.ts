@@ -283,6 +283,29 @@ try {
 }
 chip.setEvmNetwork(11155111);
 
+// the Game Boy picks the EVM network itself: RIGHT steps forward, LEFT back, and the phone is told
+let followed = 0;
+chip.onNetwork = (id) => (followed = id);
+for (let i = 0; i < 5 && chip.hasPending; i++) {
+  await step("B");
+  await frames(30);
+}
+await frames(90);
+snap("home-before-switch");
+await step("RIGHT");
+await frames(10);
+snap("home-gb-picks-base");
+console.log("RIGHT switches to Base:", followed === 84532 && chip.accountReply("evm").includes("\0Base\0") ? "OK" : "WRONG", followed);
+await step("LEFT");
+await step("LEFT");
+await frames(10);
+snap("home-gb-picks-robinhood");
+console.log("LEFT wraps to Robinhood:", followed === 46630 ? "OK" : "WRONG", followed);
+await step("RIGHT");
+await frames(10);
+console.log("back on Ethereum:", followed === 11155111 ? "OK" : "WRONG", followed);
+chip.onNetwork = null;
+
 // power cycle: keys survive, RAM does not
 gb = new GameBoy(rom);
 chip.reset();

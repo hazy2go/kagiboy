@@ -410,6 +410,85 @@ for i, t in enumerate(big_tiles):
 
 assert len(ui) <= QR - UI, f"UI tiles overflow: {len(ui)} > {QR - UI}"
 
+
+# ---------------------------------------------------------------- network icons
+# The home screen's EVM card shows one network at a time, so these live in ROM and get copied into
+# the ICON_ETH tiles when the card is drawn (VRAM has no room for all five). Order = ROM's net_icon().
+
+def disc(fn):
+    """16x16 picture from fn(x, y) -> shade, sampled at pixel centres."""
+    return [[fn(x + 0.5, y + 0.5) for x in range(16)] for y in range(16)]
+
+
+def base_icon(x, y):
+    # a solid coin with a bar cut in from the left, like Base's mark
+    if (x - 8) ** 2 + (y - 8) ** 2 > 7.2 ** 2:
+        return 0
+    return 0 if 7 <= y <= 9 and x < 10 else 3
+
+
+NET_ICONS = {
+    "ETH": art(ICONS["ETH"]),
+    "BASE": disc(base_icon),
+    "ARB": art("""
+................
+......####......
+....##....##....
+..##........##..
+..#....##....#..
+..#...#++#...#..
+..#...#++#...#..
+..#..#+..+#..#..
+..#..#+..+#..#..
+..#.#+....+#.#..
+..#.#+....+#.#..
+..##........##..
+....##....##....
+......####......
+................
+................
+"""),
+    "HYPE": art("""
+................
+.....######.....
+...##......##...
+..#..........#..
+.#..##....##..#.
+.#..##....##..#.
+#...##....##...#
+#...########...#
+#...########...#
+#...##....##...#
+.#..##....##..#.
+.#..##....##..#.
+..#..........#..
+...##......##...
+.....######.....
+................
+"""),
+    "HOOD": art("""
+................
+............###.
+..........##++#.
+.........#+++#..
+........#+++#...
+.......#+++#....
+......#+++#.....
+.....#+++#......
+....#+++#.......
+....#++#........
+...#++#.........
+...###..........
+..#.............
+.#..............
+#...............
+................
+"""),
+}
+for name, px in NET_ICONS.items():
+    assert len(px) == 16 and all(len(r) == 16 for r in px), name
+net_icon_tiles = [t for px in NET_ICONS.values() for t in split(px, 2, 2)]
+
 # ---------------------------------------------------------------- logo (boot only)
 # Pixel-doubled wordmark plus a doubled key, loaded over the grey font on the boot screen.
 
@@ -449,6 +528,7 @@ c.append(c_array("font_ink_tiles", font_ink))
 c.append(c_array("font_grey_tiles", font_grey))
 c.append(c_array("ui_tiles", [t for _, t in ui]))
 c.append(c_array("logo_tiles", logo_tiles))
+c.append(c_array("net_icon_tiles", net_icon_tiles))
 (SRC / "assets.c").write_text("\n".join(c))
 
 h = [
@@ -480,6 +560,7 @@ h += [
     "extern const uint8_t font_grey_tiles[];",
     "extern const uint8_t ui_tiles[];",
     "extern const uint8_t logo_tiles[];",
+    "extern const uint8_t net_icon_tiles[]; /* 5 icons x 4 tiles: ETH, BASE, ARB, HYPE, HOOD */",
     "",
     "#endif",
     "",

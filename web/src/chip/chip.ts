@@ -4,7 +4,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import qrcode from "qrcode-generator";
 import bs58 from "bs58";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
-import { DEFAULT_EVM, evmNetwork, type EvmNetwork } from "./networks";
+import { DEFAULT_EVM, EVM_NETWORKS, evmNetwork, type EvmNetwork } from "./networks";
 import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemonic, type Wallet } from "./keys";
 
 /**
@@ -151,6 +151,9 @@ export class CartChip {
 
   /** The EVM network the phone is showing; the Game Boy's home screen names it and uses its coin. */
   private evmNet: EvmNetwork = DEFAULT_EVM;
+
+  /** Told when the Game Boy switches the EVM network itself, so the phone can follow. */
+  onNetwork: ((id: number) => void) | null = null;
 
   setEvmNetwork(id: number) {
     const net = evmNetwork(id);
@@ -353,6 +356,17 @@ export class CartChip {
           return { status: 2 };
         }
         return { status: 1, data: new Uint8Array([p.triesLeft]) };
+      }
+
+      case CMD.NETWORK: {
+        // LEFT/RIGHT on the home screen: the Game Boy picks which EVM network its second card shows
+        if (!this.unlocked || (arg !== 1 && arg !== 2)) return { status: 1 };
+        const i = EVM_NETWORKS.findIndex((n) => n.id === this.evmNet.id);
+        const n = EVM_NETWORKS.length;
+        const next = EVM_NETWORKS[(i + (arg === 1 ? 1 : n - 1)) % n];
+        this.setEvmNetwork(next.id);
+        this.onNetwork?.(next.id);
+        return { status: 0 };
       }
 
       case CMD.ACCOUNT: {

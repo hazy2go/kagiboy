@@ -10,3 +10,4 @@ assets/3d/*.blend1
 assets/3d/raw
 assets/renders/drafts
 .impeccable/direction.json
+__pycache__/

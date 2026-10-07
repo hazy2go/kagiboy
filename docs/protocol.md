@@ -87,6 +87,7 @@ transfer from its own key and labels it `SOLANA`; the phone uses devnet.
 | `0x0C` | QR | `arg` = chain | `size`, then `size×size` bits row by row (1 = dark). 29×29 for both address types; the ROM draws it with 16 tiles, one per 2×2 block |
 | `0x0D` | WORDS | word prefix (lowercase) | `count`, then per suggestion a 2-byte word index and the word, 0-terminated (max 4, exact match first) |
 | `0x0E` | RESTORE | 12 × 2-byte word indices | status 0 ok, 2 checksum failed |
+| `0x0F` | NETWORK | arg 1 next, 2 previous | switches the EVM network on the home card (allowlist order, wraps); status 0 ok, 1 locked or bad arg. The cartridge tells the phone, which follows |
 
 Randomness: the chip's hardware RNG is the source. Button timings and
 accelerometer samples are hashed into the pool on top of it; they add to it,

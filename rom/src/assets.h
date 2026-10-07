@@ -105,5 +105,6 @@ extern const uint8_t font_ink_tiles[];
 extern const uint8_t font_grey_tiles[];
 extern const uint8_t ui_tiles[];
 extern const uint8_t logo_tiles[];
+extern const uint8_t net_icon_tiles[]; /* 5 icons x 4 tiles: ETH, BASE, ARB, HYPE, HOOD */
 
 #endif

@@ -36,6 +36,7 @@ export const CMD = {
   QR: 0x0c,
   WORDS: 0x0d,
   RESTORE: 0x0e,
+  NETWORK: 0x0f,
 } as const;
 
 export const CMD_NAME: Record<number, string> = Object.fromEntries(

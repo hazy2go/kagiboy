@@ -55,6 +55,8 @@ export class Phone {
 
   constructor(chip: CartChip) {
     this.chip = chip;
+    // the Game Boy can switch networks too; the app follows it
+    chip.onNetwork = (id) => this.setEvmNetwork(id);
   }
 
   subscribe(fn: () => void) {

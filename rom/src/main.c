@@ -42,6 +42,7 @@
 #define CMD_QR 0x0C
 #define CMD_WORDS 0x0D
 #define CMD_RESTORE 0x0E
+#define CMD_NETWORK 0x0F
 
 #define ST_TIMEOUT 0xFE
 
@@ -83,6 +84,7 @@ static uint8_t demo_pending;  /* 0 none, 1 Solana, 2 Ethereum */
 static uint8_t demo_next;     /* which chain the next request is for */
 static uint8_t demo_tx_chain; /* chain of the last signed request, 0 none */
 static uint8_t demo_tx_polls;
+static uint8_t demo_net;      /* EVM network on the home card, index into demo_account_evm */
 
 static void demo_reply(const uint8_t *src, uint8_t len) {
     memcpy(resp, src, len);
@@ -243,7 +245,12 @@ static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
     case CMD_ACCOUNT:
         if (demo_state != STATE_UNLOCKED) return 1;
         if (arg == CHAIN_SOL) demo_reply(demo_account_sol, sizeof(demo_account_sol));
-        else demo_reply(demo_account_evm, sizeof(demo_account_evm));
+        else demo_reply(demo_account_evm[demo_net], demo_account_evm_len[demo_net]);
+        return 0;
+    case CMD_NETWORK:
+        if (demo_state != STATE_UNLOCKED || (arg != 1 && arg != 2)) return 1;
+        if (arg == 1) demo_net = demo_net + 1 == DEMO_NETS ? 0 : demo_net + 1;
+        else demo_net = demo_net ? demo_net - 1 : DEMO_NETS - 1;
         return 0;
     case CMD_QR:
         if (demo_state != STATE_UNLOCKED) return 1;
@@ -990,6 +997,17 @@ static uint8_t unlock(void) {
 static char shown_bal[2][24];
 static char shown_name[2][14];
 
+/* which of net_icon_tiles fits a network name (the chip only sends names from its allowlist) */
+static uint8_t net_icon(const char *name) {
+    switch (name[0]) {
+    case 'B': return 1; /* Base */
+    case 'A': return 2; /* Arbitrum */
+    case 'H': return 3; /* HyperEVM */
+    case 'R': return 4; /* Robinhood */
+    default: return 0;  /* Ethereum */
+    }
+}
+
 static void draw_account(uint8_t chain, uint8_t y) {
     char *bal, *unit;
     const char *name;
@@ -1010,8 +1028,16 @@ static void draw_account(uint8_t chain, uint8_t y) {
     unit = bal;
     while (*unit && *unit != ' ') unit++;
     fill_bkg_rect(2, y + 1, 16, 4, T_FONT_INK);
-    icon(2, y + 1, chain == CHAIN_SOL ? T_ICON_SOL_0 : T_ICON_ETH_0);
-    txt_n(5, y + 1, shown_name[k], 12);
+    if (chain == CHAIN_SOL) {
+        icon(2, y + 1, T_ICON_SOL_0);
+        txt_n(5, y + 1, shown_name[k], 12);
+    } else {
+        /* one EVM card, five networks: load this network's icon into the card's icon tiles */
+        set_bkg_data(T_ICON_ETH_0, 4, net_icon_tiles + 64u * net_icon(shown_name[k]));
+        icon(2, y + 1, T_ICON_ETH_0);
+        txt_n(5, y + 1, shown_name[k], 10);
+        cap(16, y + 1, "<>"); /* LEFT/RIGHT switches the network */
+    }
     w = big_width(bal);
     if (w > 11) w = 11;
     big(2, y + 3, bal);
@@ -1337,6 +1363,10 @@ static void home(void) {
             r = menu();
             if (r) return;
             home_draw();
+        } else if (p & (J_LEFT | J_RIGHT)) {
+            /* the Game Boy decides which EVM network its second card shows; the phone follows */
+            beep(0xB0);
+            if (chip_call(CMD_NETWORK, (p & J_RIGHT) ? 1 : 2, 0, 0) == 0) draw_account(CHAIN_EVM, 10);
         }
         if (++refresh >= 120) {
             refresh = 0;
