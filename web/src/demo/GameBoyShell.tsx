@@ -10,8 +10,12 @@ const KEYBOARD: Record<string, Key> = {
   ArrowRight: "RIGHT",
   x: "A",
   X: "A",
+  a: "A",
+  A: "A",
   z: "B",
   Z: "B",
+  b: "B",
+  B: "B",
   Enter: "START",
   Shift: "SELECT",
   Backspace: "SELECT",
@@ -245,7 +249,7 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
         )}
       </div>
       <p className="keys">
-        Keys: arrows · <kbd>X</kbd> A · <kbd>Z</kbd> B · <kbd>Enter</kbd> Start · <kbd>Shift</kbd> Select
+        Keys: arrows · <kbd>A</kbd>/<kbd>X</kbd> A · <kbd>B</kbd>/<kbd>Z</kbd> B · <kbd>Enter</kbd> Start · <kbd>Shift</kbd> Select
       </p>
     </div>
   );

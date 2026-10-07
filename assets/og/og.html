@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500;650&family=Funnel+Sans:wght@400;500&display=block" rel="stylesheet" />
+<style>
+  html, body { margin: 0; }
+  .card {
+    position: relative; width: 1200px; height: 630px; overflow: hidden;
+    background:
+      radial-gradient(520px 420px at 14% 18%, rgba(207, 226, 255, 0.95), transparent 70%),
+      radial-gradient(560px 460px at 92% 96%, rgba(255, 220, 232, 0.95), transparent 70%),
+      radial-gradient(380px 300px at 58% 50%, rgba(230, 224, 255, 0.55), transparent 72%),
+      #fbfaf8;
+    font-family: "Funnel Sans", system-ui, sans-serif; color: #1f2330;
+  }
+  .copy { position: absolute; left: 88px; top: 50%; transform: translateY(-50%); }
+  .word { font: 650 92px/0.95 "Funnel Display", sans-serif; letter-spacing: -0.045em; margin: 0; }
+  .line { margin: 22px 0 0; font-size: 27px; color: #5a5f73; letter-spacing: -0.01em; }
+  .chains { margin: 34px 0 0; font-size: 15px; letter-spacing: 0.22em; color: #8a8fa3; text-transform: uppercase; }
+  /* the studio render (backdrop baked in), its left edge feathered into the card */
+  .device { position: absolute; left: 400px; top: 18px; width: 1040px; height: auto;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22%); mask-image: linear-gradient(90deg, transparent 0, #000 22%); }
+  .copy { z-index: 1; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="copy">
+      <p class="word">kagiboy</p>
+      <p class="line">Your keys, in a cartridge.</p>
+      <p class="chains">Solana &nbsp;·&nbsp; Ethereum</p>
+    </div>
+    <img class="device" src="device.png" />
+  </div>
+</body>
+</html>

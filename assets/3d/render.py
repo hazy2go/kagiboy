@@ -206,14 +206,31 @@ def render_tweaks():
     nt.links.new(mix.outputs[2], b.inputs["Base Color"])
 
 
-LABEL_TONE = float(os.environ.get("KB_LABEL", "0.84"))
-LABEL_SAT = float(os.environ.get("KB_LABEL_SAT", "2.3"))
+LABEL_TONE = float(os.environ.get("KB_LABEL", "0.9"))
+LABEL_SAT = float(os.environ.get("KB_LABEL_SAT", "1.35"))
+
+
+# the site draws the LCD in a softer palette than the DMG greens the screen captures use;
+# renders match the site (web/src/emu/gameboy.ts SOFT_LCD)
+SOFT = [(228, 235, 216), (164, 182, 150), (82, 102, 88), (30, 40, 38)]
+DMG = [(155, 188, 15), (139, 172, 15), (48, 98, 48), (15, 56, 15)]
+
+
+def soft_screen(name):
+    out = os.path.join(RAW, "soft-" + name)
+    code = (
+        "from PIL import Image;im=Image.open(%r).convert('RGB');"
+        "m={%s};im.putdata([m.get(p,p) for p in im.get_flattened_data()]);im.save(%r)"
+        % (os.path.join(SCREENS, name), ",".join("%r:%r" % (d, s) for d, s in zip(DMG, SOFT)), out)
+    )
+    subprocess.run([PY, "-c", code], check=True)
+    return out
 
 
 def set_screen(name):
     m = bpy.data.materials["Screen"]
     n = m.node_tree.nodes["BaseImage"]
-    n.image = bpy.data.images.load(os.path.join(SCREENS, name), check_existing=True)
+    n.image = bpy.data.images.load(soft_screen(name), check_existing=True)
     n.interpolation = "Closest"
 
 

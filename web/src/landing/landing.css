@@ -34,15 +34,25 @@
   height: 100%;
 }
 
+/* the render is only a fallback for browsers without WebGL; the live model fades in instead,
+ * so a still that differs from it never flashes on load */
 .stage-still {
   object-fit: cover;
   object-position: 70% 50%;
-  opacity: 1;
-  transition: opacity 0.8s var(--kb-ease);
+  opacity: 0;
 }
 
-.stage.is-ready .stage-still {
+.stage.no-webgl .stage-still {
+  opacity: 1;
+}
+
+.stage-canvas {
   opacity: 0;
+  transition: opacity 0.9s var(--kb-ease);
+}
+
+.stage.is-ready .stage-canvas {
+  opacity: 1;
 }
 
 .stage.no-webgl .stage-canvas {

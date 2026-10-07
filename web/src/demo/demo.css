@@ -97,12 +97,30 @@
   height: 100%;
 }
 
+/* the live model fades in; the render behind it shows only if the model is slow or WebGL never comes up */
 .device-still {
   object-fit: contain;
-  transition: opacity 0.6s var(--kb-ease);
+  opacity: 0;
+  animation: device-still-in 0.6s var(--kb-ease) 2.5s forwards;
+}
+
+@keyframes device-still-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.device-canvas {
+  opacity: 0;
+  transition: opacity 0.8s var(--kb-ease);
+}
+
+.device-stage.is-ready .device-canvas {
+  opacity: 1;
 }
 
 .device-stage.is-ready .device-still {
+  animation: none;
   opacity: 0;
 }
 
