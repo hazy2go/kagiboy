@@ -55,8 +55,8 @@ const BOM = [
 
 const ROADMAP = [
   ["NOW", "Game Boy software, chip logic and phone app, on testnets."],
-  ["WEEKS 1-2", "Dev board: Pico 2 W, SE050 kit, accelerometer, on a flash cart."],
-  ["WEEKS 3-8", "Custom PCB, power tests on a real DMG, signed firmware, link-cable backup."],
+  ["Q4 2026", "Dev board: Pico 2 W, SE050 kit, accelerometer, on a flash cart."],
+  ["Q1 2027", "Custom PCB, power tests on a real DMG, signed firmware, link-cable backup."],
   ["THEN", "Small batch, and an outside security review before real funds."],
 ] as const;
 
@@ -347,6 +347,9 @@ export function Landing() {
             <div className="slip-paper paper-pink">
               <div className="perf" />
               <p className="px">KAGIBOY READY</p>
+              <p className="px slip-scroll">
+                <i aria-hidden>▼</i> SCROLL DOWN <i aria-hidden>▼</i>
+              </p>
               <img src="/prints/home.png" alt="" />
             </div>
           </div>

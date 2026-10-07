@@ -276,6 +276,39 @@
   padding-top: 8px;
 }
 
+/* the slip sits over the page's scroll hint on wide screens, so it carries the hint itself */
+.slip-hero .slip-scroll {
+  padding-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--kb-ink-2);
+}
+
+.slip-scroll i {
+  display: inline-block;
+  font-style: normal;
+  font-size: 8px;
+  animation: slip-nudge 1.8s var(--kb-ease) infinite;
+}
+
+@keyframes slip-nudge {
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slip-scroll i {
+    animation: none;
+  }
+}
+
+@media (min-width: 861px) {
+  .scroll-hint {
+    display: none;
+  }
+}
+
 .chip-list {
   display: none;
 }

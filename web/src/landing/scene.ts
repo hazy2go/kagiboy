@@ -114,9 +114,21 @@ export class HeroScene {
     const root = gltf.scene;
     this.gb.add(root);
     root.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh && o.name === "Screen") {
-        const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial;
+      if (!(o as THREE.Mesh).isMesh) return;
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial;
+      if (o.name === "Screen") {
+        // the LCD sits a hair above the recess floor; bias it forward so the two never fight
+        m.polygonOffset = true;
+        m.polygonOffsetFactor = -1;
+        m.polygonOffsetUnits = -4;
         this.screen = m;
+      } else if (m.name === "Prints") {
+        // printed ink: blend over the face without hiding the LCD behind the bezel decal
+        m.depthWrite = false;
+        m.polygonOffset = true;
+        m.polygonOffsetFactor = -1;
+        m.polygonOffsetUnits = -2;
+        o.renderOrder = 2;
       }
     });
     this.cart = root.getObjectByName("Cartridge") ?? null;

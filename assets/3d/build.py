@@ -271,7 +271,7 @@ def make_noise_normal(path, n=256, strength=6.0, seed=11):
 
 def ensure_textures():
     py = "/opt/homebrew/bin/python3" if os.path.exists("/opt/homebrew/bin/python3") else "python3"
-    for script, out in (("make_label.py", "label.jpg"), ("make_pcb.py", "pcb.png")):
+    for script, out in (("make_label.py", "label.jpg"), ("make_pcb.py", "pcb.png"), ("make_face.py", "face.png")):
         if not os.path.exists(os.path.join(HERE, out)) or os.environ.get("KB_RETEX") == "1":
             subprocess.run([py, os.path.join(HERE, script)], check=True)
     npath = os.path.join(TEX, "abs_noise_n.png")
@@ -339,6 +339,12 @@ def build_materials(noise):
     M["Shell"] = principled("CartShell", "#F2F0EC", 0.45, normal_img=noise, normal_strength=0.2, spec=0.5)
     M["Label"] = principled("Label", "#FFFFFF", 0.38, base_img=os.path.join(HERE, "label.jpg"),
                             coat=0.25, coat_rough=0.12)
+    # face printing (make_face.py): ink only, transparent elsewhere
+    M["Prints"] = principled("Prints", "#2B2F77", 0.5, base_img=os.path.join(HERE, "face.png"), spec=0.4)
+    nt = M["Prints"].node_tree
+    nt.links.new(nt.nodes["BaseImage"].outputs["Alpha"], nt.nodes["Principled BSDF"].inputs["Alpha"])
+    if hasattr(M["Prints"], "surface_render_method"):
+        M["Prints"].surface_render_method = "BLENDED"
     M["PCB"] = principled("PCB", "#1E4D2B", 0.32, base_img=os.path.join(HERE, "pcb.png"), spec=0.6)
     M["Gold"] = principled("Gold", "#E2BE76", 0.22, metal=1.0)
     M["Chip"] = principled("ChipEpoxy", "#141416", 0.5, spec=0.45)
@@ -706,6 +712,27 @@ def main():
         nm = "Screen" if coll is C_RENDER else "Screen.glb"
         ob = bm_object(nm, bm, coll, [M["Screen"]], origin=tuple(gb_to_bl(cS[None])[0]))
         parent(ob, par)
+
+    # Face printing: two decal quads sharing face.png (UV = drawing mm / face size).
+    # One floats just off the body face below the bezel, one just off the bezel top.
+    def decal(name, x0, y0, x1, y1, d, coll, par):
+        bm = bmesh.new()
+        uvl = bm.loops.layers.uv.new("UVMap")
+        c = np.array([(x0 + x1) / 2, (y0 + y1) / 2, d])
+        pts = np.array([[x0, y1, d], [x1, y1, d], [x1, y0, d], [x0, y0, d]])
+        V = gb_to_bl(pts) - gb_to_bl(c[None])[0]
+        face = bm.faces.new([bm.verts.new(tuple(v)) for v in V])
+        for lp, (x, y) in zip(face.loops, [(x0, y1), (x1, y1), (x1, y0), (x0, y0)]):
+            lp[uvl].uv = (x / GB_W, 1.0 - y / GB_H)
+        face.normal_update()
+        if face.normal.y > 0:
+            face.normal_flip()
+        ob = bm_object(name, bm, coll, [M["Prints"]], origin=tuple(gb_to_bl(c[None])[0]))
+        parent(ob, par)
+
+    for coll, par, sfx in ((C_RENDER, gb, ""), (C_GLB, gbL, ".glb")):
+        decal("FacePrint" + sfx, 6.0, BEZEL[3] + 0.6, 86.0, 138.0, -0.05, coll, par)
+        decal("BezelPrint" + sfx, BEZEL[0] + 0.5, BEZEL[1] + 0.5, BEZEL[2] - 0.5, BEZEL[3] - 0.5, -0.2, coll, par)
 
     # ------------------------------------------------ cartridge
     log("Cartridge shells ...")

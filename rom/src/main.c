@@ -967,11 +967,19 @@ static uint8_t unlock(void) {
 /* ---------- home ---------- */
 
 /* One account card (frame top at y, 6 rows): icon, name, network, big balance, address. */
+/* last balance line drawn per chain; the 2 s refresh only repaints a box when it changed,
+ * since clearing and redrawing an unchanged box shows as a blink */
+static char shown_bal[2][24];
+
 static void draw_account(uint8_t chain, uint8_t y) {
     char *bal, *unit;
     uint8_t w;
+    char *last = shown_bal[chain == CHAIN_SOL ? 0 : 1];
     if (chip_call(CMD_ACCOUNT, chain, 0, 0) != 0) return;
     bal = next_field(resp);
+    if (!strncmp(last, bal, sizeof shown_bal[0] - 1)) return;
+    strncpy(last, bal, sizeof shown_bal[0] - 1);
+    last[sizeof shown_bal[0] - 1] = 0;
     unit = bal;
     while (*unit && *unit != ' ') unit++;
     fill_bkg_rect(2, y + 1, 16, 4, T_FONT_INK);
@@ -990,6 +998,8 @@ static void home_draw(void) {
     icon(17, 1, T_ICON_PHONE_0);
     box(1, 4, 18, 6);
     box(1, 10, 18, 6);
+    shown_bal[0][0] = shown_bal[1][0] = 0x7F; /* never a real balance: force a full draw */
+    shown_bal[0][1] = shown_bal[1][1] = 0;
     draw_account(CHAIN_SOL, 4);
     draw_account(CHAIN_EVM, 10);
     hint(1, 17, BTN_A, "RECEIVE");
