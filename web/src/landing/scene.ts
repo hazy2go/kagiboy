@@ -69,7 +69,7 @@ export class HeroScene {
   private texture: THREE.Texture | null = null;
   private target = 0;
   private current = 0;
-  private clock = new THREE.Clock();
+  private clock = new THREE.Timer();
   private still: boolean;
   private needs = true;
   private canvas: HTMLCanvasElement;
@@ -213,8 +213,9 @@ export class HeroScene {
 
   /** Render one frame; returns the eased progress. */
   frame(): number {
+    this.clock.update();
     const dt = Math.min(this.clock.getDelta(), 0.05);
-    const t = this.clock.elapsedTime;
+    const t = this.clock.getElapsed();
     // ease toward the scroll position, so scrubbing feels weighted
     const diff = this.target - this.current;
     this.current = Math.abs(diff) < 1e-4 ? this.target : this.current + diff * (1 - Math.exp(-dt * 7));

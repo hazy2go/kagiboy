@@ -854,3 +854,84 @@
     animation: none;
   }
 }
+
+/* ---------- phones ---------- */
+
+.rail-dots {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .stage {
+    height: 470vh;
+  }
+
+  .rail-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .rail-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(31, 35, 48, 0.2);
+    transition:
+      width 0.35s var(--kb-ease),
+      background 0.35s;
+  }
+
+  .rail-dots i.on {
+    width: 20px;
+    background: var(--kb-ink);
+  }
+
+  .setup,
+  .security,
+  .inside,
+  .status,
+  .demo-cta,
+  .waitlist {
+    padding-left: calc(var(--kb-gutter) + env(safe-area-inset-left));
+    padding-right: calc(var(--kb-gutter) + env(safe-area-inset-right));
+  }
+
+  .kb-foot {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 520px) {
+  /* receipt lines: label over value instead of a squeezed dot leader */
+  .receipt-wrap .receipt li {
+    display: grid;
+    gap: 2px;
+  }
+
+  .receipt-wrap .receipt li i {
+    display: none;
+  }
+
+  .receipt-wrap .receipt li span:first-child {
+    opacity: 0.55;
+  }
+
+  .receipt-wrap .receipt li span:last-child {
+    text-align: left;
+  }
+
+  .receipt-wrap .receipt ul {
+    gap: 14px;
+  }
+
+  .ch-hero h1 {
+    font-size: 42px;
+  }
+
+  .hero-aside .actions .btn {
+    flex: 1;
+    min-height: 52px;
+  }
+}

@@ -587,6 +587,7 @@
 
 .tape li.idle {
   display: block;
+  white-space: normal;
   opacity: 0.6;
 }
 
@@ -644,4 +645,238 @@
   display: inline-block;
   vertical-align: 0;
   margin-left: 2px;
+}
+
+/* ---------- phones: the demo as an app ---------- */
+
+.phone.bare {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.phone.bare .phone-screen {
+  border-radius: 0;
+  padding-top: 14px;
+  background: transparent;
+  font-size: 15px;
+}
+
+.phone.bare .app-head {
+  display: none;
+}
+
+html.demo-app-root,
+html.demo-app-root body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.demo-app {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  background:
+    radial-gradient(60% 40% at 20% 30%, rgba(207, 226, 255, 0.7), transparent 70%),
+    radial-gradient(50% 36% at 90% 70%, rgba(255, 220, 232, 0.65), transparent 72%),
+    #fff;
+}
+
+.app-top {
+  padding: calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px
+    calc(16px + env(safe-area-inset-left));
+  display: grid;
+  gap: 10px;
+}
+
+.app-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 36px;
+}
+
+.app-top .net {
+  font-size: 12px;
+  color: var(--kb-ink-2);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 1px var(--kb-line);
+}
+
+.app-top .next-step {
+  justify-self: stretch;
+  max-width: none;
+  padding: 10px 14px;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 14px;
+}
+
+.app-top .next-step .px {
+  font-size: 11px;
+}
+
+.panes {
+  position: relative;
+  overflow: hidden;
+}
+
+.pane {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  translate: calc((var(--i) - var(--at)) * 100%) 0;
+  transition: translate 0.5s var(--kb-ease), opacity 0.4s;
+  padding: 0 calc(16px + env(safe-area-inset-right)) 16px calc(16px + env(safe-area-inset-left));
+}
+
+.pane-gb {
+  --i: 0;
+  overflow: hidden;
+  padding-bottom: 8px;
+}
+
+.pane-phone {
+  --i: 1;
+  overflow: hidden;
+  padding: 0;
+}
+
+.pane-bus {
+  --i: 2;
+}
+
+.pane[inert] {
+  opacity: 0.4;
+}
+
+/* the Game Boy fills whatever height the screen gives it */
+.pane-gb .device {
+  height: 100%;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 10px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.pane-gb .device-stage {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.pane-gb .device-controls .btn {
+  min-height: 46px;
+}
+
+.pane-gb .keys {
+  display: none;
+}
+
+.pane-bus .bus {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 18px 0 8px;
+}
+
+.pane-bus .bus h2 {
+  font-size: 26px;
+}
+
+.pane-bus .tape {
+  padding: 4px 14px 10px;
+}
+
+.pane-bus .tape ol {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.pane-bus .tape li {
+  grid-template-columns: 74px 1fr;
+  font-size: 11px;
+}
+
+.pane-bus .tape li code {
+  grid-column: 1 / -1;
+}
+
+.pane-bus .kb-foot {
+  padding: 18px 0 8px;
+  font-size: 12px;
+}
+
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 6px calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
+    calc(8px + env(safe-area-inset-left));
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 -1px 0 var(--kb-line);
+}
+
+.tabbar button {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 0 2px;
+  border: 0;
+  background: none;
+  color: var(--kb-ink-3);
+  font: 560 11px/1.2 var(--kb-sans);
+  transition: color 0.25s;
+}
+
+.tabbar button.on {
+  color: var(--kb-ink);
+}
+
+.tabbar button.on svg {
+  color: var(--kb-blue-ink, #3a62c9);
+}
+
+.tabbar .dot {
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 10px);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e2557c;
+  box-shadow: 0 0 0 2px #fff;
+  animation: tab-dot 1.6s var(--kb-ease) infinite;
+}
+
+@keyframes tab-dot {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane {
+    transition: none;
+  }
+
+  .tabbar .dot {
+    animation: none;
+  }
 }

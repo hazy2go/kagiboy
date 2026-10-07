@@ -135,8 +135,16 @@ html.kb-root {
     background-color 0.25s;
 }
 
-.btn:hover {
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.kb button,
+.kb a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .btn:active {
@@ -155,8 +163,10 @@ html.kb-root {
   box-shadow: 0 8px 22px -10px rgba(31, 35, 48, 0.55);
 }
 
-.btn-ink:hover {
-  box-shadow: 0 14px 30px -12px rgba(31, 35, 48, 0.55);
+@media (hover: hover) {
+  .btn-ink:hover {
+    box-shadow: 0 14px 30px -12px rgba(31, 35, 48, 0.55);
+  }
 }
 
 .kb .btn-paper {
@@ -181,8 +191,9 @@ html.kb-root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px var(--kb-gutter);
-  background: rgba(255, 255, 255, 0.62);
+  padding: calc(14px + env(safe-area-inset-top)) calc(var(--kb-gutter) + env(safe-area-inset-right)) 14px
+    calc(var(--kb-gutter) + env(safe-area-inset-left));
+  background: rgba(255, 255, 255, 0.84);
   backdrop-filter: blur(14px) saturate(1.4);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   border-bottom: 1px solid rgba(31, 35, 48, 0.06);
@@ -283,4 +294,132 @@ html.kb-root .print-in.is-in {
 
 .ticket-perf {
   height: 8px;
+}
+
+/* ---------- mobile menu ---------- */
+
+.menu-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  border: 0;
+  background: transparent;
+  color: var(--kb-ink);
+  place-items: center;
+}
+
+.menu-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px + env(safe-area-inset-top)) var(--kb-gutter) calc(28px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(60% 40% at 80% 20%, rgba(207, 226, 255, 0.75), transparent 70%),
+    radial-gradient(60% 40% at 20% 80%, rgba(255, 220, 232, 0.75), transparent 70%),
+    #fff;
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 -12px;
+  transition:
+    opacity 0.35s var(--kb-ease),
+    translate 0.45s var(--kb-ease),
+    visibility 0s linear 0.45s;
+}
+
+.menu-sheet.is-open {
+  opacity: 1;
+  visibility: visible;
+  translate: 0 0;
+  transition:
+    opacity 0.35s var(--kb-ease),
+    translate 0.45s var(--kb-ease);
+}
+
+.menu-sheet header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+}
+
+.menu-sheet nav {
+  display: grid;
+  gap: 4px;
+  margin-top: 8vh;
+}
+
+.menu-sheet nav a {
+  font: 560 40px/1.15 var(--kb-display);
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+.menu-sheet .menu-actions {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.menu-sheet .menu-actions .btn {
+  min-height: 54px;
+  font-size: 18px;
+}
+
+/* ---------- floating call to action (phones) ---------- */
+
+.float-cta {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 15;
+  translate: -50% 140%;
+  opacity: 0;
+  transition:
+    translate 0.5s var(--kb-ease),
+    opacity 0.3s;
+  pointer-events: none;
+  display: none;
+}
+
+.float-cta.is-shown {
+  translate: -50% 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* a soft wash under the pill so body copy doesn't run straight into it */
+.float-cta::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(110px + env(safe-area-inset-bottom));
+  z-index: -1;
+  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.92) 70%);
+  pointer-events: none;
+}
+
+.float-cta .btn {
+  min-height: 52px;
+  padding: 0 26px;
+  box-shadow: 0 16px 34px -14px rgba(31, 35, 48, 0.7);
+}
+
+@media (max-width: 860px) {
+  .kb-links {
+    display: none;
+  }
+
+  .menu-btn {
+    display: grid;
+  }
+
+  .float-cta {
+    display: block;
+  }
 }

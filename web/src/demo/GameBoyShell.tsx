@@ -44,8 +44,10 @@ const ZONES: { key: Key; part: string; dx: number; dy: number; w: number; h: num
 const A_TO_B_MM = 16.5; // distance between the A and B button centres
 
 /** The real Game Boy model with the emulator on its screen; every button works. */
-export function GameBoyShell() {
+export function GameBoyShell({ active = true }: { active?: boolean }) {
   const s = useSession();
+  const activeRef = useRef(active);
+  activeRef.current = active;
   const canvas = useRef<HTMLCanvasElement>(null);
   const zoneRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const sceneRef = useRef<HeroScene | null>(null);
@@ -57,6 +59,7 @@ export function GameBoyShell() {
     let disposed = false;
     let raf = 0;
     let cleanup = () => {};
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
     const screen = document.createElement("canvas");
     screen.width = 160;
     screen.height = 144;
@@ -67,15 +70,18 @@ export function GameBoyShell() {
       const b = scene.project("ButtonB");
       if (!a || !b) return;
       const pxPerMm = Math.hypot(a.x - b.x, a.y - b.y) / A_TO_B_MM;
+      // fingers are wider than the real buttons: grow the targets on touch screens
+      const grow = coarse ? 1.4 : 1;
       ZONES.forEach((z, i) => {
         const el = zoneRefs.current[i];
         const at = scene.project(z.part);
         if (!el || !at) return;
-        const w = z.w * pxPerMm;
-        const h = z.h * pxPerMm;
+        const w = z.w * pxPerMm * grow;
+        const h = z.h * pxPerMm * grow;
+        const off = pxPerMm * (z.part === "DPad" ? grow : 1);
         el.style.width = `${w}px`;
         el.style.height = `${h}px`;
-        el.style.transform = `translate3d(${at.x + z.dx * pxPerMm - w / 2}px, ${at.y + z.dy * pxPerMm - h / 2}px, 0)`;
+        el.style.transform = `translate3d(${at.x + z.dx * off - w / 2}px, ${at.y + z.dy * off - h / 2}px, 0)`;
       });
     };
 
@@ -103,6 +109,8 @@ export function GameBoyShell() {
 
       const loop = () => {
         raf = requestAnimationFrame(loop);
+        // off-screen pane on phones: skip the GPU work, the emulator keeps running
+        if (!activeRef.current) return;
         scene.frame();
         placeZones(scene);
       };
@@ -180,9 +188,7 @@ export function GameBoyShell() {
   }, [s]);
 
   const startShake = () => {
-    // iOS asks once before it shares motion data
-    const DME = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
-    if (DME.requestPermission) DME.requestPermission().catch(() => {});
+    askMotion();
     setShaking(true);
   };
 
@@ -218,6 +224,9 @@ export function GameBoyShell() {
               onPointerDown={startShake}
               onPointerUp={() => setShaking(false)}
               onPointerLeave={() => setShaking(false)}
+              onPointerCancel={() => setShaking(false)}
+              onClick={askMotion}
+              onContextMenu={(e) => e.preventDefault()}
             >
               Hold to shake
             </button>
@@ -235,6 +244,13 @@ export function GameBoyShell() {
       </p>
     </div>
   );
+}
+
+// iOS asks once before it shares motion data, and only from a tap
+function askMotion() {
+  if (typeof DeviceMotionEvent === "undefined") return;
+  const DME = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
+  DME.requestPermission?.().catch(() => {});
 }
 
 function clamp(v: number) {

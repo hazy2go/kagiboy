@@ -8,14 +8,15 @@ import { useSession } from "./session";
 const SEPOLIA_FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
 const SOLANA_FAUCET = "https://faucet.solana.com";
 
-export function PhoneApp() {
+/** The companion app. `bare` drops the drawn phone so it can be the real screen on a phone. */
+export function PhoneApp({ bare = false }: { bare?: boolean }) {
   const s = useSession();
   const addr = s.chip.addresses;
   const state = !s.powered ? "off" : s.chip.state;
 
   return (
-    <div className="phone">
-      <div className="phone-notch" />
+    <div className={`phone ${bare ? "bare" : ""}`}>
+      {!bare && <div className="phone-notch" />}
       <div className="phone-screen">
         <header className="app-head">
           <strong>kagiboy</strong>

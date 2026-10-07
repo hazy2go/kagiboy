@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -67,6 +67,39 @@ export function Landing() {
   const calloutRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const slipRef = useRef<HTMLDivElement>(null);
   const heroSlipRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState(false);
+  const [cta, setCta] = useState(false);
+  const [railAt, setRailAt] = useState(0);
+
+  // phones: a floating "try the demo" between the 3D story and the demo/waitlist sections
+  useEffect(() => {
+    const ends = ["demo", "waitlist"].map((c) => document.querySelector(`.${c === "demo" ? "demo-cta" : c}`));
+    const seen = new Set<Element>();
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) e.isIntersecting ? seen.add(e.target) : seen.delete(e.target);
+      onScroll();
+    });
+    ends.forEach((el) => el && io.observe(el));
+    const onScroll = () => {
+      const stage = stageRef.current;
+      const pastStage = stage ? stage.getBoundingClientRect().bottom < window.innerHeight * 0.5 : false;
+      setCta(pastStage && seen.size === 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // the menu sheet locks the page underneath
+  useEffect(() => {
+    document.documentElement.style.overflow = menu ? "hidden" : "";
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [menu]);
 
   useEffect(() => {
     document.documentElement.classList.add("kb-root");
@@ -237,7 +270,43 @@ export function Landing() {
             Live demo
           </Link>
         </div>
+        <button className="menu-btn" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}>
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
+            <path d="M4 9h16M4 15h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
       </nav>
+
+      <div className={`menu-sheet ${menu ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Menu" hidden={!menu && undefined}>
+        <header>
+          <span className="kb-word">kagiboy</span>
+          <button className="menu-btn" aria-label="Close menu" onClick={() => setMenu(false)}>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </header>
+        <nav aria-label="Sections" onClick={() => setMenu(false)}>
+          <a href="#setup">How it works</a>
+          <a href="#security">Security</a>
+          <a href="#inside">Inside</a>
+          <a href="#waitlist">Waitlist</a>
+        </nav>
+        <div className="menu-actions">
+          <Link to="/demo" className="btn btn-ink">
+            Try the live demo
+          </Link>
+          <a href="#waitlist" className="btn btn-paper" onClick={() => setMenu(false)}>
+            Join the waitlist
+          </a>
+        </div>
+      </div>
+
+      <div className={`float-cta ${cta && !menu ? "is-shown" : ""}`}>
+        <Link to="/demo" className="btn btn-ink" tabIndex={cta ? 0 : -1}>
+          Try the live demo
+        </Link>
+      </div>
 
       <section className="stage" ref={stageRef} aria-label="The cartridge, up close">
         <div className="stage-sticky">
@@ -336,7 +405,16 @@ export function Landing() {
           <h2>Set up in a minute, on the Game Boy.</h2>
           <p>Every step happens on the console. The phone never sees your keys or your words.</p>
         </header>
-        <div className="rail" role="list">
+        <div
+          className="rail"
+          role="list"
+          ref={railRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const max = el.scrollWidth - el.clientWidth;
+            setRailAt(max > 0 ? Math.round((el.scrollLeft / max) * (STEPS.length - 1)) : 0);
+          }}
+        >
           {STEPS.map((s, i) => (
             <figure key={s.print} className="strip print-in" role="listitem" style={{ ["--i" as string]: i }}>
               <div className={`strip-paper paper-${s.paper}`}>
@@ -355,6 +433,11 @@ export function Landing() {
               </div>
               <figcaption>{s.caption}</figcaption>
             </figure>
+          ))}
+        </div>
+        <div className="rail-dots" aria-hidden>
+          {STEPS.map((st, i) => (
+            <i key={st.print} className={i === railAt ? "on" : ""} />
           ))}
         </div>
       </section>
