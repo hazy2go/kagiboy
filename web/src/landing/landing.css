@@ -252,8 +252,19 @@
   padding: 4px 18px 26px;
 }
 
+/* feeds downward out of the console's bottom edge: the paper is revealed from the edge down */
 .slip-sign {
-  left: 58%;
+  left: var(--edge-x, 58%);
+  top: var(--edge-y, 70%);
+  bottom: auto;
+  translate: -50% 0;
+  rotate: none;
+  z-index: 1;
+  clip-path: inset(0 -60px calc((1 - var(--feed, 0)) * 100%) -60px);
+}
+
+.slip-sign .slip-paper {
+  translate: 0 calc((var(--feed, 0) - 1) * 40%);
 }
 
 .slip-hero {
@@ -271,6 +282,7 @@
 
 .ch-sign {
   top: 34%;
+  max-width: min(24rem, 30vw);
 }
 
 .slip-paper img {
@@ -605,7 +617,7 @@
   width: min(360px, 88vw);
   margin: 0 auto;
   padding: 4px 26px 14px;
-  background: var(--paper-white);
+  background: var(--paper-blue);
   display: grid;
   gap: 8px;
   text-align: center;
@@ -700,7 +712,7 @@
     position: absolute;
     inset: 0 -20px;
     z-index: -1;
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.96) 55%, rgba(255, 255, 255, 0));
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.97) 70%, rgba(255, 255, 255, 0));
   }
 
   .ch-hero {
@@ -725,8 +737,7 @@
   }
 
   .slip-sign {
-    left: 50%;
-    width: 64vw;
+    width: 56vw;
   }
 
   .stage[data-feed="1"] .ch-sign {

@@ -30,8 +30,10 @@ const KEYS: [number, Pose][] = [
   [0.52, { az: -3.0, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
   [0.6, { az: -3.1, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
   [0.72, { az: -0.4, el: 0.12, dist: 0.46, tx: 0, ty: 0.02, lift: 0, tilt: 0, apart: 0, shift: 0.18 }],
-  [0.86, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.08 }],
-  [1.0, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.08 }],
+  [0.84, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
+  [0.88, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
+  [0.95, { az: 0, el: 0.04, dist: 0.68, tx: 0, ty: -0.062, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
+  [1.0, { az: 0, el: 0.04, dist: 0.68, tx: 0, ty: -0.062, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
 ];
 
 const smooth = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
@@ -166,6 +168,13 @@ export class HeroScene {
     this.camera.fov = w / h < 0.8 && !this.plainFraming ? 42 : 30;
     this.camera.updateProjectionMatrix();
     this.needs = true;
+  }
+
+  /** Screen-space position (px) of a point on the console, in metres. */
+  projectPoint(x: number, y: number, z: number): { x: number; y: number } {
+    const v = this.gb.localToWorld(new THREE.Vector3(x, y, z)).project(this.camera);
+    const r = this.canvas.getBoundingClientRect();
+    return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
   /** Push a button mesh in (DPad, ButtonA, ButtonB, Start, Select). */

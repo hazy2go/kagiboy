@@ -114,11 +114,11 @@ export function Landing() {
         el.style.transform = `translate3d(0, ${(1 - vis) * 18}px, 0)`;
         el.style.visibility = vis > 0.01 ? "visible" : "hidden";
       }
-      slipRef.current?.style.setProperty("--feed", String(Math.min(1, Math.max(0, (p - 0.86) / 0.11))));
+      slipRef.current?.style.setProperty("--feed", String(Math.min(1, Math.max(0, (p - 0.92) / 0.05))));
       // the hero's strip is already part-way out at rest and winds back in as you scroll
       heroSlipRef.current?.style.setProperty("--feed", String(Math.max(0, 0.42 - p * 5)));
       stage.style.setProperty("--hint", String(Math.max(0, 1 - p / 0.04)));
-      stage.dataset.feed = p > 0.9 ? "1" : "0";
+      stage.dataset.feed = p > 0.93 ? "1" : "0";
     };
 
     const placeCallouts = (scene: { project(n: string): { x: number; y: number } | null }, p: number) => {
@@ -198,6 +198,10 @@ export function Landing() {
         const p = scene.frame();
         paintChapters(p);
         placeCallouts(scene, p);
+        // the sign slip hangs from the console's bottom edge, centred under it
+        const edge = scene.projectPoint(0, -0.0735, 0.012);
+        slipRef.current?.style.setProperty("--edge-x", `${edge.x}px`);
+        slipRef.current?.style.setProperty("--edge-y", `${edge.y}px`);
       };
       raf = requestAnimationFrame(loop);
 
