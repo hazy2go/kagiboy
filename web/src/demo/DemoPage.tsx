@@ -1,11 +1,24 @@
 import "../polyfill"; // must run before @solana/web3.js loads
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import brand from "../../../brand.json";
 import { BusMonitor } from "./BusMonitor";
 import { GameBoyShell } from "./GameBoyShell";
 import { PhoneApp } from "./PhoneApp";
+import { useSession } from "./session";
 
 export function DemoPage() {
+  const s = useSession();
+  const gbRef = useRef<HTMLDivElement>(null);
+  const pending = s.chip.hasPending;
+
+  // On narrow screens the phone sits below the Game Boy; bring the console back into view to approve.
+  useEffect(() => {
+    if (pending && window.matchMedia("(max-width: 960px)").matches) {
+      gbRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [pending]);
+
   return (
     <div className="demo">
       <header className="demo-head">
@@ -16,7 +29,9 @@ export function DemoPage() {
       </header>
 
       <div className="rig">
-        <GameBoyShell />
+        <div ref={gbRef}>
+          <GameBoyShell />
+        </div>
         <div className="wire" aria-hidden>
           <span>Bluetooth</span>
         </div>

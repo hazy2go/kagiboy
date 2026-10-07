@@ -491,6 +491,18 @@ kbd {
   color: var(--ink-dim);
 }
 
+@media (hover: none) {
+  .gb-help p {
+    display: none;
+  }
+}
+
+.gb button,
+.shake-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .shake-btn {
   background: transparent;
   color: var(--ink);
