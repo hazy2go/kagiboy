@@ -9,7 +9,7 @@
 :root {
   --kb-ink: #1f2330;
   --kb-ink-2: #535a6d;
-  --kb-ink-3: #8b91a3;
+  --kb-ink-3: #666c80; /* 5.1:1 on white */
   --kb-line: rgba(31, 35, 48, 0.12);
   --kb-print: #2b2f3a;
   --kb-blue: #cfe2ff;
@@ -280,3 +280,7 @@ html.kb-root .print-in.is-in {
   }
 }
 
+
+.ticket-perf {
+  height: 8px;
+}

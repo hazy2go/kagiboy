@@ -624,7 +624,7 @@
   }
 
   .device-stage {
-    width: min(100%, 440px);
+    width: 100%;
   }
 
   .phone {
@@ -638,4 +638,10 @@
   .tape li {
     grid-template-columns: 80px 80px 1fr;
   }
+}
+
+.out {
+  display: inline-block;
+  vertical-align: 0;
+  margin-left: 2px;
 }

@@ -83,7 +83,7 @@ export function GameBoyShell() {
       const { HeroScene } = await import("../landing/scene");
       if (disposed || !canvas.current) return;
       const scene = new HeroScene(canvas.current, {
-        fixed: { az: -0.16, el: 0.05, dist: 0.39, tx: 0.002, ty: 0.004, lift: 0, tilt: 0, apart: 0, shift: 0 },
+        fixed: { az: -0.16, el: 0.05, dist: 0.35, tx: 0.002, ty: 0.004, lift: 0, tilt: 0, apart: 0, shift: 0 },
         plainFraming: true,
       });
       sceneRef.current = scene;
@@ -92,7 +92,9 @@ export function GameBoyShell() {
         scene.resize(r.width, r.height);
       };
       fit();
-      window.addEventListener("resize", fit);
+      // the stage's size settles after fonts and layout; keep the canvas buffer matched to it
+      const ro = new ResizeObserver(fit);
+      ro.observe(canvas.current);
       await scene.load("/3d/kagiboy.glb");
       if (disposed) return;
       scene.setScreen(screen);
@@ -106,7 +108,7 @@ export function GameBoyShell() {
       };
       raf = requestAnimationFrame(loop);
       cleanup = () => {
-        window.removeEventListener("resize", fit);
+        ro.disconnect();
         s.onFrame = null;
         scene.dispose();
       };

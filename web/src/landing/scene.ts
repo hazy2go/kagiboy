@@ -23,15 +23,15 @@ interface Pose {
 
 // keyframes along the stage's scroll, in metres and radians
 const KEYS: [number, Pose][] = [
-  [0.0, { az: -0.55, el: 0.12, dist: 0.5, tx: 0.012, ty: 0.035, lift: 0.045, tilt: 0, apart: 0, shift: 0.2 }],
-  [0.12, { az: -0.55, el: 0.12, dist: 0.5, tx: 0.012, ty: 0.035, lift: 0.045, tilt: 0, apart: 0, shift: 0.2 }],
+  [0.0, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.045, tilt: 0, apart: 0, shift: 0 }],
+  [0.12, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.045, tilt: 0, apart: 0, shift: 0 }],
   [0.3, { az: -2.45, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
   [0.36, { az: -2.55, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
   [0.52, { az: -3.0, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
   [0.6, { az: -3.1, el: 0.32, dist: 0.3, tx: 0, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.17 }],
   [0.72, { az: -0.4, el: 0.12, dist: 0.46, tx: 0, ty: 0.02, lift: 0, tilt: 0, apart: 0, shift: 0.18 }],
-  [0.86, { az: 0, el: 0.02, dist: 0.21, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.17 }],
-  [1.0, { az: 0, el: 0.02, dist: 0.21, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.17 }],
+  [0.86, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.08 }],
+  [1.0, { az: 0, el: 0.02, dist: 0.24, tx: -0.0005, ty: 0.012, lift: 0, tilt: 0, apart: 0, shift: 0.08 }],
 ];
 
 const smooth = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
@@ -219,7 +219,7 @@ export class HeroScene {
 
     const c = this.camera;
     const tall = c.aspect < 0.8 && !this.plainFraming;
-    const r = pose.dist * (tall ? 1.45 : 1);
+    const r = pose.dist * (tall ? 1.7 : 1);
     c.position.set(
       pose.tx + r * Math.cos(pose.el) * Math.sin(pose.az),
       pose.ty + r * Math.sin(pose.el),
@@ -229,7 +229,7 @@ export class HeroScene {
     // wide screens: console right of the copy; tall screens: console in the upper half
     if (this.plainFraming) c.clearViewOffset();
     else if (!tall) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
-    else c.setViewOffset(this.w, this.h, 0, this.h * 0.27, this.w, this.h);
+    else c.setViewOffset(this.w, this.h, 0, this.h * 0.3, this.w, this.h);
 
     if (this.cart) {
       const bob = Math.sin(t * 1.3) * 0.003 * rest;

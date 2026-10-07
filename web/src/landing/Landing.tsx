@@ -13,14 +13,15 @@ const CHAPTERS = [
   { id: "hero", from: -1, to: 0.13 },
   { id: "insert", from: 0.2, to: 0.37 },
   { id: "apart", from: 0.45, to: 0.62 },
-  { id: "sign", from: 0.8, to: 2 },
+  { id: "sign", from: 0.74, to: 2 },
 ] as const;
 
+// dy nudges each card off its neighbours (px); flip reads to the left of the chip
 const CALLOUTS = [
-  { part: "SecureElement", name: "SE050C", note: "Secure element. The keys live and sign in here." },
-  { part: "MCU", name: "RP2350", note: "Talks to the Game Boy over the cartridge bus." },
-  { part: "BLE", name: "CYW43439", note: "Bluetooth to your phone. Public data only." },
-  { part: "Accel", name: "LIS3DH", note: "Turns a shake into randomness." },
+  { part: "SecureElement", name: "SE050C", note: "Secure element. The keys live and sign in here.", dy: -34, flip: false },
+  { part: "MCU", name: "RP2350", note: "Talks to the Game Boy over the cartridge bus.", dy: -46, flip: true },
+  { part: "BLE", name: "CYW43439", note: "Bluetooth to your phone. Public data only.", dy: 30, flip: false },
+  { part: "Accel", name: "LIS3DH", note: "Turns a shake into randomness.", dy: 34, flip: true },
 ] as const;
 
 const STEPS = [
@@ -65,6 +66,7 @@ export function Landing() {
   const chapterRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const calloutRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const slipRef = useRef<HTMLDivElement>(null);
+  const heroSlipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.classList.add("kb-root");
@@ -113,7 +115,10 @@ export function Landing() {
         el.style.visibility = vis > 0.01 ? "visible" : "hidden";
       }
       slipRef.current?.style.setProperty("--feed", String(Math.min(1, Math.max(0, (p - 0.86) / 0.11))));
+      // the hero's strip is already part-way out at rest and winds back in as you scroll
+      heroSlipRef.current?.style.setProperty("--feed", String(Math.max(0, 0.42 - p * 5)));
       stage.style.setProperty("--hint", String(Math.max(0, 1 - p / 0.04)));
+      stage.dataset.feed = p > 0.9 ? "1" : "0";
     };
 
     const placeCallouts = (scene: { project(n: string): { x: number; y: number } | null }, p: number) => {
@@ -125,6 +130,7 @@ export function Landing() {
         el.style.opacity = String(vis);
         el.style.visibility = vis > 0.01 ? "visible" : "hidden";
         el.style.transform = `translate3d(${at.x}px, ${at.y}px, 0)`;
+        el.style.setProperty("--dy", `${c.dy}px`);
       }
     };
 
@@ -143,7 +149,8 @@ export function Landing() {
         scene.resize(r.width, r.height);
       };
       fit();
-      window.addEventListener("resize", fit);
+      const ro = new ResizeObserver(fit);
+      ro.observe(canvas);
 
       await scene.load("/3d/kagiboy.glb");
       if (disposed) return;
@@ -197,7 +204,7 @@ export function Landing() {
       cleanupScene = () => {
         st.kill();
         vis.disconnect();
-        window.removeEventListener("resize", fit);
+        ro.disconnect();
         scene.dispose();
       };
     })();
@@ -245,17 +252,26 @@ export function Landing() {
               kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. The keys live in a
               secure chip inside the cartridge, and you approve every transaction on a screen your phone can't touch.
             </p>
-            <div className="actions">
-              <Link to="/demo" className="btn btn-ink">
-                Try the live demo
-              </Link>
-              <a href="#waitlist" className="btn btn-paper">
-                Join the waitlist
-              </a>
+            <div className="hero-aside">
+              <div className="actions">
+                <Link to="/demo" className="btn btn-ink">
+                  Try the live demo
+                </Link>
+                <a href="#waitlist" className="btn btn-paper">
+                  Join the waitlist
+                </a>
+              </div>
+              <p className="live-note">
+                <span className="dot" aria-hidden /> The screen runs the real Game Boy software, on a devnet wallet.
+              </p>
             </div>
-            <p className="live-note">
-              <span className="dot" aria-hidden /> The screen runs the real Game Boy software, on a devnet wallet.
-            </p>
+          </div>
+          <div className="slip slip-hero" ref={heroSlipRef} aria-hidden>
+            <div className="slip-paper paper-pink">
+              <div className="perf" />
+              <p className="px">KAGIBOY READY</p>
+              <img src="/prints/home.png" alt="" />
+            </div>
           </div>
 
           <div className="ch ch-insert" ref={(el) => void (chapterRefs.current.insert = el)}>
@@ -266,11 +282,18 @@ export function Landing() {
           <div className="ch ch-apart" ref={(el) => void (chapterRefs.current.apart = el)}>
             <h2>Four small chips do the work.</h2>
             <p>About $14 of parts at a hundred units, all of them on distributor shelves today.</p>
+            <ul className="chip-list">
+              {CALLOUTS.map((c) => (
+                <li key={c.part}>
+                  <b className="px">{c.name}</b> {c.note}
+                </li>
+              ))}
+            </ul>
           </div>
-          {CALLOUTS.map((c, i) => (
+          {CALLOUTS.map((c) => (
             <div
               key={c.part}
-              className={`callout ${i % 2 ? "flip" : ""}`}
+              className={`callout ${c.flip ? "flip" : ""}`}
               ref={(el) => void (calloutRefs.current[c.part] = el)}
               aria-hidden
             >
@@ -289,7 +312,7 @@ export function Landing() {
               Nothing moves until you hold A for a second.
             </p>
           </div>
-          <div className="slip" ref={slipRef} aria-hidden>
+          <div className="slip slip-sign" ref={slipRef} aria-hidden>
             <div className="slip-paper paper-pink">
               <div className="perf" />
               <img src="/prints/sign.png" alt="" />

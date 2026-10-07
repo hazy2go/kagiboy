@@ -105,8 +105,8 @@ await press("UP");
 snap("set-pin"); // PIN 1200
 await step("A");
 await frames(20);
-chip.setBalance("sol", 2_000_000_000n);
-chip.setBalance("evm", parseEther("0.05"));
+chip.setBalance("sol", 2_480_000_000n);
+chip.setBalance("evm", parseEther("0.42"));
 await frames(130);
 snap("home");
 console.log("addresses", chip.addresses);
@@ -144,7 +144,8 @@ console.log("qr evm:", evmScan === chip.addresses!.evm ? "OK" : `MISMATCH ${evmS
 
 // phone asks for a signature, then (a compromised phone) swaps the transfer after the Game Boy shows it
 const from = new PublicKey(chip.addresses!.sol);
-const shownTo = Keypair.generate().publicKey;
+// the same recipient and amount the landing page's live attract mode shows, so the printed slip matches its screen
+const shownTo = new PublicKey("9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM");
 const attacker = Keypair.generate().publicKey;
 const tx = new Transaction({ feePayer: from, recentBlockhash: Keypair.generate().publicKey.toBase58() }).add(
   SystemProgram.transfer({ fromPubkey: from, toPubkey: shownTo, lamports: 250_000_000 }),

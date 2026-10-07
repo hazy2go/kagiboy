@@ -69,7 +69,7 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
         <div className="card-top">
           <span>Solana · devnet</span>
           <a href={explorer.solAddr(addr.sol)} target="_blank" rel="noreferrer">
-            Explorer ↗
+            Explorer <Out />
           </a>
         </div>
         <div className="amount">{show(sol, 9)} <small>SOL</small></div>
@@ -80,7 +80,7 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
           </button>
           {airdrop === "failed" && (
             <a href={SOLANA_FAUCET} target="_blank" rel="noreferrer" className="hint">
-              Faucet is rate limited. Use faucet.solana.com ↗
+              Faucet is rate limited. Use faucet.solana.com <Out />
             </a>
           )}
         </div>
@@ -89,14 +89,14 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
         <div className="card-top">
           <span>Ethereum · Sepolia</span>
           <a href={explorer.evmAddr(addr.evm)} target="_blank" rel="noreferrer">
-            Explorer ↗
+            Explorer <Out />
           </a>
         </div>
         <div className="amount">{show(evm, 18)} <small>ETH</small></div>
         <Copy text={addr.evm} />
         <div className="card-actions">
           <a href={SEPOLIA_FAUCET} target="_blank" rel="noreferrer" className="hint">
-            Get Sepolia ETH ↗
+            Get Sepolia ETH <Out />
           </a>
         </div>
       </article>
@@ -174,7 +174,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
             <>
               {" · "}
               <a href={explorer[latest.chain](latest.hash)} target="_blank" rel="noreferrer">
-                View ↗
+                View <Out />
               </a>
             </>
           )}
@@ -237,7 +237,7 @@ function ActivityList({ items }: { items: Activity[] }) {
               <span className="state">{STATE_LABEL[a.state]}</span>
               {a.hash && (
                 <a href={explorer[a.chain](a.hash)} target="_blank" rel="noreferrer">
-                  View ↗
+                  View <Out />
                 </a>
               )}
               {a.error && <span className="error">{a.error}</span>}
@@ -246,5 +246,14 @@ function ActivityList({ items }: { items: Activity[] }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Small drawn "opens elsewhere" arrow. */
+function Out() {
+  return (
+    <svg className="out" viewBox="0 0 12 12" width="10" height="10" aria-hidden>
+      <path d="M4 2.5h5.5V8M9.2 2.8 2.5 9.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

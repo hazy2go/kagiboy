@@ -13,6 +13,10 @@ export function Waitlist() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setState({ kind: "error", message: "Type the email you'd like the note sent to." });
+      return;
+    }
     setState({ kind: "sending" });
     try {
       const res = await fetch("/api/waitlist", {
@@ -44,9 +48,12 @@ export function Waitlist() {
   }
 
   return (
-    <form className="waitlist-form" onSubmit={submit} noValidate>
-      <label className="sr" htmlFor="wl-email">
-        Email address
+    <form className="ticket ticket-blank" onSubmit={submit} noValidate>
+      <div className="ticket-perf" aria-hidden />
+      <p className="px ticket-head">KAGIBOY WAITLIST</p>
+      <p className="px ticket-no">No. ----</p>
+      <label className="px ticket-label" htmlFor="wl-email">
+        EMAIL
       </label>
       <input
         id="wl-email"
@@ -60,12 +67,13 @@ export function Waitlist() {
         aria-invalid={state.kind === "error"}
         aria-describedby="wl-msg"
       />
-      <button className="btn btn-ink" disabled={state.kind === "sending" || !email}>
+      <button className="btn btn-ink" disabled={state.kind === "sending"}>
         {state.kind === "sending" ? "Printing…" : "Print my ticket"}
       </button>
       <p id="wl-msg" className={`waitlist-msg ${state.kind === "error" ? "is-error" : ""}`} aria-live="polite">
         {state.kind === "error" ? state.message : "One email when kagiboy ships. Nothing else."}
       </p>
+      <div className="ticket-perf bottom" aria-hidden />
     </form>
   );
 }
@@ -73,5 +81,5 @@ export function Waitlist() {
 function maskEmail(e: string) {
   const [user, domain] = e.split("@");
   if (!domain) return e.toUpperCase();
-  return `${user.slice(0, 2)}${"·".repeat(Math.max(1, Math.min(6, user.length - 2)))}@${domain}`.toUpperCase();
+  return `${user.slice(0, 2)}${"*".repeat(Math.max(1, Math.min(6, user.length - 2)))}@${domain}`.toUpperCase();
 }

@@ -71,15 +71,41 @@
 }
 
 .ch-hero {
-  max-width: min(36rem, 46vw);
+  right: var(--kb-gutter);
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 29rem) 1fr minmax(0, 16.5rem);
+  grid-template-rows: auto auto;
+  column-gap: 32px;
+  pointer-events: none;
 }
 
-.ch-sign {
-  top: 30%;
+.ch-hero > * {
+  pointer-events: auto;
 }
+
+.ch-hero h1,
+.ch-hero .lede {
+  grid-column: 1;
+}
+
+.hero-aside {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: grid;
+  gap: 20px;
+}
+
+.hero-aside .actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+
 
 .ch-hero .lede {
-  margin: 24px 0 32px;
+  margin: 24px 0 0;
   font-size: 20px;
 }
 
@@ -90,7 +116,7 @@
 }
 
 .live-note {
-  margin-top: 26px !important;
+  margin-top: 0 !important;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -138,10 +164,40 @@
   border: 2px solid var(--kb-ink);
 }
 
+/* elbow: dot -> across -> up/down to the card */
+.callout::before,
+.callout::after {
+  content: "";
+  position: absolute;
+  background: var(--kb-ink);
+}
+
+.callout::before {
+  left: 0;
+  top: 0;
+  width: 11px;
+  height: 1px;
+}
+
+.callout::after {
+  left: 11px;
+  top: min(0px, var(--dy, 0px));
+  width: 1px;
+  height: max(var(--dy, 0px), calc(var(--dy, 0px) * -1));
+}
+
+.callout.flip::before {
+  left: -11px;
+}
+
+.callout.flip::after {
+  left: -11px;
+}
+
 .callout-card {
   position: absolute;
   left: 22px;
-  top: -18px;
+  top: calc(var(--dy, 0px) - 18px);
   display: grid;
   gap: 2px;
   width: 210px;
@@ -159,9 +215,9 @@
 .callout-card::before {
   content: "";
   position: absolute;
-  left: -17px;
+  left: -11px;
   top: 17px;
-  width: 17px;
+  width: 11px;
   height: 1px;
   background: var(--kb-ink);
 }
@@ -178,22 +234,43 @@
 
 .callout.flip .callout-card::before {
   left: auto;
-  right: -17px;
+  right: -11px;
 }
 
 .slip {
   position: absolute;
-  left: var(--kb-gutter);
+  left: 50%;
   bottom: 0;
   z-index: 2;
   width: min(270px, 70vw);
-  translate: 0 calc((1 - var(--feed, 0)) * 105%);
+  translate: -50% calc((1 - var(--feed, 0)) * 105%);
   rotate: calc((1 - var(--feed, 0)) * 2deg);
   pointer-events: none;
 }
 
 .slip-paper {
   padding: 4px 18px 26px;
+}
+
+.slip-sign {
+  left: 58%;
+}
+
+.slip-hero {
+  width: 210px;
+  z-index: 1;
+}
+
+.slip-hero .px {
+  padding-top: 8px;
+}
+
+.chip-list {
+  display: none;
+}
+
+.ch-sign {
+  top: 34%;
 }
 
 .slip-paper img {
@@ -375,23 +452,28 @@
 }
 
 .ghost-slip {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
-  justify-self: center;
-  width: 82%;
-  padding: 28px 22px;
+  justify-self: end;
+  align-self: center;
+  width: min(260px, 100%);
+  padding: 22px 20px;
   background: var(--paper-lavender);
-  opacity: 0.55;
-  rotate: -7deg;
-  translate: -38% -6%;
-  border-radius: 2px;
+  rotate: -5deg;
   display: grid;
   gap: 6px;
   text-align: center;
+  filter: drop-shadow(0 12px 18px rgba(70, 76, 128, 0.1));
 }
 
 .ghost-slip .px {
-  color: rgba(43, 47, 58, 0.45);
+  color: rgba(43, 47, 58, 0.62);
+}
+
+.ghost-slip .px:first-child {
+  font-size: 24px;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
 }
 
 .limits {
@@ -427,6 +509,9 @@
 
 .bom {
   padding: 4px 24px 12px;
+  position: sticky;
+  top: 120px;
+  align-self: start;
 }
 
 .bom .total {
@@ -507,34 +592,7 @@
   filter: blur(10px);
 }
 
-.waitlist-form {
-  display: grid;
-  grid-template-columns: minmax(0, 340px) auto;
-  justify-content: center;
-  gap: 10px;
-}
-
-.waitlist-form input {
-  min-height: 50px;
-  padding: 0 22px;
-  border-radius: 999px;
-  border: 1px solid var(--kb-line);
-  background: #fff;
-  font: 400 17px var(--kb-sans);
-  color: var(--kb-ink);
-  box-shadow: 0 6px 18px -12px rgba(60, 70, 120, 0.35);
-}
-
-.waitlist-form input::placeholder {
-  color: var(--kb-ink-3);
-}
-
-.waitlist-form input[aria-invalid="true"] {
-  border-color: #d5466a;
-}
-
 .waitlist-msg {
-  grid-column: 1 / -1;
   font-size: 14px;
   color: var(--kb-ink-3);
 }
@@ -544,12 +602,12 @@
 }
 
 .ticket {
-  width: min(320px, 86vw);
+  width: min(360px, 88vw);
   margin: 0 auto;
-  padding: 4px 22px 10px;
+  padding: 4px 26px 14px;
   background: var(--paper-white);
   display: grid;
-  gap: 6px;
+  gap: 8px;
   text-align: center;
 }
 
@@ -560,6 +618,45 @@
 .ticket-head,
 .ticket-foot {
   opacity: 0.6;
+}
+
+.ticket-blank .ticket-no {
+  opacity: 0.35;
+}
+
+.ticket-label {
+  margin-top: 6px;
+  text-align: left;
+  opacity: 0.6;
+}
+
+.ticket-blank input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px dotted rgba(43, 47, 58, 0.45);
+  border-radius: 0;
+  background: transparent;
+  font: 400 17px var(--kb-sans);
+  color: var(--kb-ink);
+}
+
+.ticket-blank input::placeholder {
+  color: var(--kb-ink-3);
+}
+
+.ticket-blank input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--kb-ink);
+}
+
+.ticket-blank input[aria-invalid="true"] {
+  border-bottom-color: #b8304f;
+}
+
+.ticket-blank .btn {
+  margin-top: 8px;
 }
 
 .kb-foot {
@@ -606,9 +703,54 @@
     background: linear-gradient(to top, rgba(255, 255, 255, 0.96) 55%, rgba(255, 255, 255, 0));
   }
 
+  .ch-hero {
+    display: block;
+  }
+
   .ch-hero .lede {
-    margin: 14px 0 20px;
-    font-size: 17px;
+    margin: 12px 0 18px;
+    font-size: 16px;
+  }
+
+  .hero-aside {
+    gap: 14px;
+  }
+
+  .hero-aside .actions {
+    flex-direction: row;
+  }
+
+  .slip-hero {
+    display: none;
+  }
+
+  .slip-sign {
+    left: 50%;
+    width: 64vw;
+  }
+
+  .stage[data-feed="1"] .ch-sign {
+    opacity: 0 !important;
+  }
+
+  .chip-list {
+    display: grid;
+    gap: 6px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--kb-ink-2);
+  }
+
+  .chip-list b {
+    margin-right: 6px;
+    font-weight: 400;
+  }
+
+  .callout::before,
+  .callout::after {
+    display: none;
   }
 
   .ch p {
@@ -628,17 +770,19 @@
     display: none;
   }
 
+  .callout-card {
+    top: -14px;
+  }
+
+  .callout-card::before {
+    display: none;
+  }
+
   .kb h1 {
     font-size: 40px;
   }
 
-  .slip {
-    display: none;
-  }
 
-  .ch-hero .lede {
-    font-size: 16px;
-  }
 
   .receipt-wrap,
   .inside-grid,
@@ -672,11 +816,7 @@
     scroll-padding-left: var(--kb-gutter);
   }
 
-  .waitlist-form {
-    grid-template-columns: 1fr;
-    max-width: 380px;
-    margin: 0 auto;
-  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
