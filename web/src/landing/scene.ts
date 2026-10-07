@@ -61,6 +61,7 @@ export class HeroScene {
   private camera = new THREE.PerspectiveCamera(30, 1, 0.01, 10);
   private gb = new THREE.Group();
   private cart: THREE.Object3D | null = null;
+  private body: THREE.Object3D | null = null;
   private cartHome = new THREE.Vector3();
   private cartQuat = new THREE.Quaternion();
   private pieces: Record<string, { obj: THREE.Object3D; home: THREE.Vector3 }> = {};
@@ -117,6 +118,7 @@ export class HeroScene {
       }
     });
     this.cart = root.getObjectByName("Cartridge") ?? null;
+    this.body = root.getObjectByName("GameBoy") ?? null;
     if (this.cart) {
       this.cartHome.copy(this.cart.position);
       this.cartQuat.copy(this.cart.quaternion);
@@ -239,6 +241,9 @@ export class HeroScene {
     if (this.plainFraming) c.clearViewOffset();
     else if (!tall) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
     else c.setViewOffset(this.w, this.h, 0, this.h * 0.3, this.w, this.h);
+
+    // on tall screens the console body steps aside while the cartridge is apart, so nothing sits behind the copy
+    if (this.body) this.body.visible = !(tall && pose.apart > 0.5);
 
     if (this.cart) {
       const bob = Math.sin(t * 1.3) * 0.003 * rest;
