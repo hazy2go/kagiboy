@@ -1293,3 +1293,59 @@
     }
   }
 }
+
+/* the founder's story, between the scroll stage and the how-to */
+.origin {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(110px, 16vh, 180px) var(--kb-gutter) 0;
+}
+
+.origin .eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--kb-ink-3);
+  margin-bottom: 16px;
+}
+
+.origin h2 {
+  max-width: 16ch;
+  font-size: clamp(36px, 5vw, 68px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin-bottom: 26px;
+}
+
+.origin p:not(.eyebrow) {
+  max-width: 36rem;
+  font-size: clamp(18px, 1.5vw, 21px);
+  line-height: 1.55;
+  color: var(--kb-ink-2);
+}
+
+.origin p + p {
+  margin-top: 16px;
+}
+
+.origin-link {
+  display: inline-block;
+  margin-top: 24px;
+  font-weight: 560;
+  color: var(--kb-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 860px) {
+  .origin {
+    padding: 96px calc(var(--kb-gutter) + env(safe-area-inset-right)) 0 calc(var(--kb-gutter) + env(safe-area-inset-left));
+  }
+
+  .origin h2 {
+    font-size: 36px;
+  }
+
+  .origin p:not(.eyebrow) {
+    font-size: 17px;
+  }
+}

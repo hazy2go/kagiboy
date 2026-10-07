@@ -57,6 +57,49 @@
   color: var(--kb-ink-2);
 }
 
+/* the story: one reading column */
+.story {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 calc(var(--kb-gutter) + env(safe-area-inset-right)) clamp(80px, 12vh, 130px)
+    calc(var(--kb-gutter) + env(safe-area-inset-left));
+}
+
+.story p,
+.story h2 {
+  max-width: 38rem;
+}
+
+.story p {
+  font-size: clamp(18px, 1.5vw, 20px);
+  line-height: 1.65;
+  color: var(--kb-ink-2);
+}
+
+.story p + p {
+  margin-top: 20px;
+}
+
+.story h2 {
+  margin: clamp(56px, 8vh, 80px) 0 22px;
+  font-size: clamp(32px, 3.6vw, 48px);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.kagi {
+  margin-top: 26px !important;
+  padding-top: 20px;
+  border-top: 2px dashed rgba(43, 47, 58, 0.18);
+  font-size: 16px !important;
+}
+
+.kagi span {
+  font-size: 22px;
+  margin-right: 4px;
+  color: var(--kb-ink);
+}
+
 /* why: three slips, slightly offset like they were torn off one after another */
 .why {
   display: grid;

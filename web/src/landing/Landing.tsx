@@ -39,7 +39,7 @@ const PROMISES = [
   ["SIGNS", "EXACTLY WHAT IT SHOWS"],
   ["REFUSES", "WHAT IT CAN'T SHOW"],
   ["PIN", "5 TRIES, THEN WIPE"],
-  ["EVM", "SEPOLIA ONLY, FEE CAP"],
+  ["ETHEREUM", "PLAIN SENDS, FEE CAP"],
   ["BLUETOOTH", "PUBLIC DATA ONLY"],
 ] as const;
 
@@ -300,8 +300,8 @@ export function Landing() {
           <div className="ch ch-hero" ref={(el) => void (chapterRefs.current.hero = el)}>
             <h1>Your keys, in a Game Boy cartridge.</h1>
             <p className="lede">
-              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. The keys live in a
-              secure chip inside the cartridge, and you approve every transaction on a screen your phone can't touch.
+              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. Your keys live in a
+              chip inside the cartridge, and nothing leaves until you hold A.
             </p>
             <div className="hero-aside">
               <div className="actions">
@@ -313,7 +313,7 @@ export function Landing() {
                 </a>
               </div>
               <p className="live-note">
-                <span className="dot" aria-hidden /> The screen runs the real Game Boy software, on a devnet wallet.
+                <span className="dot" aria-hidden /> The screen runs the real Game Boy software.
               </p>
             </div>
           </div>
@@ -329,13 +329,13 @@ export function Landing() {
           </div>
 
           <div className="ch ch-insert" ref={(el) => void (chapterRefs.current.insert = el)}>
-            <h2>The cartridge is the wallet.</h2>
-            <p>Slide it into any original Game Boy. The keys are made inside it, and they never come out.</p>
+            <h2>Slide it in. Feel the click.</h2>
+            <p>Any original Game Boy will do. Your keys are made inside the cartridge and stay there, even after you pull it out.</p>
           </div>
 
           <div className="ch ch-apart" ref={(el) => void (chapterRefs.current.apart = el)}>
-            <h2>Four small chips do the work.</h2>
-            <p>All of them off-the-shelf parts, on distributor shelves today.</p>
+            <h2>What's under the label?</h2>
+            <p>Four tiny chips. One keeps your keys, one talks to the Game Boy, one talks to your phone, and one turns a shake into randomness.</p>
             <ul className="chip-list">
               {CALLOUTS.map((c) => (
                 <li key={c.part}>
@@ -362,8 +362,8 @@ export function Landing() {
           <div className="ch ch-sign" ref={(el) => void (chapterRefs.current.sign = el)}>
             <h2>Hold A to sign.</h2>
             <p>
-              Your phone asks. The cartridge decodes the transaction itself and shows the real amount, fee and address.
-              Nothing moves until you hold A for a second.
+              Your phone can only ask. The cartridge shows the real amount and address on the Game Boy's own screen, then
+              waits for your thumb.
             </p>
           </div>
           <div className="slip slip-sign" ref={slipRef} aria-hidden>
@@ -371,7 +371,7 @@ export function Landing() {
               <div className="perf" />
               <img src="/prints/sign.png" alt="" />
               <p className="px">APPROVED ON THE GAME BOY</p>
-              <p className="px faint">0.25 SOL - DEVNET SAMPLE</p>
+              <p className="px faint">0.25 SOL</p>
             </div>
           </div>
 
@@ -381,10 +381,25 @@ export function Landing() {
         </div>
       </section>
 
+      <section className="origin" aria-labelledby="origin-title">
+        <p className="px eyebrow">HOW IT STARTED</p>
+        <h2 id="origin-title">My dad found it at a flea market.</h2>
+        <p>
+          I was so young I didn't know what Nintendo was. The game was Super Mario Land, and I never beat it. I didn't
+          care. I had the music and a whole world in my hands, at a time when the best thing on a phone was Snake.
+        </p>
+        <p>
+          Years later I work in crypto, and holding my keys has never felt like that. So I gave the Game Boy a new job.
+        </p>
+        <Link to="/about" className="origin-link">
+          Read the whole story <span aria-hidden>→</span>
+        </Link>
+      </section>
+
       <section className="setup" id="setup">
         <header className="sec-head">
-          <h2>Set up in a minute, on the Game Boy.</h2>
-          <p>Every step happens on the console. The phone never sees your keys or your words.</p>
+          <h2>Setup feels like starting a new game</h2>
+          <p>Mash some buttons, give it a shake, write down your 12 words, pick a PIN. Your phone never gets to see any of it.</p>
         </header>
         <div
           className="rail"
@@ -425,10 +440,10 @@ export function Landing() {
 
       <section className="security" id="security">
         <header className="sec-head">
-          <h2>What you see is what you sign.</h2>
+          <h2>Why a console from 1989?</h2>
           <p>
-            The phone can only ask. The cartridge freezes each transaction, draws it on the Game Boy itself, and signs
-            exactly those bytes.
+            Because it can't do much. No Wi-Fi, no Bluetooth, no app store, no updates. The Game Boy is a screen and a few
+            buttons, and the only thing it talks to is the cartridge. What it shows you is exactly what gets signed.
           </p>
         </header>
         <div className="receipt-wrap">
@@ -465,8 +480,8 @@ export function Landing() {
 
       <section className="inside" id="inside">
         <header className="sec-head">
-          <h2>Built from parts that exist today.</h2>
-          <p>The Game Boy side already works with RP2040 flash carts. kagiboy adds a secure element and a radio.</p>
+          <h2>Made from parts you can buy today</h2>
+          <p>Modern flash carts already run on the same family of chip. kagiboy adds a secure element for your keys and a small radio for your phone.</p>
         </header>
         <div className="inside-grid">
           <img
@@ -499,8 +514,8 @@ export function Landing() {
 
       <section className="status">
         <header className="sec-head">
-          <h2>Where it stands.</h2>
-          <p>The software is real and runs today. The cartridge is in the works, and this is how we're building it.</p>
+          <h2>Where we're at</h2>
+          <p>The software runs today, on testnets. The cartridge is in the works, and here's the plan.</p>
         </header>
         <ol className="road">
           {ROADMAP.map(([when, what], i) => (
@@ -515,10 +530,10 @@ export function Landing() {
       <section className="demo-cta">
         <img src="/renders/hero-front34.webp" alt="The Game Boy with the kagiboy cartridge, showing the wallet home screen" loading="lazy" />
         <div>
-          <h2>Play with it now.</h2>
+          <h2>Go on, press Start</h2>
           <p>
-            The real Game Boy software runs in your browser, with the cartridge's chip simulated beside it. It signs real
-            Solana devnet and Ethereum Sepolia transactions.
+            The real Game Boy software runs right in your browser, with the cartridge's chip simulated next to it. It
+            signs real transactions on test networks.
           </p>
           <Link to="/demo" className="btn btn-ink">
             Open the live demo
@@ -527,8 +542,8 @@ export function Landing() {
       </section>
 
       <section className="waitlist" id="waitlist">
-        <h2>Print your place in line.</h2>
-        <p>We'll build the first batch if this finds its people. Leave an email and we'll tell you when it ships.</p>
+        <h2>Want one for your shelf?</h2>
+        <p>I'll build a small first batch if enough of you want one. Leave your email and I'll write once, when it's ready.</p>
         <Waitlist />
       </section>
 

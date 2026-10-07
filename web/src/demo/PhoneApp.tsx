@@ -69,7 +69,7 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
     <section className="cards">
       <article className="card sol">
         <div className="card-top">
-          <span>Solana · devnet</span>
+          <span>Solana</span>
           <a href={explorer.solAddr(addr.sol)} target="_blank" rel="noreferrer">
             Explorer <Out />
           </a>
@@ -89,7 +89,7 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
       </article>
       <article className="card evm">
         <div className="card-top">
-          <span>Ethereum · Sepolia</span>
+          <span>Ethereum</span>
           <a href={explorer.evmAddr(addr.evm)} target="_blank" rel="noreferrer">
             Explorer <Out />
           </a>

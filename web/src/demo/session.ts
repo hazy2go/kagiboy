@@ -92,12 +92,23 @@ export class Session {
     }
   }
 
+  /**
+   * Safari only lets audio start inside the tap or key press itself (not after an await), and on iOS
+   * web audio follows the silent switch unless the page declares itself as playback, like a media app.
+   */
+  private unlockAudio() {
+    if (typeof AudioContext === "undefined") return;
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = "playback";
+    this.audio ??= new AudioContext();
+    if (this.audio.state !== "running") this.audio.resume().catch(() => {});
+  }
+
   async powerOn() {
+    this.unlockAudio(); // before the await below, while we're still inside the click
     this.rom ??= new Uint8Array(await (await fetch("/wallet.gb")).arrayBuffer());
     this.gb = new GameBoy(this.rom);
     this.gb.onBeep = (hz) => this.beep(hz);
-    // created inside the click that powers on, so browsers allow it to play
-    this.audio ??= typeof AudioContext === "undefined" ? null : new AudioContext();
     this.pressedAt.clear();
     this.releaseAt.clear();
     this.chip.reset();
@@ -156,6 +167,7 @@ export class Session {
   /** Taps are held for at least 3 frames, or the ROM (which polls once per frame) would miss them. */
   toggleMute() {
     this.muted = !this.muted;
+    if (!this.muted) this.unlockAudio();
     try {
       localStorage.setItem("kagiboy.muted", this.muted ? "1" : "0");
     } catch {
@@ -182,6 +194,7 @@ export class Session {
   key(key: Key, down: boolean) {
     if (!this.gb) return;
     if (down) {
+      if (this.audio?.state !== "running") this.unlockAudio(); // every press is a gesture Safari accepts
       this.releaseAt.delete(key);
       if (!this.pressedAt.has(key)) this.pressedAt.set(key, this.frameCount);
       this.gb.setKey(key, true);

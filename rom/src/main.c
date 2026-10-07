@@ -984,8 +984,8 @@ static void draw_account(uint8_t chain, uint8_t y) {
     while (*unit && *unit != ' ') unit++;
     fill_bkg_rect(2, y + 1, 16, 4, T_FONT_INK);
     icon(2, y + 1, chain == CHAIN_SOL ? T_ICON_SOL_0 : T_ICON_ETH_0);
-    txt(5, y + 1, chain == CHAIN_SOL ? "Solana" : "Ethereum");
-    cap(5, y + 2, chain == CHAIN_SOL ? "DEVNET" : "SEPOLIA");
+    if (chain == CHAIN_SOL) txt(5, y + 1, "Solana");
+    else txt(5, y + 1, "Ethereum");
     w = big_width(bal);
     if (w > 11) w = 11;
     big(2, y + 3, bal);
@@ -1066,7 +1066,7 @@ static uint8_t receive(void) {
             txtc(0, chain == CHAIN_SOL ? "Solana" : "Ethereum");
             cap(19, 0, ">");
             rule(1);
-            capc(3, chain == CHAIN_SOL ? "DEVNET ADDRESS" : "SEPOLIA ADDRESS");
+            capc(3, "YOUR ADDRESS");
             box(1, 5, 18, 5);
             if (chip_call(CMD_ACCOUNT, chain, 0, 0) == 0) wrap(2, 6, 16, resp, 3);
             capc(12, "SEND TESTNET FUNDS");

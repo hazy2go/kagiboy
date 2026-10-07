@@ -473,7 +473,7 @@ function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
         amount: `${exact(BigInt(lamports), 9)} SOL`,
         fee: `${exact(SOL_FEE_PER_SIGNATURE * BigInt(signers), 9)} SOL`,
         // a Solana transaction doesn't name its cluster; the cartridge firmware is built per network
-        network: "SOLANA DEVNET",
+        network: "SOLANA",
       },
     };
   }
@@ -494,7 +494,7 @@ function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
       to: getAddress(tx.to), // checksummed, so the mixed case can be compared with the phone
       amount: `${exact(tx.value ?? 0n, 18)} ETH`,
       fee: `MAX ${ceilDecimals(maxFee, 18, 6)} ETH`,
-      network: "ETH SEPOLIA",
+      network: "ETHEREUM",
     },
   };
 }

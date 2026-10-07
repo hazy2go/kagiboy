@@ -15,28 +15,28 @@ const GALLERY: { src: string; caption: string; alt: string }[] = [
 
 const WHY = [
   {
-    stamp: "A BLAST FROM THE PAST",
+    stamp: "IT DOES ONE THING",
     paper: "blue",
-    body: "A handheld from 1989, signing Solana and Ethereum transactions. Old hardware, a new job, and the same click when the cartridge goes in.",
+    body: "No Wi-Fi, no Bluetooth, no app store, no touchscreen. The Game Boy shows you a transaction and waits for you to hold A. That's it.",
   },
   {
-    stamp: "SMALL ON PURPOSE",
+    stamp: "MADE FOR THE SHELF",
     paper: "pink",
-    body: "The Game Boy has no internet, no browser and no app store. It can only show what the cartridge draws, which makes it a calm place to say yes or no.",
+    body: "Load it with the coins you plan to keep for years, back up your 12 words, and put it somewhere you'll smile at it. A safe, a shelf, a gift for a friend.",
   },
   {
     stamp: "NOT A LEDGER RIVAL",
     paper: "lavender",
-    body: "kagiboy is a novelty for people who love this console as much as I do. For serious savings, use a serious wallet. For joy, plug in a cartridge.",
+    body: "I'm not out to beat the big wallet companies. This is for people who grew up with a Game Boy and ended up in crypto, like me.",
   },
 ] as const;
 
 const PLAYER = [
   ["NAME", "HAZY"],
-  ["BASE", "TOKYO"],
-  ["WEB3", "5+ YEARS"],
-  ["SPEAKS", "EN  TR  DE"],
-  ["CONSOLE", "DMG-01"],
+  ["BASE", "JAPAN"],
+  ["1ST GAME", "MARIO LAND"],
+  ["FOUND AT", "FLEA MARKET"],
+  ["COLLECTS", "GB TO GAMECUBE"],
 ] as const;
 
 export function AboutPage() {
@@ -78,13 +78,37 @@ export function AboutPage() {
       </nav>
 
       <header className="about-hero">
-        <p className="px eyebrow">ABOUT</p>
-        <h1>A love letter to the Game Boy, with keys inside.</h1>
+        <p className="px eyebrow">THE STORY</p>
+        <h1>My first console came from a flea market.</h1>
         <p className="lede">
-          kagiboy isn't trying to be the next big hardware wallet. It's a small, honest experiment: what if the console I
-          love could hold my crypto keys, and show me every transaction before I sign it?
+          My dad bought it for me when I was so young I didn't even know what Nintendo was. I only knew I was holding
+          something magic.
         </p>
       </header>
+
+      <section className="story" aria-label="How kagiboy started">
+        <p>
+          The game was Super Mario Land. I never beat it. It was way too hard for me, and I didn't care, because I had the
+          music and a whole world I could carry around. The most exciting thing on a phone back then was Snake on a Nokia.
+          This was a real game, in my hands, anywhere I wanted.
+        </p>
+        <p>
+          Then came Castlevania, then Pokémon Yellow. That grey Game Boy was the first console I ever called my own, and
+          it never really left me. Today I live in Japan and collect old consoles: Game Boy, PSP, PS1, N64, GameCube. The
+          Game Boy is still my favourite.
+        </p>
+        <h2>Crypto never felt like that.</h2>
+        <p>
+          I've spent years working in Web3, and holding keys has always made me a little nervous, whatever wallet I used.
+          Meanwhile hardware wallets keep getting fancier, with touchscreens, Wi-Fi and colour displays. More features,
+          more things to worry about.
+        </p>
+        <p>
+          One day I looked at my Game Boy and thought: you can't connect this to anything. No Wi-Fi, no Bluetooth, no
+          extras. Just a screen and some buttons. What if the cartridge held my keys, and this little screen was the only
+          place I could say yes?
+        </p>
+      </section>
 
       <section className="why" aria-label="Why kagiboy">
         {WHY.map((w, i) => (
@@ -116,17 +140,16 @@ export function AboutPage() {
         <div className="me-copy">
           <h2 id="me-title">Hey, I'm hazy.</h2>
           <p>
-            I'm a retro gaming enthusiast, and I've lived and worked in Web3 for more than five years. kagiboy is where
-            those two things meet.
+            I'm not doing this to get rich. I want to bring one of my favourite things in the world back to life, and
+            maybe give you a little of the magic I felt the first time I held one.
           </p>
           <p>
-            I love the Game Boy: the weight of it, the click of the buttons, the way a cartridge slides home. My keys
-            live in devices I never want to look at. I wanted them in something I actually enjoy holding.
+            If the cartridge ever breaks, or the Game Boy does, your 12 words bring everything back. And one day you get
+            to say: yes, my wallet is a Game Boy.
           </p>
-          <p>
-            Old hardware has a quiet advantage, too. A console from 1989 can't browse, can't install anything and can't
-            be talked into much. Put the secure part in the cartridge, let the Game Boy be the screen, and you get
-            something simple enough to trust and fun enough to keep on your desk.
+          <p className="kagi">
+            <span lang="ja">鍵</span> <b>kagi</b> means key in Japanese, a small thank-you to where the Game Boy was
+            born, and where kagiboy is being made.
           </p>
         </div>
       </section>
@@ -153,10 +176,10 @@ export function AboutPage() {
       )}
 
       <section className="about-cta">
-        <h2>Come play.</h2>
+        <h2>Want one for your shelf?</h2>
         <div className="actions">
           <Link to="/demo" className="btn btn-ink">
-            Try the live demo
+            Press Start
           </Link>
           <a href="/#waitlist" className="btn btn-paper">
             Join the waitlist
