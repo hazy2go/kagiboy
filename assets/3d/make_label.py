@@ -51,67 +51,83 @@ KEY = [  # 9 wide x 15 tall pixel key, '#' = white pixel
 ]
 
 
+NAVY = (43, 47, 119)
+FUT = "/System/Library/Fonts/Supplemental/Futura.ttc"
+
+
+def tracked(d, xy, text, fnt, fill, track, anchor_right=False):
+    """Draw text with letter spacing; xy is the cap-top-left (or top-right) point."""
+    adv = [fnt.getlength(c) for c in text]
+    total = sum(adv) + track * (len(text) - 1)
+    x, y = xy
+    if anchor_right:
+        x -= total
+    top = fnt.getbbox("H")[1]
+    for c, a in zip(text, adv):
+        d.text((x, y - top), c, font=fnt, fill=fill)
+        x += a + track
+    return total
+
+
 def main():
     w, h = W * SS, H * SS
-    base = gradient(W, H).resize((w, h), Image.BICUBIC)
-    layer = Image.new("L", (w, h), 0)
-    d = ImageDraw.Draw(layer)
+    base = gradient(W, H).resize((w, h), Image.BICUBIC).convert("RGBA")
+    m = int(0.075 * w)  # margin
 
-    # pixel-art key, top-left
-    px = 13 * SS
-    kx, ky = int(0.085 * w), int(0.10 * h)
-    for r, row in enumerate(KEY):
-        for c, ch in enumerate(row):
-            if ch == "#":
-                d.rectangle([kx + c * px, ky + r * px, kx + (c + 1) * px - 1, ky + (r + 1) * px - 1], fill=255)
+    # ---- artwork: a soft white halo, then the pixel key with a pixel drop shadow
+    halo = Image.new("L", (w, h), 0)
+    hd = ImageDraw.Draw(halo)
+    cx, cy, r = int(0.5 * w), int(0.43 * h), int(0.26 * h)
+    hd.ellipse([cx - r, cy - r, cx + r, cy + r], fill=95)
+    halo = halo.filter(ImageFilter.GaussianBlur(40 * SS))
+    base = Image.composite(Image.new("RGBA", (w, h), (255, 255, 255, 255)), base, halo)
 
-    # wordmark
-    font_path = os.path.join(HERE, "fonts", "Nunito-wght.ttf")
-    big = ImageFont.truetype(font_path, 200 * SS)
-    try:
-        big.set_variation_by_name("ExtraBold")
-    except Exception:
-        pass
+    px = 22 * SS
+    kw, kh = len(KEY[0]) * px, len(KEY) * px
+    kx, ky = cx - kw // 2, cy - kh // 2
+    art = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ad = ImageDraw.Draw(art)
+    for (ox, oy, col) in ((px // 2, px // 2, (*NAVY, 120)), (0, 0, (255, 255, 255, 255))):
+        for rr, row in enumerate(KEY):
+            for c, ch in enumerate(row):
+                if ch == "#":
+                    x0, y0 = kx + c * px + ox, ky + rr * px + oy
+                    ad.rectangle([x0, y0, x0 + px - 1, y0 + px - 1], fill=col)
+    base.alpha_composite(art)
+
+    ink = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(ink)
+
+    # ---- top band: what it is, and which chains
+    cap = ImageFont.truetype(FUT, int(0.027 * h), index=2)
+    band_y = int(0.075 * h)
+    tracked(d, (m, band_y), "HARDWARE WALLET", cap, 255, int(0.004 * w))
+    tracked(d, (w - m, band_y), "SOLANA \u00b7 ETHEREUM", cap, 255, int(0.006 * w), anchor_right=True)
+    rule_y = band_y + int(0.026 * h) + int(0.035 * h)
+    d.rectangle([m, rule_y, w - m, rule_y + max(2, int(0.0035 * h))], fill=255)
+
+    # ---- wordmark: the console's slanted KAGIBOY, sized to the label width
+    logo_layer = Image.new("L", (w, h), 0)
+    ld = ImageDraw.Draw(logo_layer)
+    fnt = ImageFont.truetype(FUT, 100, index=2)
     text = "KAGIBOY"
-    track = 6 * SS
-    # measure with tracking
-    widths = [big.getbbox(ch)[2] - big.getbbox(ch)[0] for ch in text]
-    adv = [big.getlength(ch) for ch in text]
-    total = sum(adv) + track * (len(text) - 1)
-    target = 0.80 * w
-    scale = target / total
-    big = ImageFont.truetype(font_path, int(200 * SS * scale))
-    try:
-        big.set_variation_by_name("ExtraBold")
-    except Exception:
-        pass
-    track = int(track * scale)
-    x = int(0.085 * w)
-    asc_top = big.getbbox("K")[1]
-    cap_h = big.getbbox("K")[3] - asc_top
-    y_cap = int(0.50 * h)
-    for ch in text:
-        d.text((x, y_cap - asc_top), ch, font=big, fill=255)
-        x += big.getlength(ch) + track
+    total = sum(fnt.getlength(c) for c in text)
+    size = int(100 * (w - 2 * m) * 0.93 / total)
+    fnt = ImageFont.truetype(FUT, size, index=2)
+    top = fnt.getbbox("K")[1]
+    capb = fnt.getbbox("K")[3]
+    base_y = int(0.885 * h)
+    x = m
+    for c in text:
+        ld.text((x, base_y - capb), c, font=fnt, fill=255)
+        x += fnt.getlength(c) - size * 0.01
+    slant = 0.21
+    logo_layer = logo_layer.transform((w, h), Image.AFFINE, (1, slant, -slant * base_y, 0, 1, 0), Image.BICUBIC)
+    ink = Image.fromarray(np.maximum(np.array(ink), np.array(logo_layer)))
 
-    # subline
-    small = ImageFont.truetype(font_path, int(cap_h * 0.36))
-    try:
-        small.set_variation_by_name("Bold")
-    except Exception:
-        pass
-    sub = "SOL · EVM"
-    x = int(0.088 * w)
-    s_top = small.getbbox("S")[1]
-    y_sub = y_cap + cap_h + int(0.07 * h)
-    for ch in sub:
-        d.text((x, y_sub - s_top), ch, font=small, fill=255)
-        x += small.getlength(ch) + int(0.012 * w)
-
-    white = Image.new("RGB", (w, h), (255, 255, 255))
-    # very slight soft ink spread so the print doesn't look vector-perfect
-    mask = layer.filter(ImageFilter.GaussianBlur(0.6 * SS))
-    out = Image.composite(white, base, mask)
+    # a whisper of ink spread so the print doesn't look vector-perfect
+    mask = ink.filter(ImageFilter.GaussianBlur(0.5 * SS))
+    out = Image.composite(Image.new("RGBA", (w, h), (*NAVY, 255)), base, mask).convert("RGB")
     out = out.resize((W, H), Image.LANCZOS)
     out.save(os.path.join(HERE, "label.png"))
     out.save(os.path.join(HERE, "label.jpg"), quality=92, subsampling=0)
