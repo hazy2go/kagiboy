@@ -300,8 +300,7 @@ export function Landing() {
           <div className="ch ch-hero" ref={(el) => void (chapterRefs.current.hero = el)}>
             <h1>Your keys, in a Game Boy cartridge.</h1>
             <p className="lede">
-              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. Your keys live in a
-              chip inside the cartridge, and nothing leaves until you hold A.
+              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. Your keys live in a chip inside the cartridge, and nothing gets signed until you hold A.
             </p>
             <div className="hero-aside">
               <div className="actions">
@@ -330,12 +329,12 @@ export function Landing() {
 
           <div className="ch ch-insert" ref={(el) => void (chapterRefs.current.insert = el)}>
             <h2>Slide it in. Feel the click.</h2>
-            <p>Any original Game Boy will do. Your keys are made inside the cartridge and stay there, even after you pull it out.</p>
+            <p>Any original Game Boy will do. Your keys are made inside the cartridge and never leave it.</p>
           </div>
 
           <div className="ch ch-apart" ref={(el) => void (chapterRefs.current.apart = el)}>
             <h2>What's under the label?</h2>
-            <p>Four tiny chips. One keeps your keys, one talks to the Game Boy, one talks to your phone, and one turns a shake into randomness.</p>
+            <p>Four main chips. One keeps your keys, one talks to the Game Boy, one talks to your phone, and one turns a shake into randomness.</p>
             <ul className="chip-list">
               {CALLOUTS.map((c) => (
                 <li key={c.part}>
@@ -442,8 +441,7 @@ export function Landing() {
         <header className="sec-head">
           <h2>Why a console from 1989?</h2>
           <p>
-            Because it can't do much. No Wi-Fi, no Bluetooth, no app store, no updates. The Game Boy is a screen and a few
-            buttons, and the only thing it talks to is the cartridge. What it shows you is exactly what gets signed.
+            Because it can't do much. The Game Boy itself has no Wi-Fi, no Bluetooth and no app store. It's a screen and a few buttons, and it only talks to the cartridge. The cartridge has a small Bluetooth radio for your phone, but it only carries requests and public addresses, never keys. What the Game Boy shows you is exactly what gets signed.
           </p>
         </header>
         <div className="receipt-wrap">
@@ -467,7 +465,7 @@ export function Landing() {
             <div className="perf bottom" aria-hidden />
           </div>
           <aside className="limits">
-            <h3>Limits, stated plainly</h3>
+            <h3>Known limits</h3>
             <p>
               The cartridge's main chip has published glitch attacks, which is why the keys live in a separate secure
               element. A modified Game Boy could fake button presses, so possession plus your PIN is the bar. A Solana
@@ -503,7 +501,7 @@ export function Landing() {
               ))}
             </ul>
             <p className="px total">
-              <span>4 CHIPS</span>
+              <span>6 PARTS</span>
               <span>0 SECRETS OUT</span>
             </p>
             <p className="px faint">ALL OFF-THE-SHELF PARTS</p>

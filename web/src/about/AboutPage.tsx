@@ -15,14 +15,14 @@ const GALLERY: { src: string; caption: string; alt: string }[] = [
 
 const WHY = [
   {
-    stamp: "IT DOES ONE THING",
+    stamp: "THE GAME BOY STAYS OFFLINE",
     paper: "blue",
-    body: "No Wi-Fi, no Bluetooth, no app store, no touchscreen. The Game Boy shows you a transaction and waits for you to hold A. That's it.",
+    body: "The console has no Wi-Fi and no apps. The cartridge's small radio only talks to your phone, and only to pass along requests and public addresses. Your keys never travel.",
   },
   {
     stamp: "MADE FOR THE SHELF",
     paper: "pink",
-    body: "Load it with the coins you plan to keep for years, back up your 12 words, and put it somewhere you'll smile at it. A safe, a shelf, a gift for a friend.",
+    body: "When it ships, load it with the coins you plan to keep for years, back up your 12 words, and put it somewhere you'll smile at it, like a safe, a shelf or a friend's birthday.",
   },
   {
     stamp: "NOT A LEDGER RIVAL",
@@ -100,13 +100,11 @@ export function AboutPage() {
         <h2>Crypto never felt like that.</h2>
         <p>
           I've spent years working in Web3, and holding keys has always made me a little nervous, whatever wallet I used.
-          Meanwhile hardware wallets keep getting fancier, with touchscreens, Wi-Fi and colour displays. More features,
-          more things to worry about.
+          Meanwhile hardware wallets keep getting fancier, with touchscreens, Wi-Fi and colour displays. To me, every extra feature is one more thing to worry about.
         </p>
         <p>
           One day I looked at my Game Boy and thought: you can't connect this to anything. No Wi-Fi, no Bluetooth, no
-          extras. Just a screen and some buttons. What if the cartridge held my keys, and this little screen was the only
-          place I could say yes?
+          extras. Just a screen and some buttons. What if the cartridge held my keys, my phone could only ask, and this little screen was the only place I could say yes?
         </p>
       </section>
 
@@ -176,7 +174,7 @@ export function AboutPage() {
       )}
 
       <section className="about-cta">
-        <h2>Want one for your shelf?</h2>
+        <h2>Want to follow along?</h2>
         <div className="actions">
           <Link to="/demo" className="btn btn-ink">
             Press Start
