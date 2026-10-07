@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { CartChip, type Persisted, type Storage } from "../chip/chip";
-import { GameBoy, type Key } from "../emu/gameboy";
+import { GameBoy, SOFT_LCD, type Key } from "../emu/gameboy";
 import { Phone } from "../phone/phone";
 
 const STORE_KEY = "kagiboy.secure-element";
@@ -59,6 +59,8 @@ export class Session {
   private releaseAt = new Map<Key, number>();
   private listeners = new Set<() => void>();
   powered = false;
+  /** Called after each drawn frame, e.g. to refresh a 3D screen texture. */
+  onFrame: (() => void) | null = null;
   muted = readMuted();
   private audio: AudioContext | null = null;
 
@@ -82,7 +84,12 @@ export class Session {
 
   attach(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.image = canvas.getContext("2d")!.createImageData(160, 144);
+    const ctx = canvas.getContext("2d")!;
+    this.image = ctx.createImageData(160, 144);
+    if (!this.powered) {
+      ctx.fillStyle = "#c3ccb8";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   async powerOn() {
@@ -114,8 +121,9 @@ export class Session {
     this.phone.clearBalances();
     const ctx = this.canvas?.getContext("2d");
     if (ctx && this.canvas) {
-      ctx.fillStyle = "#8b9a3c";
+      ctx.fillStyle = "#c3ccb8"; // an unlit LCD
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.onFrame?.();
     }
     this.notify();
   }
@@ -191,8 +199,9 @@ export class Session {
     if (before !== "unlocked" && this.chip.state === "unlocked") this.phone.refreshBalances();
     if (before === "unlocked" && this.chip.state !== "unlocked") this.phone.clearBalances();
     if (this.canvas && this.image) {
-      gb.draw(this.image.data);
+      gb.draw(this.image.data, SOFT_LCD);
       this.canvas.getContext("2d")!.putImageData(this.image, 0, 0);
+      this.onFrame?.();
     }
     this.raf = requestAnimationFrame(this.loop);
   };

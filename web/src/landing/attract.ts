@@ -1,7 +1,7 @@
 import "../polyfill"; // must run before @solana/web3.js loads
 import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { CartChip, demoPersisted, type Persisted } from "../chip/chip";
-import { GameBoy, HEIGHT, WIDTH, type Key } from "../emu/gameboy";
+import { GameBoy, HEIGHT, SOFT_LCD, WIDTH, type Key } from "../emu/gameboy";
 
 /**
  * Attract mode for the landing page: the real ROM and the real chip, driven by
@@ -12,14 +12,6 @@ import { GameBoy, HEIGHT, WIDTH, type Key } from "../emu/gameboy";
 // BIP-39 test vector; never funded, testnet only.
 const DEMO_WORDS = "legal winner thank year wave sausage worth useful legal winner thank yellow";
 
-// soft LCD tones so the screen sits in a pastel page (lightest to darkest)
-const LCD = [
-  [232, 238, 222],
-  [181, 196, 170],
-  [104, 122, 110],
-  [42, 52, 50],
-];
-
 export type AttractScene = "home" | "sign";
 
 export class Attract {
@@ -28,7 +20,6 @@ export class Attract {
   private image: ImageData;
   private gb: GameBoy;
   private chip: CartChip;
-  private raw = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
   private queue: { key: Key; down: boolean; at: number }[] = [];
   private frame = 0;
   private ready = false;
@@ -79,17 +70,7 @@ export class Attract {
     }
     if (this.ready) this.direct();
 
-    this.gb.draw(this.raw);
-    const d = this.image.data;
-    for (let i = 0; i < d.length; i += 4) {
-      // gb.draw recolours to DMG greens; map those 4 shades onto the soft palette
-      const g = this.raw[i + 1];
-      const c = LCD[g > 180 ? 0 : g > 160 ? 1 : g > 80 ? 2 : 3];
-      d[i] = c[0];
-      d[i + 1] = c[1];
-      d[i + 2] = c[2];
-      d[i + 3] = 255;
-    }
+    this.gb.draw(this.image.data, SOFT_LCD);
     this.ctx.putImageData(this.image, 0, 0);
     this.onFrame?.();
   }

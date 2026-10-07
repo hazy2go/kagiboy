@@ -13,7 +13,7 @@ export default function App() {
         <Route
           path="/demo"
           element={
-            <Suspense fallback={<p className="loading">Inserting cartridge…</p>}>
+            <Suspense fallback={<p className="loading">Inserting the cartridge…</p>}>
               <DemoPage />
             </Suspense>
           }

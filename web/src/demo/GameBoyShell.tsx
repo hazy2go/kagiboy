@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import brand from "../../../brand.json";
+import { useEffect, useRef, useState } from "react";
 import type { Key } from "../emu/gameboy";
+import type { HeroScene } from "../landing/scene";
 import { useSession } from "./session";
 
 const KEYBOARD: Record<string, Key> = {
@@ -17,15 +17,112 @@ const KEYBOARD: Record<string, Key> = {
   Backspace: "SELECT",
 };
 
+// which 3D part moves for each key
+const PART: Record<Key, string> = {
+  UP: "DPad",
+  DOWN: "DPad",
+  LEFT: "DPad",
+  RIGHT: "DPad",
+  A: "ButtonA",
+  B: "ButtonB",
+  START: "Start",
+  SELECT: "Select",
+};
+
+// tap targets around projected parts, in millimetres on the console face
+const ZONES: { key: Key; part: string; dx: number; dy: number; w: number; h: number; round?: boolean }[] = [
+  { key: "UP", part: "DPad", dx: 0, dy: -6.9, w: 6.6, h: 7 },
+  { key: "DOWN", part: "DPad", dx: 0, dy: 6.9, w: 6.6, h: 7 },
+  { key: "LEFT", part: "DPad", dx: -6.9, dy: 0, w: 7, h: 6.6 },
+  { key: "RIGHT", part: "DPad", dx: 6.9, dy: 0, w: 7, h: 6.6 },
+  { key: "A", part: "ButtonA", dx: 0, dy: 0, w: 12, h: 12, round: true },
+  { key: "B", part: "ButtonB", dx: 0, dy: 0, w: 12, h: 12, round: true },
+  { key: "SELECT", part: "Select", dx: 0, dy: 0, w: 12, h: 7 },
+  { key: "START", part: "Start", dx: 0, dy: 0, w: 12, h: 7 },
+];
+
+const A_TO_B_MM = 16.5; // distance between the A and B button centres
+
+/** The real Game Boy model with the emulator on its screen; every button works. */
 export function GameBoyShell() {
   const s = useSession();
   const canvas = useRef<HTMLCanvasElement>(null);
+  const zoneRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const sceneRef = useRef<HeroScene | null>(null);
   const [shaking, setShaking] = useState(false);
-  const drag = useRef<{ x: number; y: number; t: number } | null>(null);
+  const [ready, setReady] = useState(false);
 
+  // 3D device + live screen
   useEffect(() => {
-    if (canvas.current) s.attach(canvas.current);
+    let disposed = false;
+    let raf = 0;
+    let cleanup = () => {};
+    const screen = document.createElement("canvas");
+    screen.width = 160;
+    screen.height = 144;
+    s.attach(screen);
+
+    const placeZones = (scene: HeroScene) => {
+      const a = scene.project("ButtonA");
+      const b = scene.project("ButtonB");
+      if (!a || !b) return;
+      const pxPerMm = Math.hypot(a.x - b.x, a.y - b.y) / A_TO_B_MM;
+      ZONES.forEach((z, i) => {
+        const el = zoneRefs.current[i];
+        const at = scene.project(z.part);
+        if (!el || !at) return;
+        const w = z.w * pxPerMm;
+        const h = z.h * pxPerMm;
+        el.style.width = `${w}px`;
+        el.style.height = `${h}px`;
+        el.style.transform = `translate3d(${at.x + z.dx * pxPerMm - w / 2}px, ${at.y + z.dy * pxPerMm - h / 2}px, 0)`;
+      });
+    };
+
+    (async () => {
+      const { HeroScene } = await import("../landing/scene");
+      if (disposed || !canvas.current) return;
+      const scene = new HeroScene(canvas.current, {
+        fixed: { az: -0.16, el: 0.05, dist: 0.39, tx: 0.002, ty: 0.004, lift: 0, tilt: 0, apart: 0, shift: 0 },
+        plainFraming: true,
+      });
+      sceneRef.current = scene;
+      const fit = () => {
+        const r = canvas.current!.getBoundingClientRect();
+        scene.resize(r.width, r.height);
+      };
+      fit();
+      window.addEventListener("resize", fit);
+      await scene.load("/3d/kagiboy.glb");
+      if (disposed) return;
+      scene.setScreen(screen);
+      s.onFrame = () => scene.screenChanged();
+      setReady(true);
+
+      const loop = () => {
+        raf = requestAnimationFrame(loop);
+        scene.frame();
+        placeZones(scene);
+      };
+      raf = requestAnimationFrame(loop);
+      cleanup = () => {
+        window.removeEventListener("resize", fit);
+        s.onFrame = null;
+        scene.dispose();
+      };
+    })();
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      cleanup();
+    };
   }, [s]);
+
+  const press = (key: Key, down: boolean) => {
+    s.key(key, down);
+    sceneRef.current?.press(PART[key], down);
+  };
 
   useEffect(() => {
     const isTyping = (e: KeyboardEvent) => {
@@ -37,10 +134,13 @@ export function GameBoyShell() {
       if (!k || isTyping(e)) return;
       e.preventDefault();
       s.key(k, true);
+      sceneRef.current?.press(PART[k], true);
     };
     const up = (e: KeyboardEvent) => {
       const k = KEYBOARD[e.key];
-      if (k) s.key(k, false);
+      if (!k) return;
+      s.key(k, false);
+      sceneRef.current?.press(PART[k], false);
     };
     const blur = () => s.releaseAll();
     window.addEventListener("keydown", down);
@@ -53,8 +153,9 @@ export function GameBoyShell() {
     };
   }, [s]);
 
-  // "Shake" button: jitter the accelerometer while held.
+  // "Hold to shake": jitter the accelerometer while held
   useEffect(() => {
+    sceneRef.current?.shake(shaking ? 1 : 0);
     if (!shaking) {
       s.chip.accel = { x: 0, y: 0 };
       return;
@@ -65,7 +166,7 @@ export function GameBoyShell() {
     return () => clearInterval(id);
   }, [shaking, s]);
 
-  // Real accelerometer on phones.
+  // the phone's real accelerometer, when there is one
   useEffect(() => {
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
@@ -76,19 +177,7 @@ export function GameBoyShell() {
     return () => window.removeEventListener("devicemotion", onMotion);
   }, [s]);
 
-  // Dragging the console around also feeds the accelerometer.
-  const onBodyMove = (e: ReactPointerEvent) => {
-    if (!drag.current) return;
-    const now = performance.now();
-    const dt = Math.max(now - drag.current.t, 1);
-    s.chip.accel = {
-      x: clamp(((e.clientX - drag.current.x) / dt) * 40),
-      y: clamp(((e.clientY - drag.current.y) / dt) * 40),
-    };
-    drag.current = { x: e.clientX, y: e.clientY, t: now };
-  };
-
-  const startShake = async () => {
+  const startShake = () => {
     // iOS asks once before it shares motion data
     const DME = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
     if (DME.requestPermission) DME.requestPermission().catch(() => {});
@@ -96,114 +185,53 @@ export function GameBoyShell() {
   };
 
   return (
-    <div className="gb-stage">
-      <div className={`cart-slot ${s.powered ? "inserted" : ""}`} aria-hidden>
-        <div className="cart">
-          <div className="cart-label">
-            <span>{brand.name}</span>
-            <small>SOL · EVM</small>
-          </div>
-        </div>
-      </div>
-      <div
-        className={`gb ${shaking ? "shake" : ""}`}
-        onPointerDown={(e) => {
-          if ((e.target as HTMLElement).closest("button")) return;
-          drag.current = { x: e.clientX, y: e.clientY, t: performance.now() };
-          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-        }}
-        onPointerMove={onBodyMove}
-        onPointerUp={() => {
-          drag.current = null;
-          s.chip.accel = { x: 0, y: 0 };
-        }}
-      >
-        <div className="gb-top">
-          <button className={`power ${s.powered ? "on" : ""}`} onClick={() => (s.powered ? s.powerOff() : s.powerOn())}>
-            ◀ OFF · ON ▶
-          </button>
-        </div>
-        <div className="bezel">
-          <div className="bezel-stripes">
-            <span>DOT MATRIX · KEY CHIP INSIDE</span>
-          </div>
-          <div className="screen-row">
-            <div className="led-wrap">
-              <span className={`led ${s.powered ? "on" : ""}`} />
-              <small>BATTERY</small>
-            </div>
-            <canvas ref={canvas} width={160} height={144} className="screen" />
-          </div>
-        </div>
-        <div className="wordmark">{brand.name}</div>
-
-        <div className="controls">
-          <div className="dpad">
-            <PadButton k="UP" className="up" />
-            <PadButton k="LEFT" className="left" />
-            <PadButton k="RIGHT" className="right" />
-            <PadButton k="DOWN" className="down" />
-            <span className="dpad-center" />
-          </div>
-          <div className="ab">
-            <PadButton k="B" className="btn-b" label="B" />
-            <PadButton k="A" className="btn-a" label="A" />
-          </div>
-        </div>
-        <div className="start-select">
-          <PadButton k="SELECT" className="pill" label="SELECT" />
-          <PadButton k="START" className="pill" label="START" />
-        </div>
-        <div className="speaker" aria-hidden>
-          {Array.from({ length: 6 }, (_, i) => (
-            <span key={i} />
-          ))}
-        </div>
+    <div className="device">
+      <div className={`device-stage ${ready ? "is-ready" : ""}`}>
+        <img className="device-still" src="/renders/front-ortho.webp" alt="" aria-hidden />
+        <canvas ref={canvas} className="device-canvas" role="img" aria-label="Game Boy with the kagiboy cartridge" />
+        {ZONES.map((z, i) => (
+          <button
+            key={z.key}
+            ref={(el) => void (zoneRefs.current[i] = el)}
+            className={`zone ${z.round ? "round" : ""}`}
+            aria-label={z.key}
+            onPointerDown={() => press(z.key, true)}
+            onPointerUp={() => press(z.key, false)}
+            onPointerLeave={() => press(z.key, false)}
+            onPointerCancel={() => press(z.key, false)}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        ))}
       </div>
 
-      <div className="gb-help">
+      <div className="device-controls">
         {!s.powered ? (
-          <button className="primary" onClick={() => s.powerOn()}>
+          <button className="btn btn-ink" onClick={() => s.powerOn()}>
             Switch on
           </button>
         ) : (
-          <button
-            className={`shake-btn ${shaking ? "active" : ""}`}
-            onPointerDown={startShake}
-            onPointerUp={() => setShaking(false)}
-            onPointerLeave={() => setShaking(false)}
-          >
-            Hold to shake
-          </button>
+          <>
+            <button
+              className={`btn btn-paper shake ${shaking ? "is-on" : ""}`}
+              onPointerDown={startShake}
+              onPointerUp={() => setShaking(false)}
+              onPointerLeave={() => setShaking(false)}
+            >
+              Hold to shake
+            </button>
+            <button className="btn btn-paper" onClick={() => s.powerOff()}>
+              Switch off
+            </button>
+            <button className="link" onClick={() => s.toggleMute()} aria-pressed={!s.muted}>
+              {s.muted ? "Sound off" : "Sound on"}
+            </button>
+          </>
         )}
-        {s.powered && (
-          <button className="mute" onClick={() => s.toggleMute()} aria-pressed={!s.muted}>
-            {s.muted ? "Sound off" : "Sound on"}
-          </button>
-        )}
-        <p>
-          Keys: arrows · <kbd>X</kbd> A · <kbd>Z</kbd> B · <kbd>Enter</kbd> Start · <kbd>Shift</kbd> Select
-        </p>
       </div>
+      <p className="keys">
+        Keys: arrows · <kbd>X</kbd> A · <kbd>Z</kbd> B · <kbd>Enter</kbd> Start · <kbd>Shift</kbd> Select
+      </p>
     </div>
-  );
-}
-
-function PadButton({ k, className, label }: { k: Key; className: string; label?: string }) {
-  const s = useSession();
-  const press = (down: boolean) => () => s.key(k, down);
-  return (
-    <button
-      className={className}
-      aria-label={k}
-      onPointerDown={press(true)}
-      onPointerUp={press(false)}
-      onPointerLeave={press(false)}
-      onPointerCancel={press(false)}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {label && <span>{label}</span>}
-    </button>
   );
 }
 

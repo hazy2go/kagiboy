@@ -17,11 +17,19 @@ export const WIDTH = 160;
 export const HEIGHT = 144;
 
 // Original DMG pea-soup greens, lightest to darkest.
-const DMG = [
+export const DMG = [
   [0x9b, 0xbc, 0x0f],
   [0x8b, 0xac, 0x0f],
   [0x30, 0x62, 0x30],
   [0x0f, 0x38, 0x0f],
+];
+
+// Soft LCD tones for the pastel site, lightest to darkest.
+export const SOFT_LCD = [
+  [228, 235, 216],
+  [164, 182, 150],
+  [82, 102, 88],
+  [30, 40, 38],
 ];
 
 interface Core {
@@ -94,12 +102,12 @@ export class GameBoy implements Bus {
     this.core.memory[addr] = value;
   }
 
-  /** RGBA pixels, recoloured to the DMG palette. */
-  draw(into: Uint8ClampedArray) {
+  /** RGBA pixels, recoloured to a 4-tone palette (DMG greens by default). */
+  draw(into: Uint8ClampedArray, palette: number[][] = DMG) {
     const src = this.core.canvasBuffer.data;
     for (let i = 0; i < src.length; i += 4) {
       const lum = src[i] * 0.3 + src[i + 1] * 0.59 + src[i + 2] * 0.11;
-      const c = DMG[lum > 200 ? 0 : lum > 130 ? 1 : lum > 60 ? 2 : 3];
+      const c = palette[lum > 200 ? 0 : lum > 130 ? 1 : lum > 60 ? 2 : 3];
       into[i] = c[0];
       into[i + 1] = c[1];
       into[i + 2] = c[2];

@@ -1,6 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
 import qrcode from "qrcode-generator";
-import brand from "../../../brand.json";
 import type { Chain } from "../chip/protocol";
 import { formatUnits } from "viem";
 import { explorer, type Activity } from "../phone/phone";
@@ -19,7 +18,7 @@ export function PhoneApp() {
       <div className="phone-notch" />
       <div className="phone-screen">
         <header className="app-head">
-          <strong>{brand.name}</strong>
+          <strong>kagiboy</strong>
           <span className={`link-pill ${s.powered ? "up" : ""}`}>
             <i /> {s.powered ? "Cartridge linked" : "No cartridge"}
           </span>
@@ -203,7 +202,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
             Amount
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
           </label>
-          <button className="primary" disabled={!to || !amount || s.phone.sending}>
+          <button className="btn btn-ink" disabled={!to || !amount || s.phone.sending}>
             {s.phone.sending ? "Preparing…" : "Ask cartridge to sign"}
           </button>
           {error && <p className="error">{error}</p>}

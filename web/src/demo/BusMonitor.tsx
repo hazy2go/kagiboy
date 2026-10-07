@@ -1,25 +1,27 @@
 import { useSession } from "./session";
 
-/** Live view of the cartridge bus: every request the Game Boy makes and every reply. */
+/** Every request the Game Boy makes and every reply, printed as a running tape. */
 export function BusMonitor() {
   const s = useSession();
-  const rows = s.chip.log.slice(-40).reverse();
+  const rows = s.chip.log.slice(-28).reverse();
   return (
-    <section className="bus">
+    <section className="bus" aria-label="Cartridge bus log">
       <header>
-        <h4>Cartridge bus</h4>
-        <span>Mailbox at 0xD800 · what the Game Boy and key chip say to each other</span>
+        <h2>The cartridge bus</h2>
+        <p>What the Game Boy and the key chip say to each other, through the mailbox at 0xD800. PINs and words are never shown.</p>
       </header>
-      <ol>
-        {rows.length === 0 && <li className="idle">Switch on the Game Boy to see traffic.</li>}
-        {rows.map((r, i) => (
-          <li key={`${r.t}-${i}`} className={r.dir === "gb>chip" ? "req" : "resp"}>
-            <span className="dir">{r.dir === "gb>chip" ? "GB → CHIP" : "CHIP → GB"}</span>
-            <span className="cmd">{r.cmd}</span>
-            <code>{r.hex}</code>
-          </li>
-        ))}
-      </ol>
+      <div className="tape paper-white">
+        <ol>
+          {rows.length === 0 && <li className="px idle">SWITCH ON THE GAME BOY TO SEE TRAFFIC</li>}
+          {rows.map((r, i) => (
+            <li key={`${r.t}-${i}`} className={`px ${r.dir === "gb>chip" ? "req" : "resp"}`}>
+              <span className="dir">{r.dir === "gb>chip" ? "GB > CHIP" : "CHIP > GB"}</span>
+              <span className="cmd">{r.cmd}</span>
+              <code>{r.hex}</code>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }

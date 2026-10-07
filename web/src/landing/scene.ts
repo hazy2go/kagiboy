@@ -73,9 +73,17 @@ export class HeroScene {
   private w = 1;
   private h = 1;
 
-  constructor(canvas: HTMLCanvasElement, opts: { still?: boolean } = {}) {
+  private fixed: Pose | null = null;
+  private pressed = new Map<string, { obj: THREE.Object3D; home: THREE.Vector3 }>();
+  private wobble = 0;
+
+  private plainFraming = false;
+
+  constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean } = {}) {
     this.canvas = canvas;
     this.still = !!opts.still;
+    this.plainFraming = !!opts.plainFraming;
+    if (opts.fixed) this.fixed = { ...KEYS[0][1], ...opts.fixed };
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -133,7 +141,7 @@ export class HeroScene {
     this.screen.map = tex;
     this.screen.emissiveMap = tex;
     this.screen.emissive = new THREE.Color(0xffffff);
-    this.screen.emissiveIntensity = 0.55;
+    this.screen.emissiveIntensity = 0.38;
     this.screen.color = new THREE.Color(0xffffff);
     this.screen.needsUpdate = true;
     this.needs = true;
@@ -155,16 +163,35 @@ export class HeroScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     // keep the console framed on tall phones
-    this.camera.fov = w / h < 0.8 ? 42 : 30;
+    this.camera.fov = w / h < 0.8 && !this.plainFraming ? 42 : 30;
     this.camera.updateProjectionMatrix();
     this.needs = true;
   }
 
-  /** Screen-space position (px) of a cartridge part, for the callouts. */
+  /** Push a button mesh in (DPad, ButtonA, ButtonB, Start, Select). */
+  press(name: string, down: boolean) {
+    let entry = this.pressed.get(name);
+    if (!entry) {
+      const obj = this.gb.getObjectByName(name);
+      if (!obj) return;
+      entry = { obj, home: obj.position.clone() };
+      this.pressed.set(name, entry);
+    }
+    entry.obj.position.z = entry.home.z - (down ? 0.0016 : 0);
+    this.needs = true;
+  }
+
+  /** 0..1: how hard the console is being shaken. */
+  shake(amount: number) {
+    this.wobble = amount;
+    this.needs = true;
+  }
+
+  /** Screen-space position (px) of any named part (cartridge pieces or console buttons). */
   project(name: string): { x: number; y: number } | null {
-    const piece = this.pieces[name];
-    if (!piece) return null;
-    const v = piece.obj.getWorldPosition(new THREE.Vector3()).project(this.camera);
+    const obj = this.pieces[name]?.obj ?? this.gb.getObjectByName(name);
+    if (!obj) return null;
+    const v = obj.getWorldPosition(new THREE.Vector3()).project(this.camera);
     const r = this.canvas.getBoundingClientRect();
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
@@ -180,16 +207,19 @@ export class HeroScene {
     // ease toward the scroll position, so scrubbing feels weighted
     const diff = this.target - this.current;
     this.current = Math.abs(diff) < 1e-4 ? this.target : this.current + diff * (1 - Math.exp(-dt * 7));
-    const pose = poseAt(this.current);
+    const pose = this.fixed ?? poseAt(this.current);
 
     // a slow breath while the hero is at rest
-    const rest = this.still ? 0 : Math.max(0, 1 - this.current / 0.12);
+    const rest = this.still || this.fixed ? 0 : Math.max(0, 1 - this.current / 0.12); // the demo console holds still so its buttons are easy to hit
     const breathe = Math.sin(t * 0.9) * 0.004 * rest;
-    this.gb.position.y = breathe;
-    this.gb.rotation.y = Math.sin(t * 0.45) * 0.05 * rest;
+    const jolt = this.wobble ? (Math.random() - 0.5) * 0.06 * this.wobble : 0;
+    this.gb.position.y = breathe + jolt * 0.04;
+    this.gb.rotation.y = Math.sin(t * 0.45) * 0.05 * rest + jolt;
+    this.gb.rotation.z = jolt * 0.6;
 
     const c = this.camera;
-    const r = pose.dist * (c.aspect < 0.8 ? 1.45 : 1);
+    const tall = c.aspect < 0.8 && !this.plainFraming;
+    const r = pose.dist * (tall ? 1.45 : 1);
     c.position.set(
       pose.tx + r * Math.cos(pose.el) * Math.sin(pose.az),
       pose.ty + r * Math.sin(pose.el),
@@ -197,7 +227,8 @@ export class HeroScene {
     );
     c.lookAt(pose.tx, pose.ty, 0);
     // wide screens: console right of the copy; tall screens: console in the upper half
-    if (c.aspect >= 0.8) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
+    if (this.plainFraming) c.clearViewOffset();
+    else if (!tall) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
     else c.setViewOffset(this.w, this.h, 0, this.h * 0.27, this.w, this.h);
 
     if (this.cart) {
@@ -223,7 +254,7 @@ export class HeroScene {
   }
 
   get dirty() {
-    return this.needs || Math.abs(this.target - this.current) > 1e-4;
+    return this.needs || this.wobble > 0 || Math.abs(this.target - this.current) > 1e-4;
   }
 
   dispose() {

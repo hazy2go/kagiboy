@@ -1,11 +1,11 @@
 import "../polyfill"; // must run before @solana/web3.js loads
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import brand from "../../../brand.json";
 import { BusMonitor } from "./BusMonitor";
 import { GameBoyShell } from "./GameBoyShell";
 import { PhoneApp } from "./PhoneApp";
 import { useSession } from "./session";
+import "./demo.css";
 
 export function DemoPage() {
   const s = useSession();
@@ -19,47 +19,46 @@ export function DemoPage() {
     }
   }, [pending]);
 
+  useEffect(() => {
+    document.documentElement.classList.add("kb-root");
+    return () => document.documentElement.classList.remove("kb-root");
+  }, []);
+
   return (
-    <div className="demo">
-      <header className="demo-head">
-        <Link to="/" className="brand">
-          {brand.name}
+    <div className="kb demo">
+      <nav className="kb-nav" aria-label="Main">
+        <Link to="/" className="kb-word" aria-label="kagiboy home">
+          kagiboy
         </Link>
-        <span className="net">Testnets only · Solana devnet · Ethereum Sepolia</span>
+        <span className="net">Live demo · Solana devnet · Ethereum Sepolia</span>
+      </nav>
+
+      <header className="demo-intro">
+        <h1>Try kagiboy.</h1>
+        <p className="next-step" aria-live="polite">
+          <span className="px">NEXT</span>
+          <span>{nextStep(s)}</span>
+        </p>
       </header>
 
-      <p className="next-step" aria-live="polite">
-        <span>Next</span> {nextStep(s)}
-      </p>
-
       <div className="rig">
-        <div ref={gbRef}>
+        <div ref={gbRef} className="rig-gb">
           <GameBoyShell />
         </div>
         <div className="wire" aria-hidden>
-          <span>Bluetooth</span>
+          <span className="px">BLUETOOTH</span>
         </div>
         <PhoneApp />
       </div>
 
-      <div className="below">
-        <ol className="steps">
-          <li>
-            <b>Switch on.</b> The Game Boy boots the wallet from the cartridge.
-          </li>
-          <li>
-            <b>Make your keys.</b> Mash buttons, then hold “shake”. Both feed the chip's random number generator.
-          </li>
-          <li>
-            <b>Send from the phone.</b> The phone builds the transaction, but only the Game Boy can approve it.
-          </li>
-        </ol>
-        <BusMonitor />
-      </div>
+      <BusMonitor />
 
-      <footer className="demo-foot">
-        Demo build: the key chip is simulated in your browser and the wallet is saved in this browser's storage. Use
-        testnet funds only.
+      <footer className="kb-foot">
+        <p>
+          Demo build: the cartridge's chip is simulated in your browser, and this wallet is saved in this browser's
+          storage. Testnet funds only.
+        </p>
+        <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>
     </div>
   );
