@@ -76,7 +76,7 @@ function nextStep(s: ReturnType<typeof useSession>): string {
     case "locked":
       return "Enter your PIN on the Game Boy (arrows change digits, A confirms).";
     default:
-      if (!s.phone.balances.sol && !s.phone.balances.evm) return "Fund the wallet: tap “Airdrop 1 SOL” on the phone, or press A on the Game Boy to show your QR code.";
+      if (!s.phone.balances.sol && !s.phone.balances.evm) return "Fund the wallet: tap “Get test SOL” on the phone (your address is copied for you), or press A on the Game Boy to show its QR code.";
       return "Send a test transfer from the phone and approve it on the Game Boy.";
   }
 }

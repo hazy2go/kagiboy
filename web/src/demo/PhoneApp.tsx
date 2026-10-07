@@ -70,21 +70,32 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
       <article className="card sol">
         <div className="card-top">
           <span>Solana</span>
-          <a href={explorer.solAddr(addr.sol)} target="_blank" rel="noreferrer">
-            Explorer <Out />
-          </a>
-        </div>
-        <div className="amount">{show(sol, 9)} <small>SOL</small></div>
-        <Copy text={addr.sol} />
-        <div className="card-actions">
-          <button onClick={doAirdrop} disabled={airdrop === "busy"}>
-            {airdrop === "busy" ? "Requesting…" : "Airdrop 1 SOL"}
-          </button>
-          {airdrop === "failed" && (
-            <a href={SOLANA_FAUCET} target="_blank" rel="noreferrer" className="hint">
-              Faucet is rate limited. Use faucet.solana.com <Out />
+          {sol !== 0n && (
+            <a href={explorer.solAddr(addr.sol)} target="_blank" rel="noreferrer">
+              Explorer <Out />
             </a>
           )}
+        </div>
+        <div className="amount">{show(sol, 9)} <small>SOL</small></div>
+        {sol === 0n && (
+          <p className="hint fresh">A brand-new address. Solana only lists it on the explorer after its first deposit.</p>
+        )}
+        <Copy text={addr.sol} />
+        <div className="card-actions">
+          {/* the public airdrop endpoint is usually rate limited, so the web faucet comes first */}
+          <a
+            href={SOLANA_FAUCET}
+            target="_blank"
+            rel="noreferrer"
+            className="faucet-btn"
+            onClick={() => navigator.clipboard?.writeText(addr.sol).catch(() => {})}
+          >
+            Get test SOL <Out />
+          </a>
+          <button className="link-btn" onClick={doAirdrop} disabled={airdrop === "busy"}>
+            {airdrop === "busy" ? "Requesting…" : "or try a quick airdrop"}
+          </button>
+          {airdrop === "failed" && <p className="hint">The quick airdrop is out of SOL right now. Use the faucet button; your address is copied.</p>}
         </div>
       </article>
       <article className="card evm">
@@ -97,8 +108,14 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
         <div className="amount">{show(evm, 18)} <small>ETH</small></div>
         <Copy text={addr.evm} />
         <div className="card-actions">
-          <a href={SEPOLIA_FAUCET} target="_blank" rel="noreferrer" className="hint">
-            Get Sepolia ETH <Out />
+          <a
+            href={SEPOLIA_FAUCET}
+            target="_blank"
+            rel="noreferrer"
+            className="faucet-btn"
+            onClick={() => navigator.clipboard?.writeText(addr.evm).catch(() => {})}
+          >
+            Get test ETH <Out />
           </a>
         </div>
       </article>
