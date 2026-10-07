@@ -41,7 +41,9 @@ export async function POST(request: Request): Promise<Response> {
     if (hits === 1) await redis("EXPIRE", key, 600);
     if (hits > LIMIT) return Response.json({ error: "Too many tries. Give it a few minutes." }, { status: 429 });
 
-    // HSETNX makes "first time we've seen this email" atomic; a lost race only skips a number
+    // repeats are answered before a number is drawn, so they never use one up
+    if (Number(await redis("HEXISTS", "waitlist:position", email))) return Response.json({ already: true });
+    // HSETNX keeps "first time we've seen this email" atomic; only a true race can skip a number
     const position = Number(await redis("INCR", "waitlist:count"));
     const added = Number(await redis("HSETNX", "waitlist:position", email, position));
     // an email already on the list gets no number back, so nobody can look up when someone joined
