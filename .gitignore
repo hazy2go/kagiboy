@@ -5,3 +5,8 @@ smoke-out
 .DS_Store
 .vercel
 .env*
+assets/3d/*.blend
+assets/3d/*.blend1
+assets/3d/raw
+assets/renders/drafts
+.impeccable/direction.json

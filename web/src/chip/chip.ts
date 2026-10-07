@@ -540,6 +540,12 @@ function bytesEqual(a: Uint8Array, b: Uint8Array) {
   return a.length === b.length && a.every((x, i) => x === b[i]);
 }
 
+/** A stored wallet with a known PIN, for the landing page's attract mode (testnet only). */
+export function demoPersisted(mnemonic: string, pin: number[]): Persisted {
+  const pinSalt = "demo";
+  return { mnemonic, pinSalt, pinHash: pinHash(pinSalt, Uint8Array.from(pin)), triesLeft: 5 };
+}
+
 function pinHash(salt: string, pin: Uint8Array) {
   return hex(sha256(concat(ascii(salt), pin)));
 }

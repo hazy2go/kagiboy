@@ -1,212 +1,452 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import brand from "../../../brand.json";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
+import { Waitlist } from "./Waitlist";
 import "./landing.css";
 
-// Real screenshots from the ROM (regenerate with `pnpm smoke` after ROM UI changes).
-const HERO_SCREENS = ["/screens/home.png", "/screens/qr.png", "/screens/sign.png", "/screens/confirmed.png"];
+gsap.registerPlugin(ScrollTrigger);
+
+// windows of the stage's scroll progress in which each chapter's copy shows
+const CHAPTERS = [
+  { id: "hero", from: -1, to: 0.13 },
+  { id: "insert", from: 0.2, to: 0.37 },
+  { id: "apart", from: 0.45, to: 0.62 },
+  { id: "sign", from: 0.8, to: 2 },
+] as const;
+
+const CALLOUTS = [
+  { part: "SecureElement", name: "SE050C", note: "Secure element. The keys live and sign in here." },
+  { part: "MCU", name: "RP2350", note: "Talks to the Game Boy over the cartridge bus." },
+  { part: "BLE", name: "CYW43439", note: "Bluetooth to your phone. Public data only." },
+  { part: "Accel", name: "LIS3DH", note: "Turns a shake into randomness." },
+] as const;
 
 const STEPS = [
-  {
-    img: "/screens/mash.png",
-    title: "Mash, then shake",
-    body: "Setup asks you to mash buttons and shake the console. The timing and motion are mixed into the secure chip's own random number generator.",
-  },
-  {
-    img: "/screens/words.png",
-    title: "Write down 12 words",
-    body: "Your backup appears once, on the Game Boy. It never touches your phone or the internet, and it restores into any standard wallet.",
-  },
-  {
-    img: "/screens/qr.png",
-    title: "Receive with a QR code",
-    body: "Your Solana and Ethereum addresses show as QR codes on the Game Boy screen. Scan them straight off the console, so a hacked phone can't swap them.",
-  },
-  {
-    img: "/screens/sign.png",
-    title: "Approve on the Game Boy",
-    body: "Your phone prepares the transaction. The cartridge decodes it and shows the real amount and address. Hold A to sign, press B to refuse.",
-  },
-];
+  { print: "mash", paper: "blue", stamp: ["STEP 1 OF 3", "MASH + SHAKE"], caption: "Mash buttons, then shake it. The chip mixes your noise into its own randomness." },
+  { print: "words", paper: "white", stamp: ["STEP 2 OF 3", "12 WORDS", "SAMPLE WALLET"], caption: "Your backup appears once, on the Game Boy, and nowhere else." },
+  { print: "pin", paper: "pink", stamp: ["STEP 3 OF 3", "PIN", "5 TRIES, THEN WIPE"], caption: "Pick a PIN. Five wrong tries and the chip erases the keys." },
+  { print: "qr", paper: "lavender", stamp: ["RECEIVE", "SCAN IT OFF", "THE SCREEN"], caption: "Your address as a QR code, drawn by the cartridge, not the phone." },
+  { print: "sign", paper: "pink", stamp: ["APPROVE", "HOLD A", "1 SECOND"], caption: "The real amount, fee and address. Hold A to sign, B to refuse." },
+  { print: "confirmed", paper: "blue", stamp: ["SIGNED", "SENT TO", "YOUR PHONE"], caption: "The signature goes to the phone, which broadcasts it." },
+] as const;
 
-const SECURITY = [
-  ["Keys never leave the chip", "An NXP SE050 secure element creates your seed and signs inside itself. Plugging the cartridge into a reader gets a thief nothing."],
-  ["Five wrong PINs and it wipes", "The retry counter lives inside the secure element, so reflashing the cartridge doesn't reset it."],
-  ["What you see is what you sign", "The phone can ask, but only the A button approves. The cartridge freezes each transaction, shows the exact amount, fee and network, and signs exactly those bytes. Anything it can't show you, it refuses."],
-  ["Bluetooth carries nothing secret", "Unsigned transactions go in and signatures come out. Someone listening learns what you sent, not how to sign."],
-];
+const PROMISES = [
+  ["KEYS", "NEVER LEAVE THE CHIP"],
+  ["SCREEN", "ONLY THE CARTRIDGE DRAWS"],
+  ["SIGNS", "EXACTLY WHAT IT SHOWS"],
+  ["REFUSES", "WHAT IT CAN'T SHOW"],
+  ["PIN", "5 TRIES, THEN WIPE"],
+  ["EVM", "SEPOLIA ONLY, FEE CAP"],
+  ["BLUETOOTH", "PUBLIC DATA ONLY"],
+] as const;
 
-const PARTS = [
-  ["RP2350", "Talks to the Game Boy over the cartridge bus"],
-  ["NXP SE050C", "Holds the keys; signs Solana (Ed25519) and EVM (secp256k1)"],
-  ["CYW43439", "Bluetooth LE to your phone"],
-  ["LIS3DH", "Accelerometer for shake-to-generate"],
-];
+const BOM = [
+  ["RP2350 MCU", "1.10"],
+  ["NXP SE050C", "3.00"],
+  ["CYW43439 BLE", "4.00"],
+  ["LIS3DH", "0.80"],
+  ["3x TXB0108", "1.50"],
+  ["4MB FLASH", "0.40"],
+  ["PCB + SHELL", "3.00"],
+] as const;
+
+const ROADMAP = [
+  ["NOW", "Game Boy software, chip logic and phone app, on testnets."],
+  ["WEEKS 1-2", "Dev board: Pico 2 W, SE050 kit, accelerometer, on a flash cart."],
+  ["WEEKS 3-8", "Custom PCB, power tests on a real DMG, signed firmware, link-cable backup."],
+  ["THEN", "Small batch, and an outside security review before real funds."],
+] as const;
 
 export function Landing() {
-  const [screen, setScreen] = useState(0);
+  const stageRef = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chapterRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const calloutRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const slipRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => setScreen((i) => (i + 1) % HERO_SCREENS.length), 2600);
-    return () => clearInterval(id);
+    document.documentElement.classList.add("kb-root");
+    return () => document.documentElement.classList.remove("kb-root");
+  }, []);
+
+  // smooth scroll + the 3D stage
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let lenis: Lenis | null = null;
+    const tick = (t: number) => lenis?.raf(t * 1000);
+    if (!reduced) {
+      lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 0.9 });
+      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+    }
+
+    // "print" elements feed out when they enter the viewport
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+        }),
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    document.querySelectorAll(".print-in").forEach((el) => io.observe(el));
+
+    let disposed = false;
+    let raf = 0;
+    let cleanupScene = () => {};
+    const stage = stageRef.current!;
+    const canvas = canvasRef.current!;
+
+    const paintChapters = (p: number) => {
+      for (const c of CHAPTERS) {
+        const el = chapterRefs.current[c.id];
+        if (!el) continue;
+        const fade = 0.035;
+        const vis = Math.min(1, Math.max(0, (p - c.from) / fade), Math.max(0, (c.to - p) / fade));
+        el.style.opacity = String(vis);
+        el.style.transform = `translate3d(0, ${(1 - vis) * 18}px, 0)`;
+        el.style.visibility = vis > 0.01 ? "visible" : "hidden";
+      }
+      slipRef.current?.style.setProperty("--feed", String(Math.min(1, Math.max(0, (p - 0.86) / 0.11))));
+      stage.style.setProperty("--hint", String(Math.max(0, 1 - p / 0.04)));
+    };
+
+    const placeCallouts = (scene: { project(n: string): { x: number; y: number } | null }, p: number) => {
+      const vis = Math.min(1, Math.max(0, (p - 0.5) / 0.03), Math.max(0, (0.62 - p) / 0.03));
+      for (const c of CALLOUTS) {
+        const el = calloutRefs.current[c.part];
+        const at = scene.project(c.part);
+        if (!el || !at) continue;
+        el.style.opacity = String(vis);
+        el.style.visibility = vis > 0.01 ? "visible" : "hidden";
+        el.style.transform = `translate3d(${at.x}px, ${at.y}px, 0)`;
+      }
+    };
+
+    (async () => {
+      const { HeroScene } = await import("./scene");
+      if (disposed) return;
+      let scene: InstanceType<typeof HeroScene>;
+      try {
+        scene = new HeroScene(canvas, { still: reduced });
+      } catch {
+        stage.classList.add("no-webgl");
+        return;
+      }
+      const fit = () => {
+        const r = canvas.getBoundingClientRect();
+        scene.resize(r.width, r.height);
+      };
+      fit();
+      window.addEventListener("resize", fit);
+
+      await scene.load("/3d/kagiboy.glb");
+      if (disposed) return;
+      const still = new Image();
+      still.src = "/screens/home.png";
+      still.onload = () => scene.setScreen(still);
+      stage.classList.add("is-ready");
+
+      const st = ScrollTrigger.create({
+        trigger: stage,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: (s) => scene.setProgress(s.progress),
+      });
+
+      // the real ROM, loaded after first paint so the page opens fast
+      let attract: import("./attract").Attract | null = null;
+      if (!reduced) {
+        import("./attract").then(async ({ startAttract }) => {
+          if (disposed) return;
+          attract = await startAttract();
+          scene.setScreen(attract.canvas);
+          attract.frameListener = () => scene.screenChanged();
+        });
+      }
+
+      let last = performance.now();
+      let debt = 0;
+      let visible = true;
+      const vis = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
+      vis.observe(stage);
+      const loop = (now: number) => {
+        raf = requestAnimationFrame(loop);
+        const dt = now - last;
+        last = now;
+        if (!visible) return; // nothing to draw once the stage has scrolled away
+        if (attract) {
+          debt = Math.min(debt + dt, 70);
+          while (debt >= 16.74) {
+            attract.step();
+            debt -= 16.74;
+          }
+          attract.scene(scene.progress > 0.74 ? "sign" : "home");
+        }
+        const p = scene.frame();
+        paintChapters(p);
+        placeCallouts(scene, p);
+      };
+      raf = requestAnimationFrame(loop);
+
+      cleanupScene = () => {
+        st.kill();
+        vis.disconnect();
+        window.removeEventListener("resize", fit);
+        scene.dispose();
+      };
+    })();
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      cleanupScene();
+      io.disconnect();
+      gsap.ticker.remove(tick);
+      lenis?.destroy();
+    };
   }, []);
 
   return (
-    <div className="lp">
-      <nav className="lp-nav">
-        <Link to="/" className="brand">
-          {brand.name}
+    <div className="kb">
+      <nav className="kb-nav" aria-label="Main">
+        <Link to="/" className="kb-word" aria-label="kagiboy home">
+          kagiboy
         </Link>
-        <div className="lp-links">
-          <a href="#how">How it works</a>
+        <div className="kb-links">
+          <a href="#setup">How it works</a>
           <a href="#security">Security</a>
-          <a href="#hardware">Hardware</a>
-          <Link to="/demo" className="primary small">
+          <a href="#inside">Inside</a>
+          <Link to="/demo" className="btn btn-ink btn-sm">
             Live demo
           </Link>
         </div>
       </nav>
 
-      <header className="lp-hero">
-        <div className="lp-hero-text">
-          <p className="eyebrow">Hardware wallet · Solana + EVM</p>
-          <h1>Your crypto keys, in a Game Boy cartridge.</h1>
-          <p className="lede">
-            {brand.name} turns the original Game Boy into a hardware wallet. A secure chip in the cartridge holds your keys,
-            and you approve every transaction on a screen your phone can't touch.
-          </p>
-          <div className="lp-ctas">
-            <Link to="/demo" className="primary">
-              Try the live demo
-            </Link>
-            <a href="#how" className="ghost">
-              See how it works
-            </a>
-          </div>
-          <p className="fine">The demo runs the real Game Boy software in your browser and signs real testnet transactions.</p>
-        </div>
-        <div className="lp-hero-art" aria-hidden>
-          <div className="mini-cart">
-            <span>{brand.name}</span>
-          </div>
-          <div className="mini-gb">
-            <div className="mini-bezel">
-              <span className="mini-led" />
-              {HERO_SCREENS.map((src, i) => (
-                <img key={src} src={src} alt="" className={i === screen ? "on" : ""} width={320} height={288} />
-              ))}
+      <section className="stage" ref={stageRef} aria-label="The cartridge, up close">
+        <div className="stage-sticky">
+          <div className="haze" aria-hidden />
+          <img className="stage-still" src="/renders/hero-front34.webp" alt="" aria-hidden />
+          <canvas
+            className="stage-canvas"
+            ref={canvasRef}
+            role="img"
+            aria-label="A Game Boy with the kagiboy cartridge, running the wallet"
+          />
+
+          <div className="ch ch-hero" ref={(el) => void (chapterRefs.current.hero = el)}>
+            <h1>Your keys, in a Game Boy cartridge.</h1>
+            <p className="lede">
+              kagiboy turns the original Game Boy into a hardware wallet for Solana and Ethereum. The keys live in a
+              secure chip inside the cartridge, and you approve every transaction on a screen your phone can't touch.
+            </p>
+            <div className="actions">
+              <Link to="/demo" className="btn btn-ink">
+                Try the live demo
+              </Link>
+              <a href="#waitlist" className="btn btn-paper">
+                Join the waitlist
+              </a>
             </div>
-            <div className="mini-controls">
-              <span className="mini-dpad" />
-              <span className="mini-ab">
-                <i />
-                <i />
+            <p className="live-note">
+              <span className="dot" aria-hidden /> The screen runs the real Game Boy software, on a devnet wallet.
+            </p>
+          </div>
+
+          <div className="ch ch-insert" ref={(el) => void (chapterRefs.current.insert = el)}>
+            <h2>The cartridge is the wallet.</h2>
+            <p>Slide it into any original Game Boy. The keys are made inside it, and they never come out.</p>
+          </div>
+
+          <div className="ch ch-apart" ref={(el) => void (chapterRefs.current.apart = el)}>
+            <h2>Four small chips do the work.</h2>
+            <p>About $14 of parts at a hundred units, all of them on distributor shelves today.</p>
+          </div>
+          {CALLOUTS.map((c, i) => (
+            <div
+              key={c.part}
+              className={`callout ${i % 2 ? "flip" : ""}`}
+              ref={(el) => void (calloutRefs.current[c.part] = el)}
+              aria-hidden
+            >
+              <span className="callout-dot" />
+              <span className="callout-card">
+                <b className="px">{c.name}</b>
+                <span>{c.note}</span>
               </span>
             </div>
-          </div>
-        </div>
-      </header>
+          ))}
 
-      <section className="lp-why">
-        <article>
-          <h3>A screen your phone can't touch</h3>
-          <p>
-            A Game Boy has no internet, no app store and no browser. Everything on its screen comes from the cartridge, which
-            makes it a good place to check a transaction before you sign it.
+          <div className="ch ch-sign" ref={(el) => void (chapterRefs.current.sign = el)}>
+            <h2>Hold A to sign.</h2>
+            <p>
+              Your phone asks. The cartridge decodes the transaction itself and shows the real amount, fee and address.
+              Nothing moves until you hold A for a second.
+            </p>
+          </div>
+          <div className="slip" ref={slipRef} aria-hidden>
+            <div className="slip-paper paper-pink">
+              <div className="perf" />
+              <img src="/prints/sign.png" alt="" />
+              <p className="px">APPROVED ON THE GAME BOY</p>
+              <p className="px faint">0.25 SOL - DEVNET SAMPLE</p>
+            </div>
+          </div>
+
+          <p className="scroll-hint" aria-hidden>
+            Scroll
           </p>
-        </article>
-        <article>
-          <h3>Old hardware, new job</h3>
-          <p>Millions of original Game Boys still work. Plug in the cartridge and one of them guards your wallet.</p>
-        </article>
-        <article>
-          <h3>A wallet you won't lose in a drawer</h3>
-          <p>Hardware wallets are easy to forget. This one sits in a console you already care about, and it's fun to use.</p>
-        </article>
+        </div>
       </section>
 
-      <section id="how" className="lp-section">
-        <h2>How it works</h2>
-        <ol className="lp-steps">
+      <section className="setup" id="setup">
+        <header className="sec-head">
+          <h2>Set up in a minute, on the Game Boy.</h2>
+          <p>Every step happens on the console. The phone never sees your keys or your words.</p>
+        </header>
+        <div className="rail" role="list">
           {STEPS.map((s, i) => (
-            <li key={s.title}>
-              <div className="lp-shot">
-                <img src={s.img} alt={`Game Boy screen: ${s.title}`} width={320} height={288} />
+            <figure key={s.print} className="strip print-in" role="listitem" style={{ ["--i" as string]: i }}>
+              <div className={`strip-paper paper-${s.paper}`}>
+                <div className="perf" aria-hidden />
+                <img
+                  src={`/prints/${s.print}.png`}
+                  alt={`Game Boy screen: ${s.stamp.join(", ").toLowerCase()}`}
+                  loading="lazy"
+                />
+                <div className="stamp px">
+                  {s.stamp.map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                </div>
+                <div className="perf bottom" aria-hidden />
               </div>
-              <span className="num">{i + 1}</span>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
+              <figcaption>{s.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      <section className="security" id="security">
+        <header className="sec-head">
+          <h2>What you see is what you sign.</h2>
+          <p>
+            The phone can only ask. The cartridge freezes each transaction, draws it on the Game Boy itself, and signs
+            exactly those bytes.
+          </p>
+        </header>
+        <div className="receipt-wrap">
+          <div className="ghost-slip" aria-hidden>
+            <p className="px">REJECTED</p>
+            <p className="px">NOTHING WAS SIGNED</p>
+          </div>
+          <div className="receipt paper-white print-in">
+            <div className="perf" aria-hidden />
+            <p className="px receipt-title">KAGIBOY SECURITY</p>
+            <ul>
+              {PROMISES.map(([k, v]) => (
+                <li key={k} className="px">
+                  <span>{k}</span>
+                  <i aria-hidden />
+                  <span>{v}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="px receipt-foot">CHECKED ON EVERY REQUEST</p>
+            <div className="perf bottom" aria-hidden />
+          </div>
+          <aside className="limits">
+            <h3>Limits, stated plainly</h3>
+            <p>
+              The cartridge's main chip has published glitch attacks, which is why the keys live in a separate secure
+              element. A modified Game Boy could fake button presses, so possession plus your PIN is the bar. A Solana
+              transaction doesn't say which network it's for, so keep testnet and mainnet seeds apart. Nothing goes on
+              sale before an outside security review.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section className="inside" id="inside">
+        <header className="sec-head">
+          <h2>Built from parts that exist today.</h2>
+          <p>The Game Boy side already works with RP2040 flash carts. kagiboy adds a secure element and a radio.</p>
+        </header>
+        <div className="inside-grid">
+          <img
+            className="exploded"
+            src="/renders/cart-exploded.webp"
+            alt="The kagiboy cartridge taken apart: front shell with label, circuit board with four chips, back shell"
+            loading="lazy"
+          />
+          <div className="receipt bom paper-blue print-in">
+            <div className="perf" aria-hidden />
+            <p className="px receipt-title">PARTS, PER CARTRIDGE</p>
+            <ul>
+              {BOM.map(([k, v]) => (
+                <li key={k} className="px">
+                  <span>{k}</span>
+                  <i aria-hidden />
+                  <span>${v}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="px total">
+              <span>TOTAL</span>
+              <span>$14</span>
+            </p>
+            <p className="px faint">ABOUT, AT 100 UNITS</p>
+            <div className="perf bottom" aria-hidden />
+          </div>
+        </div>
+      </section>
+
+      <section className="status">
+        <header className="sec-head">
+          <h2>Where it stands.</h2>
+          <p>The software is real and runs today. The cartridge is a design, and this is the plan to build it.</p>
+        </header>
+        <ol className="road">
+          {ROADMAP.map(([when, what], i) => (
+            <li key={when} className={`road-step print-in ${i === 0 ? "is-now" : ""}`} style={{ ["--i" as string]: i }}>
+              <span className="px">{when}</span>
+              <p>{what}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section id="security" className="lp-section">
-        <h2>Security model</h2>
-        <div className="lp-grid">
-          {SECURITY.map(([t, b]) => (
-            <article key={t}>
-              <h3>{t}</h3>
-              <p>{b}</p>
-            </article>
-          ))}
+      <section className="demo-cta">
+        <img src="/renders/hero-front34.webp" alt="The Game Boy with the kagiboy cartridge, showing the wallet home screen" loading="lazy" />
+        <div>
+          <h2>Play with it now.</h2>
+          <p>
+            The real Game Boy software runs in your browser, with the cartridge's chip simulated beside it. It signs real
+            Solana devnet and Ethereum Sepolia transactions.
+          </p>
+          <Link to="/demo" className="btn btn-ink">
+            Open the live demo
+          </Link>
         </div>
-        <p className="lp-note">
-          Known limits, stated plainly: the cartridge's main chip has published glitch attacks, which is why keys live in the
-          separate secure element. A modified Game Boy could fake button presses, so possession plus your PIN is the bar.
-          Nothing goes on sale before an external security review.
+      </section>
+
+      <section className="waitlist" id="waitlist">
+        <h2>Print your place in line.</h2>
+        <p>We'll build the first batch if this finds its people. Leave an email and we'll tell you when it ships.</p>
+        <Waitlist />
+      </section>
+
+      <footer className="kb-foot">
+        <p>
+          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge hardware is
+          a design.
         </p>
-      </section>
-
-      <section id="hardware" className="lp-section">
-        <h2>What's in the cartridge</h2>
-        <div className="lp-hw">
-          <ul className="lp-parts">
-            {PARTS.map(([p, d]) => (
-              <li key={p}>
-                <strong>{p}</strong>
-                <span>{d}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="lp-cost">
-            <div className="big">$14</div>
-            <p>Roughly what the parts cost per cartridge at 100 units, from distributor prices. RP2040-based Game Boy flash carts already prove the bus side works.</p>
-          </div>
-        </div>
-
-        <h3 className="lp-sub">Roadmap</h3>
-        <ol className="lp-road">
-          <li className="done">
-            <b>Now</b> Game Boy software, chip logic and phone app, running on testnets.
-          </li>
-          <li>
-            <b>Weeks 1–2</b> Dev board: Pico 2 W, SE050 kit and accelerometer wired to an existing flash cart.
-          </li>
-          <li>
-            <b>Weeks 3–8</b> Custom PCB, power testing on a real DMG, signed firmware, link-cable backup between two
-            cartridges.
-          </li>
-          <li>
-            <b>Then</b> Small batch and an external security review before anyone stores real funds.
-          </li>
-        </ol>
-      </section>
-
-      <section className="lp-final">
-        <h2>Press START.</h2>
-        <p>Make a wallet, receive with a QR code and sign a devnet transaction, all on an emulated Game Boy.</p>
-        <Link to="/demo" className="primary">
-          Open the live demo
-        </Link>
-      </section>
-
-      <footer className="lp-foot">
-        <span>
-          {brand.name} is a Colosseum hackathon project. The cartridge is a design; the demo uses Solana devnet and
-          Ethereum Sepolia only.
-        </span>
-        <span>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</span>
+        <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>
     </div>
   );
