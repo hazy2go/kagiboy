@@ -1,0 +1,163 @@
+import { useSyncExternalStore } from "react";
+import { CartChip, type Persisted, type Storage } from "../chip/chip";
+import { GameBoy, type Key } from "../emu/gameboy";
+import { Phone } from "../phone/phone";
+
+const STORE_KEY = "cartwallet.secure-element";
+
+// Demo only: the "secure element" is localStorage, and it holds testnet keys.
+const browserStorage: Storage = {
+  load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? (JSON.parse(raw) as Persisted) : null;
+    } catch {
+      return null;
+    }
+  },
+  save(p) {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(p));
+    } catch {
+      /* private mode: the wallet just won't survive a reload */
+    }
+  },
+  clear() {
+    try {
+      localStorage.removeItem(STORE_KEY);
+    } catch {
+      /* ignore */
+    }
+  },
+};
+
+const FRAME_MS = 1000 / 59.7275;
+
+/** Owns the emulator loop and the three parts: Game Boy, cartridge chip, phone. */
+export class Session {
+  readonly chip = new CartChip(browserStorage);
+  readonly phone = new Phone(this.chip);
+  private gb: GameBoy | null = null;
+  private rom: Uint8Array | null = null;
+  private canvas: HTMLCanvasElement | null = null;
+  private image: ImageData | null = null;
+  private raf = 0;
+  private last = 0;
+  private debt = 0;
+  private balanceTimer = 0;
+  private version = 0;
+  private frameCount = 0;
+  private pressedAt = new Map<Key, number>();
+  private releaseAt = new Map<Key, number>();
+  private listeners = new Set<() => void>();
+  powered = false;
+
+  constructor() {
+    const bump = () => {
+      this.version++;
+      for (const fn of this.listeners) fn();
+    };
+    this.chip.subscribe(bump);
+    this.phone.subscribe(bump);
+  }
+
+  subscribe = (fn: () => void) => {
+    this.listeners.add(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
+  };
+
+  getVersion = () => this.version;
+
+  attach(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    this.image = canvas.getContext("2d")!.createImageData(160, 144);
+  }
+
+  async powerOn() {
+    this.rom ??= new Uint8Array(await (await fetch("/wallet.gb")).arrayBuffer());
+    this.gb = new GameBoy(this.rom);
+    this.pressedAt.clear();
+    this.releaseAt.clear();
+    this.chip.reset();
+    this.powered = true;
+    this.last = performance.now();
+    this.debt = 0;
+    cancelAnimationFrame(this.raf);
+    this.raf = requestAnimationFrame(this.loop);
+    clearInterval(this.balanceTimer);
+    this.balanceTimer = window.setInterval(() => this.phone.refreshBalances(), 15000);
+    this.notify();
+  }
+
+  powerOff() {
+    cancelAnimationFrame(this.raf);
+    clearInterval(this.balanceTimer);
+    this.gb = null;
+    this.powered = false;
+    this.chip.reset();
+    const ctx = this.canvas?.getContext("2d");
+    if (ctx && this.canvas) {
+      ctx.fillStyle = "#8b9a3c";
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    this.notify();
+  }
+
+  /** Taps are held for at least 3 frames, or the ROM (which polls once per frame) would miss them. */
+  key(key: Key, down: boolean) {
+    if (!this.gb) return;
+    if (down) {
+      this.releaseAt.delete(key);
+      if (!this.pressedAt.has(key)) this.pressedAt.set(key, this.frameCount);
+      this.gb.setKey(key, true);
+      return;
+    }
+    const since = this.pressedAt.get(key);
+    if (since === undefined) return;
+    this.pressedAt.delete(key);
+    if (this.frameCount - since >= 3) this.gb.setKey(key, false);
+    else this.releaseAt.set(key, since + 3);
+  }
+
+  private loop = (now: number) => {
+    const gb = this.gb;
+    if (!gb) return;
+    // keep real Game Boy speed on 60, 120 and 144 Hz displays
+    this.debt = Math.min(this.debt + (now - this.last), FRAME_MS * 4);
+    this.last = now;
+    const before = this.chip.state;
+    while (this.debt >= FRAME_MS) {
+      gb.frame();
+      this.chip.tick(gb);
+      this.frameCount++;
+      for (const [k, at] of this.releaseAt) {
+        if (this.frameCount >= at) {
+          gb.setKey(k, false);
+          this.releaseAt.delete(k);
+        }
+      }
+      this.debt -= FRAME_MS;
+    }
+    if (before !== "unlocked" && this.chip.state === "unlocked") this.phone.refreshBalances();
+    if (this.canvas && this.image) {
+      gb.draw(this.image.data);
+      this.canvas.getContext("2d")!.putImageData(this.image, 0, 0);
+    }
+    this.raf = requestAnimationFrame(this.loop);
+  };
+
+  private notify() {
+    this.version++;
+    for (const fn of this.listeners) fn();
+  }
+}
+
+export const session = new Session();
+
+/** Re-render whenever the chip, phone or power state changes. */
+export function useSession() {
+  useSyncExternalStore(session.subscribe, session.getVersion);
+  return session;
+}

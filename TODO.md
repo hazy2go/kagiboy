@@ -1,0 +1,34 @@
+# TODO
+
+Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Americas).
+
+## Waiting on hazy
+- [ ] **Name.** CARTWALLET is a placeholder. Change `brand.json`, then `cd rom && make`.
+- [ ] **AI mockups (Higgsfield).** Cartridge on a DMG, exploded view of the internals (MCU + SE050 + BLE),
+      shake-to-generate, phone + Game Boy signing, link-cable backup, packaging. Credits needed.
+- [ ] Deploy to Vercel (hazy's account, check `vercel whoami` first).
+
+## Loop backlog
+### UI/UX
+- [ ] Phone app header sits under the notch
+- [ ] Failed tx: show the reason (e.g. "no funds") on the Game Boy and phone
+- [ ] Phone activity scrolls out of view while a request is pending
+- [ ] First-run guidance: point at the Game Boy, highlight the next action
+- [ ] Mobile layout pass (390px): Game Boy first, phone below, sticky controls
+- [ ] Receive screen QR code on the Game Boy (air-gapped receive)
+- [ ] Sound: Web Audio beeps mirroring the ROM's
+
+### Performance
+- [ ] Code-split /demo (1 MB bundle); landing should load fast
+- [ ] Emulator: pause when the tab is hidden
+
+### Features
+- [ ] Real marketing landing page (problem, how it works, hardware spec, security model, roadmap)
+- [ ] docs/hardware.md: parts list, BOM cost, tamper model, link-cable backup
+- [ ] Restore from 12 words
+- [ ] Link-cable backup simulation (two cartridges)
+
+### Bugs / hardening
+- [ ] Wrong-PIN wipe flow end-to-end test
+- [ ] EVM sign path in the browser
+- [ ] Power off mid-signing

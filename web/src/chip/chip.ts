@@ -73,7 +73,10 @@ export class CartChip {
   private listeners = new Set<() => void>();
   readonly log: BusEvent[] = [];
 
-  constructor(private storage: Storage) {
+  private storage: Storage;
+
+  constructor(storage: Storage) {
+    this.storage = storage;
     this.persisted = storage.load();
   }
 
