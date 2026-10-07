@@ -11,6 +11,20 @@ import { CartChip, type Persisted, type SignResult } from "../src/chip/chip";
 import { walletFromMnemonic } from "../src/chip/keys";
 
 const out = process.argv[2] ?? "smoke-out";
+
+// any failed check makes the run exit non-zero
+let failed = false;
+const log = console.log;
+console.log = (...args: unknown[]) => {
+  if (/WRONG|NOT REFUSED|MISMATCH|FAILED|LEAKED|STILL THERE|: false|: null/.test(args.map(String).join(" "))) failed = true;
+  log(...args);
+};
+process.on("exit", () => {
+  if (failed) {
+    log("\nSMOKE: FAILED");
+    process.exitCode = 1;
+  } else log("\nSMOKE: all checks passed");
+});
 mkdirSync(out, { recursive: true });
 const rom = readFileSync(new URL("../public/wallet.gb", import.meta.url));
 
@@ -62,6 +76,9 @@ const keys: Key[] = ["A", "B", "UP", "DOWN", "LEFT", "RIGHT", "SELECT"];
 await frames(120);
 snap("boot");
 await press("START");
+await frames(10);
+snap("start-menu");
+await press("A"); // CREATE NEW WALLET (restore is tested at the end)
 await frames(10);
 snap("mash-start");
 // mash until the ROM sends its final (empty) ENTROPY call

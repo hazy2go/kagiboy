@@ -392,10 +392,10 @@ static uint8_t start_menu(void) {
         header("NEW CARTRIDGE");
         center(4, "NO WALLET ON THIS");
         center(5, "CARTRIDGE YET");
-        at(2, 9, sel == 0 ? ">" : " ");
-        at(4, 9, "CREATE NEW WALLET");
-        at(2, 11, sel == 1 ? ">" : " ");
-        at(4, 11, "RESTORE 12 WORDS");
+        at(1, 9, sel == 0 ? ">" : " ");
+        at(3, 9, "CREATE NEW WALLET");
+        at(1, 11, sel == 1 ? ">" : " ");
+        at(3, 11, "RESTORE 12 WORDS");
         at(0, 17, "UP/DOWN  A:SELECT");
         p = wait_press();
         if (p & (J_UP | J_DOWN)) sel ^= 1;

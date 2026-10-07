@@ -59,3 +59,7 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [x] 60-digit amount cut on screen but signed → chip refuses any field longer than its rows (smoke: 2^256-1 refused)
 - [x] SIGN timeout said "not signed" → "NO ANSWER, CHECK YOUR PHONE"
 
+### Third review — no material issues
+- [x] Smoke test was flaky (random mash could pick RESTORE) and exited 0 on failed checks → selects CREATE first, exits 1 on any failed check
+- [x] "CREATE NEW WALLET" wrapped by one column on the start menu
+
