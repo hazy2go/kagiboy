@@ -67,7 +67,9 @@ static uint8_t frame;
  * Game Boy (no chip) can walk through every screen for photos. It serves canned
  * replies generated from the real browser chip (assets/gen_demo_chip.mts) for
  * the website's attract-mode wallet. No keys, no signing: testnet demo only.
- * Nothing persists; every power-on starts with no wallet.
+ * The cartridge's save RAM (MBC1 + battery, or a flash cart's FRAM) remembers
+ * that a wallet exists, its PIN and the tries left, so power-on lands on the
+ * PIN screen like the real cartridge. Wipe from the menu to start over.
  */
 #include "demo_chip.h"
 
@@ -105,11 +107,59 @@ static void demo_think(void) {
     }
 }
 
+/* save RAM layout at 0xA000; never holds "unlocked", so power-on is always locked */
+typedef struct {
+    uint8_t magic[3];
+    uint8_t state;
+    uint8_t pin[4];
+    uint8_t tries;
+    uint8_t sum;
+} demo_save_t;
+#define DEMO_SAVE ((demo_save_t *)0xA000)
+static uint8_t demo_loaded;
+
+static uint8_t demo_sum(const demo_save_t *v) {
+    const uint8_t *b = (const uint8_t *)v;
+    uint8_t i, x = 0x5A;
+    for (i = 0; i < sizeof(demo_save_t) - 1; i++) x = (x << 1 | x >> 7) ^ b[i];
+    return x;
+}
+
+static void demo_store(void) {
+    demo_save_t v;
+    v.magic[0] = 'K';
+    v.magic[1] = 'G';
+    v.magic[2] = 1;
+    v.state = demo_state == STATE_NONE ? STATE_NONE : STATE_LOCKED;
+    memcpy(v.pin, demo_pin, 4);
+    v.tries = demo_tries;
+    v.sum = demo_sum(&v);
+    ENABLE_RAM;
+    memcpy(DEMO_SAVE, &v, sizeof v);
+    DISABLE_RAM;
+}
+
+static void demo_load(void) {
+    demo_save_t v;
+    ENABLE_RAM;
+    memcpy(&v, DEMO_SAVE, sizeof v);
+    DISABLE_RAM;
+    /* blank or corrupt save RAM reads as a fresh cartridge */
+    if (v.magic[0] != 'K' || v.magic[1] != 'G' || v.magic[2] != 1 || v.sum != demo_sum(&v)) return;
+    if (v.state != STATE_LOCKED || !v.tries || v.tries > DEMO_TRIES) return;
+    demo_state = STATE_LOCKED;
+    memcpy(demo_pin, v.pin, 4);
+    demo_tries = v.tries;
+}
+
 static void demo_wipe(void) {
     demo_state = STATE_NONE;
     demo_seeded = 0;
     demo_pending = 0;
     demo_tx_chain = 0;
+    memset(demo_pin, 0, 4);
+    demo_tries = 0;
+    demo_store();
 }
 
 static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
@@ -118,6 +168,10 @@ static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
     resp[0] = 0;
     vsync(); /* a real round trip takes at least a frame */
     anim_tick(++frame);
+    if (!demo_loaded) {
+        demo_loaded = 1;
+        demo_load();
+    }
     switch (cmd) {
     case CMD_PING:
         resp[0] = demo_state;
@@ -165,16 +219,21 @@ static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
         memcpy(demo_pin, data, 4);
         demo_tries = DEMO_TRIES;
         demo_state = STATE_UNLOCKED;
+        demo_store();
         return 0;
     case CMD_UNLOCK:
         if (demo_state == STATE_NONE) return 3;
+        /* spend the try before checking, so pulling the power can't undo a wrong guess */
+        demo_tries--;
+        demo_store();
         /* the PIN chosen at setup, or 0000 */
         if (!memcmp(data, demo_pin, 4) || !(data[0] | data[1] | data[2] | data[3])) {
             demo_tries = DEMO_TRIES;
             demo_state = STATE_UNLOCKED;
+            demo_store();
             return 0;
         }
-        if (--demo_tries == 0) {
+        if (demo_tries == 0) {
             demo_wipe();
             return 2;
         }

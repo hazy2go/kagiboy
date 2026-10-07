@@ -17,12 +17,13 @@ $(OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h
 
 # Demo cartridge for real hardware without a key chip: an in-ROM mock chip
 # (-DDEMO_CHIP) serves the attract-mode wallet so every screen can be shown.
+# MBC1+RAM+BATTERY (0x03) with one 8 KB RAM bank holds the demo wallet across power-offs.
 demo: $(DEMO_OUT)
 	cp $(DEMO_OUT) $(HOME)/Desktop/kagiboy-demo.gb
 
 $(DEMO_OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h src/demo_chip.h
 	mkdir -p build
-	$(LCC) -DDEMO_CHIP -Wa-l -Wl-m -Wm-yn"$(TITLE)" -o $(DEMO_OUT) src/main.c src/gfx.c src/assets.c
+	$(LCC) -DDEMO_CHIP -Wa-l -Wl-m -Wl-yt0x03 -Wl-ya1 -Wm-yn"$(TITLE)" -o $(DEMO_OUT) src/main.c src/gfx.c src/assets.c
 
 # canned replies from the real browser chip; needs web/ dependencies installed
 src/demo_chip.h: assets/gen_demo_chip.mts ../web/src/chip/chip.ts ../web/src/chip/keys.ts
