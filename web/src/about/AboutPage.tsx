@@ -81,8 +81,8 @@ export function AboutPage() {
         <p className="px eyebrow">THE STORY</p>
         <h1>My first console came from a flea market.</h1>
         <p className="lede">
-          My dad bought it for me when I was so young I didn't even know what Nintendo was. I only knew I was holding
-          something magic.
+          My dad bought it for me when I was so young I didn't even know what Nintendo was. All I knew was that I was holding
+          something magical.
         </p>
       </header>
 
