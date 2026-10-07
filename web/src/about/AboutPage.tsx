@@ -2,9 +2,16 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./about.css";
 
-// Photos of kagiboy running on a real Game Boy. Drop files in public/gallery/ and list them here;
-// the section stays hidden until there is at least one.
-const GALLERY: { src: string; caption: string; wide?: boolean }[] = [];
+// Photos of kagiboy on a Game Boy. Drop files in public/gallery/ and list them here; the section
+// hides itself when the list is empty. PLACEHOLDERS for now (AI scene, real ROM screen composited in,
+// see each file's .webp.json); swap in real photos and set PLACEHOLDER_PHOTOS to false.
+const PLACEHOLDER_PHOTOS = true;
+const GALLERY: { src: string; caption: string; alt: string }[] = [
+  { src: "/gallery/desk.webp", caption: "HOME, 2.48 SOL", alt: "A Game Boy on a wooden desk beside a coffee mug, showing the kagiboy home screen" },
+  { src: "/gallery/hands.webp", caption: "APPROVE? 0.25 SOL", alt: "Hands holding a Game Boy that asks to approve sending 0.25 SOL" },
+  { src: "/gallery/shelf.webp", caption: "RECEIVE, SCAN ME", alt: "A Game Boy on a shelf of cartridges, showing a Solana address as a QR code" },
+  { src: "/gallery/couch.webp", caption: "SIGNED, CONFIRMED", alt: "A Game Boy on a couch showing a signed and confirmed transaction" },
+];
 
 const WHY = [
   {
@@ -127,13 +134,17 @@ export function AboutPage() {
       {GALLERY.length > 0 && (
         <section className="gallery" aria-labelledby="gallery-title">
           <header>
-            <h2 id="gallery-title">On a real Game Boy.</h2>
-            <p>The same ROM as the live demo, running on my own DMG from a flash cart.</p>
+            <h2 id="gallery-title">{PLACEHOLDER_PHOTOS ? "On the desk." : "On a real Game Boy."}</h2>
+            <p>
+              {PLACEHOLDER_PHOTOS
+                ? "The screens are the real ROM. Photos of my own Game Boy running it are on the way."
+                : "The same ROM as the live demo, running on my own Game Boy from a flash cart."}
+            </p>
           </header>
           <div className="gallery-grid">
             {GALLERY.map((g) => (
-              <figure key={g.src} className={g.wide ? "wide" : ""}>
-                <img src={g.src} alt={g.caption} loading="lazy" />
+              <figure key={g.src}>
+                <img src={g.src} alt={g.alt} loading="lazy" />
                 <figcaption className="px">{g.caption}</figcaption>
               </figure>
             ))}

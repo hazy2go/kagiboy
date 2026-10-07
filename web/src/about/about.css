@@ -149,8 +149,13 @@
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+}
+
+/* a little hand-placed, like prints pinned to a board */
+.gallery-grid figure:nth-child(odd) {
+  margin-top: 28px;
 }
 
 .gallery-grid figure {
@@ -248,6 +253,14 @@
   .gallery-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+
+  .gallery-grid figure:nth-child(odd) {
+    margin-top: 0;
+  }
+
+  .gallery-grid figure:nth-child(even) {
+    margin-top: 22px;
   }
 
   .gallery-grid figure.wide {
