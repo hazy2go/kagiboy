@@ -35,7 +35,11 @@ interface Core {
   start(): void;
   run(): void;
   JoyPadEvent(key: number, down: boolean): void;
+  memoryHighWriter: WriteFn[];
+  memoryWriter: WriteFn[];
 }
+
+type WriteFn = (core: Core, address: number, data: number) => void;
 
 export class GameBoy implements Bus {
   private core: Core;
@@ -47,6 +51,30 @@ export class GameBoy implements Bus {
     this.core.start();
     this.core.stopEmulator &= 1;
     this.core.iterations = 0;
+    this.tapSquare1();
+  }
+
+  /** Called with a frequency in Hz whenever the ROM triggers square channel 1. */
+  onBeep: ((hz: number) => void) | null = null;
+
+  // The core's own audio is off, so watch channel 1's frequency and trigger registers instead.
+  private tapSquare1() {
+    let lo = 0;
+    const wrap = (index: number, high: number, after: (data: number) => void) => {
+      const original = this.core.memoryHighWriter[index];
+      const wrapped: WriteFn = (core, address, data) => {
+        original(core, address, data);
+        after(data);
+      };
+      this.core.memoryHighWriter[index] = wrapped;
+      this.core.memoryWriter[high] = wrapped;
+    };
+    wrap(0x13, 0xff13, (data) => (lo = data));
+    wrap(0x14, 0xff14, (data) => {
+      if (!(data & 0x80)) return; // not a trigger
+      const x = ((data & 7) << 8) | lo;
+      this.onBeep?.(131072 / (2048 - x));
+    });
   }
 
   frame() {

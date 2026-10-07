@@ -936,3 +936,13 @@ kbd {
 .last-tx.confirmed { color: var(--ok); }
 .last-tx.failed,
 .last-tx.rejected { color: var(--bad); }
+
+.mute {
+  margin-left: 8px;
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -33,6 +33,14 @@ const browserStorage: Storage = {
 
 const FRAME_MS = 1000 / 59.7275;
 
+function readMuted() {
+  try {
+    return localStorage.getItem("cartwallet.muted") === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Owns the emulator loop and the three parts: Game Boy, cartridge chip, phone. */
 export class Session {
   readonly chip = new CartChip(browserStorage);
@@ -51,6 +59,8 @@ export class Session {
   private releaseAt = new Map<Key, number>();
   private listeners = new Set<() => void>();
   powered = false;
+  muted = readMuted();
+  private audio: AudioContext | null = null;
 
   constructor() {
     const bump = () => {
@@ -78,6 +88,9 @@ export class Session {
   async powerOn() {
     this.rom ??= new Uint8Array(await (await fetch("/wallet.gb")).arrayBuffer());
     this.gb = new GameBoy(this.rom);
+    this.gb.onBeep = (hz) => this.beep(hz);
+    // created inside the click that powers on, so browsers allow it to play
+    this.audio ??= typeof AudioContext === "undefined" ? null : new AudioContext();
     this.pressedAt.clear();
     this.releaseAt.clear();
     this.chip.reset();
@@ -106,6 +119,31 @@ export class Session {
   }
 
   /** Taps are held for at least 3 frames, or the ROM (which polls once per frame) would miss them. */
+  toggleMute() {
+    this.muted = !this.muted;
+    try {
+      localStorage.setItem("cartwallet.muted", this.muted ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+    this.notify();
+  }
+
+  private beep(hz: number) {
+    const ctx = this.audio;
+    if (!ctx || this.muted || !(hz > 20 && hz < 20000)) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.value = hz;
+    gain.gain.setValueAtTime(0.04, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.13);
+  }
+
   key(key: Key, down: boolean) {
     if (!this.gb) return;
     if (down) {

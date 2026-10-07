@@ -173,6 +173,11 @@ export function GameBoyShell() {
             Hold to shake
           </button>
         )}
+        {s.powered && (
+          <button className="mute" onClick={() => s.toggleMute()} aria-pressed={!s.muted}>
+            {s.muted ? "Sound off" : "Sound on"}
+          </button>
+        )}
         <p>
           Keys: arrows · <kbd>X</kbd> A · <kbd>Z</kbd> B · <kbd>Enter</kbd> Start · <kbd>Shift</kbd> Select
         </p>

@@ -6,7 +6,7 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [ ] **Name.** CARTWALLET is a placeholder. Change `brand.json`, then `cd rom && make`.
 - [ ] **AI mockups (Higgsfield).** Cartridge on a DMG, exploded view of the internals (MCU + SE050 + BLE),
       shake-to-generate, phone + Game Boy signing, link-cable backup, packaging. Credits needed.
-- [ ] Deploy to Vercel (hazy's account, check `vercel whoami` first).
+- [ ] Deploy to Vercel (hazy's account, check `vercel whoami` first). Then make og:image an absolute URL in web/index.html.
 
 ## Loop backlog
 ### UI/UX
@@ -16,7 +16,7 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [x] First-run guidance: a "Next" line above the rig that follows the wallet state
 - [x] Mobile layout pass (390px): touch-only setup verified, key hint hidden on touch, no tap-zoom, scrolls to the Game Boy when the phone sends a request
 - [x] Receive screen QR code on the Game Boy (air-gapped receive), scanned in the smoke test with jsQR; QR toggle in the phone app too
-- [ ] Sound: Web Audio beeps mirroring the ROM's
+- [x] Sound: Web Audio square beeps from the ROM's channel-1 register writes, with a mute toggle
 
 ### Performance
 - [x] Code-split /demo (landing 83 kB gz, demo chunk 213 kB gz)
@@ -28,7 +28,7 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [x] Restore from 12 words (D-pad letter picker with chip suggestions; smoke restores a BIP-39 test vector)
 - [ ] Link-cable backup simulation (two cartridges)
 
-- [ ] Social preview (og:image, twitter card) — use a mockup once hazy picks them, a ROM screenshot until then
+- [x] Social preview: public/og.png from the landing hero (swap for a mockup later)
 
 ### Bugs / hardening
 - [x] Button presses lost during redraws: joypad now latched in the VBlank interrupt; stale presses flushed at confirm screens
