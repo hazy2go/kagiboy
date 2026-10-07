@@ -12,8 +12,8 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 ### UI/UX
 - [x] Phone app header sits under the notch
 - [x] Failed tx: show the reason (e.g. "no funds") on the Game Boy and phone; phone validates address/amount/balance first
-- [ ] Phone: latest transaction status is below the fold after sending; show it next to the form
-- [ ] First-run guidance: point at the Game Boy, highlight the next action
+- [x] Phone: latest transaction status shown under the Send heading
+- [x] First-run guidance: a "Next" line above the rig that follows the wallet state
 - [x] Mobile layout pass (390px): touch-only setup verified, key hint hidden on touch, no tap-zoom, scrolls to the Game Boy when the phone sends a request
 - [x] Receive screen QR code on the Game Boy (air-gapped receive), scanned in the smoke test with jsQR; QR toggle in the phone app too
 - [ ] Sound: Web Audio beeps mirroring the ROM's

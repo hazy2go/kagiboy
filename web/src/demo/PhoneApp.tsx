@@ -32,7 +32,7 @@ export function PhoneApp() {
         {state === "unlocked" && addr && (
           <>
             <Balances sol={s.phone.balances.sol} evm={s.phone.balances.evm} addr={addr} />
-            <SendForm pending={s.chip.hasPending} />
+            <SendForm pending={s.chip.hasPending} latest={s.phone.activity[0]} />
             <ActivityList items={s.phone.activity} />
           </>
         )}
@@ -144,7 +144,7 @@ function Copy({ text }: { text: string }) {
   );
 }
 
-function SendForm({ pending }: { pending: boolean }) {
+function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) {
   const s = useSession();
   const [chain, setChain] = useState<Chain>("sol");
   const [to, setTo] = useState("");
@@ -160,6 +160,19 @@ function SendForm({ pending }: { pending: boolean }) {
   return (
     <section className="send">
       <h4>Send</h4>
+      {latest && !pending && (
+        <p className={`last-tx ${latest.state}`}>
+          Last: {latest.amount} · {STATE_LABEL[latest.state]}
+          {latest.hash && (
+            <>
+              {" · "}
+              <a href={explorer[latest.chain](latest.hash)} target="_blank" rel="noreferrer">
+                View ↗
+              </a>
+            </>
+          )}
+        </p>
+      )}
       {pending ? (
         <div className="confirm-callout">
           <strong>Check your Game Boy</strong>

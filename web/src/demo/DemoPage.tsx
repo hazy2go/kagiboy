@@ -28,6 +28,10 @@ export function DemoPage() {
         <span className="net">Testnets only · Solana devnet · Ethereum Sepolia</span>
       </header>
 
+      <p className="next-step" aria-live="polite">
+        <span>Next</span> {nextStep(s)}
+      </p>
+
       <div className="rig">
         <div ref={gbRef}>
           <GameBoyShell />
@@ -59,4 +63,18 @@ export function DemoPage() {
       </footer>
     </div>
   );
+}
+
+function nextStep(s: ReturnType<typeof useSession>): string {
+  if (!s.powered) return "Switch on the Game Boy.";
+  if (s.chip.hasPending) return "Check the amount and address on the Game Boy, then hold A to sign or press B to reject.";
+  switch (s.chip.state) {
+    case "none":
+      return "Press START, mash the buttons, hold “shake”, write down your 12 words and pick a PIN.";
+    case "locked":
+      return "Enter your PIN on the Game Boy (arrows change digits, A confirms).";
+    default:
+      if (!s.phone.balances.sol && !s.phone.balances.evm) return "Fund the wallet: tap “Airdrop 1 SOL” on the phone, or press A on the Game Boy to show your QR code.";
+      return "Send a test transfer from the phone and approve it on the Game Boy.";
+  }
 }

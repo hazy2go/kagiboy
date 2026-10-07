@@ -907,3 +907,32 @@ kbd {
   width: 100%;
   height: auto;
 }
+
+.next-step {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: -8px 0 24px;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.next-step span {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--dmg-4);
+  background: var(--dmg-1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex: none;
+}
+
+.last-tx {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--app-dim);
+}
+
+.last-tx.confirmed { color: var(--ok); }
+.last-tx.failed,
+.last-tx.rejected { color: var(--bad); }
