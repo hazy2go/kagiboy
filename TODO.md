@@ -26,7 +26,7 @@ Live: https://kagiboy.vercel.app · repo hazy2go/kagiboy (private) · deploy = p
 - [x] Streak next to the battery LED (bezel + LED meshes less decimated in the GLB)
 - [x] Hero lede no longer lists every chain (moved to the demo CTA); phone hero one-liner
 - [x] 404 page, robots.txt, MOCKUP stamps on the gallery, PIN try spent before the check
-- [ ] Idea from hazy: let the Game Boy pick which network fills the 2nd home card (and maybe pages later)
+- [x] Game Boy picks the EVM network for the 2nd home card (LEFT/RIGHT), per-network icons; pages later if needed
 
 ## Done since the redesign (2026-10-07)
 - [x] Thermal Print site, real 3D model (Blender) with KAGIBOY face print + new label, phone re-staged (TALL_KEYS), About story page
