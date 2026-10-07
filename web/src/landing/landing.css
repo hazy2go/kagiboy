@@ -60,6 +60,12 @@
   will-change: opacity, transform;
 }
 
+/* only the hero shows until the scroll script (which waits for the 3D model) takes over */
+.ch:not(.ch-hero) {
+  opacity: 0;
+  visibility: hidden;
+}
+
 .ch h2 {
   margin-bottom: 18px;
 }
