@@ -41,6 +41,8 @@
 #define CMD_TXSTATUS 0x0A
 #define CMD_LOCK 0x0B
 #define CMD_QR 0x0C
+#define CMD_WORDS 0x0D
+#define CMD_RESTORE 0x0E
 
 #define ST_TIMEOUT 0xFE
 
@@ -172,12 +174,31 @@ static void hex2(uint8_t v) {
 
 /* ---------- input ---------- */
 
-static uint8_t keys, prev_keys;
+/* The joypad is read once per frame in the VBlank interrupt, so a press can't be
+ * lost while the main loop is busy redrawing or waiting on the chip. */
+static volatile uint8_t held_keys, latched_keys, press_div;
 
+static void vbl_isr(void) {
+    uint8_t k = joypad();
+    uint8_t fresh = k & ~held_keys;
+    if (fresh) press_div = DIV_REG; /* the exact cycle of a human press is noisy */
+    latched_keys |= fresh;
+    held_keys = k;
+}
+
+/* Buttons pressed since the last call. */
 static uint8_t pressed(void) {
-    prev_keys = keys;
-    keys = joypad();
-    return keys & ~prev_keys;
+    uint8_t p;
+    disable_interrupts();
+    p = latched_keys;
+    latched_keys = 0;
+    enable_interrupts();
+    return p;
+}
+
+/* Drop presses made before a screen that needs a deliberate answer. */
+static void flush_input(void) {
+    pressed();
 }
 
 static uint8_t wait_press(void) {
@@ -262,7 +283,7 @@ static void entropy_buttons(void) {
         p = pressed();
         if (!p) continue;
         /* the exact cycle a human presses on is the noisy part */
-        add_entropy(DIV_REG);
+        add_entropy(press_div);
         add_entropy(p ^ frame);
         count++;
         beep(0x80 + (DIV_REG & 0x3F));
@@ -356,14 +377,135 @@ static void pin_entry(const char *title, const char *prompt) {
     }
 }
 
+/* ---------- restore from 12 words ---------- */
+
+static uint8_t word_idx[24]; /* 12 big-endian word indices for CMD_RESTORE */
+
+/* Returns 0 for "create new", 1 for "restore". */
+static uint8_t start_menu(void) {
+    uint8_t sel = 0, p;
+    for (;;) {
+        header("NEW CARTRIDGE");
+        center(4, "NO WALLET ON THIS");
+        center(5, "CARTRIDGE YET");
+        at(2, 9, sel == 0 ? ">" : " ");
+        at(4, 9, "CREATE NEW WALLET");
+        at(2, 11, sel == 1 ? ">" : " ");
+        at(4, 11, "RESTORE 12 WORDS");
+        at(0, 17, "UP/DOWN  A:SELECT");
+        p = wait_press();
+        if (p & (J_UP | J_DOWN)) sel ^= 1;
+        if (p & J_A) return sel;
+    }
+}
+
+/* resp after CMD_WORDS: count, then per word a 2-byte index and the word, 0-terminated */
+static char *word_at(uint8_t k, uint16_t *index) {
+    char *w = resp + 1;
+    while (k--) w += 2 + strlen(w + 2) + 1;
+    *index = ((uint16_t)(uint8_t)w[0] << 8) | (uint8_t)w[1];
+    return w + 2;
+}
+
+static void word_entry_draw(uint8_t n, const char *prefix, uint8_t len, uint8_t count) {
+    uint8_t k;
+    uint16_t index;
+    header("RESTORE");
+    gotoxy(12, 0);
+    printf("WORD %u", (uint16_t)(n + 1));
+    gotoxy(1, 3);
+    for (k = 0; k < len; k++) putchar(prefix[k]);
+    gotoxy(1 + len, 4);
+    putchar('^');
+    if (len == 0) {
+        center(7, "PICK THE FIRST");
+        center(8, "LETTER, THEN RIGHT");
+    } else if (count == 0) {
+        center(7, "NO WORD STARTS");
+        center(8, "LIKE THAT");
+    } else {
+        for (k = 0; k < count; k++) {
+            at(2, 6 + k * 2, k == 0 ? ">" : " ");
+            at(4, 6 + k * 2, word_at(k, &index));
+        }
+    }
+    at(0, 15, "UP/DN:LETTER R:ADD");
+    at(0, 16, "LEFT:DELETE");
+    at(0, 17, count && len ? "A:USE TOP WORD" : "B:CANCEL");
+}
+
+/* Letter picker with suggestions from the chip. Returns 0 if cancelled.
+ * UP/DOWN only redraw the one letter so fast presses aren't dropped. */
+static uint8_t word_entry(uint8_t n) {
+    char prefix[9];
+    uint8_t len = 0, count = 0, p;
+    char cur = 'a';
+    uint16_t index;
+    word_entry_draw(n, prefix, len, count);
+    for (;;) {
+        gotoxy(1 + len, 3);
+        putchar(cur);
+        p = wait_press();
+        if (p & J_UP) cur = cur == 'z' ? 'a' : cur + 1;
+        if (p & J_DOWN) cur = cur == 'a' ? 'z' : cur - 1;
+        if ((p & J_RIGHT) && len < 8) {
+            prefix[len++] = cur;
+            cur = 'a';
+            count = 0;
+            if (chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = (uint8_t)resp[0];
+            word_entry_draw(n, prefix, len, count);
+        }
+        if ((p & J_LEFT) && len) {
+            cur = prefix[--len];
+            count = 0;
+            if (len && chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = (uint8_t)resp[0];
+            word_entry_draw(n, prefix, len, count);
+        }
+        if ((p & J_A) && count && len) {
+            word_at(0, &index);
+            word_idx[n * 2] = index >> 8;
+            word_idx[n * 2 + 1] = index & 0xFF;
+            return 1;
+        }
+        if ((p & J_B) && !len) return 0;
+    }
+}
+
+/* Returns 1 when the chip accepted the words, 0 to go back to the menu. */
+static uint8_t restore(void) {
+    uint8_t n, st;
+    for (n = 0; n < 12; n++) {
+        if (!word_entry(n)) return 0;
+    }
+    header("RESTORE");
+    center(8, "CHECKING WORDS...");
+    st = chip_call(CMD_RESTORE, 0, word_idx, 24);
+    expect_ok(st);
+    if (st == 0) return 1;
+    header("WORDS DON'T MATCH");
+    center(6, "ONE OF THE WORDS");
+    center(7, "IS WRONG OR IN THE");
+    center(8, "WRONG ORDER");
+    center(16, "A: START AGAIN");
+    while (!(wait_press() & J_A)) {}
+    return 0;
+}
+
 static void new_wallet(void) {
-    entropy_buttons();
-    entropy_motion();
-    header("NEW WALLET");
-    center(8, "GENERATING KEYS");
-    center(9, "IN SECURE CHIP...");
-    expect_ok(chip_call(CMD_CREATE, 0, 0, 0));
-    show_words();
+    for (;;) {
+        if (start_menu() == 1) {
+            if (restore()) break;
+            continue;
+        }
+        entropy_buttons();
+        entropy_motion();
+        header("NEW WALLET");
+        center(8, "GENERATING KEYS");
+        center(9, "IN SECURE CHIP...");
+        expect_ok(chip_call(CMD_CREATE, 0, 0, 0));
+        show_words();
+        break;
+    }
     pin_entry("SET PIN", "CHOOSE A 4-DIGIT PIN");
     expect_ok(chip_call(CMD_SET_PIN, 0, pin, 4));
 }
@@ -510,6 +652,7 @@ static void tx_result(void) {
         }
     }
     center(17, "A: DONE");
+    flush_input();
     while (!(wait_press() & J_A)) {}
 }
 
@@ -518,6 +661,7 @@ static void sign_request(void) {
     uint16_t hold_start = 0, elapsed;
     char *to, *amount;
     if (chip_call(CMD_PENDING, 0, 0, 0) != 0) return;
+    flush_input();
     chain = (uint8_t)resp[0];
     to = resp + 1;
     amount = to + strlen(to) + 1;
@@ -535,7 +679,7 @@ static void sign_request(void) {
     for (;;) {
         vsync();
         frame++;
-        k = joypad();
+        k = held_keys;
         if (k & J_B) {
             beep(0x40);
             chip_call(CMD_SIGN, 0, 0, 0);
@@ -563,6 +707,7 @@ static void sign_request(void) {
             bar(12, 0, 60);
         }
     }
+    flush_input(); /* the A that was held to sign must not answer the next screen */
     beep(0xF8);
     header("SIGNING");
     center(8, "SECURE CHIP IS");
@@ -602,7 +747,7 @@ static uint8_t menu(void) {
             at(0, 17, "B: CANCEL");
             for (;;) {
                 vsync();
-                p = joypad();
+                p = held_keys;
                 if ((p & (J_SELECT | J_A)) == (J_SELECT | J_A)) {
                     chip_call(CMD_WIPE, 0, 0, 0);
                     return 2;
@@ -649,6 +794,9 @@ static void home(void) {
 void main(void) {
     uint8_t st;
     DISPLAY_ON;
+    disable_interrupts();
+    add_VBL(vbl_isr);
+    enable_interrupts();
     boot();
     for (;;) {
         st = chip_call(CMD_PING, 0, 0, 0);

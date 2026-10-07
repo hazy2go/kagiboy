@@ -48,6 +48,8 @@ One writer per byte, so there are no races. The Game Boy waits until
 | `0x0A` | TXSTATUS | | `state\0short-signature\0` |
 | `0x0B` | LOCK | | |
 | `0x0C` | QR | `arg` = chain | `size`, then `size×size` bits row by row (1 = dark). 29×29 for both address types; the ROM draws it with 16 tiles, one per 2×2 block |
+| `0x0D` | WORDS | word prefix (lowercase) | `count`, then per suggestion a 2-byte word index and the word, 0-terminated (max 4, exact match first) |
+| `0x0E` | RESTORE | 12 × 2-byte word indices | status 0 ok, 2 checksum failed |
 
 Randomness: the chip's hardware RNG is the source. Button timings and
 accelerometer samples are hashed into the pool on top of it; they add to it,

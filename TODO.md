@@ -25,12 +25,13 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 ### Features
 - [x] Real marketing landing page (why, how it works with real ROM screens, security model + limits, hardware, roadmap)
 - [x] docs/hardware.md: parts list, BOM cost, tamper model, link-cable backup
-- [ ] Restore from 12 words
+- [x] Restore from 12 words (D-pad letter picker with chip suggestions; smoke restores a BIP-39 test vector)
 - [ ] Link-cable backup simulation (two cartridges)
 
 - [ ] Social preview (og:image, twitter card) — use a mockup once hazy picks them, a ROM screenshot until then
 
 ### Bugs / hardening
+- [x] Button presses lost during redraws: joypad now latched in the VBlank interrupt; stale presses flushed at confirm screens
 - [ ] Landing page uses real ROM screenshots from public/screens; regenerate them after any ROM UI change
 - [x] Wrong-PIN wipe flow end-to-end test (smoke: 5 wrong PINs → WIPED, storage erased)
 - [x] EVM sign path (smoke: approved ETH tx recovers to the wallet address)

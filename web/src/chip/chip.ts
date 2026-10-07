@@ -3,7 +3,7 @@ import { formatEther, type TransactionSerializableEIP1559 } from "viem";
 import { sha256 } from "@noble/hashes/sha2.js";
 import qrcode from "qrcode-generator";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
-import { concat, newMnemonic, walletFromMnemonic, type Wallet } from "./keys";
+import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemonic, type Wallet } from "./keys";
 
 /**
  * Software stand-in for the cartridge's MCU + secure element.
@@ -209,6 +209,24 @@ export class CartChip {
         this.pool = new Uint8Array(32);
         this.wallet = walletFromMnemonic(mnemonic);
         return { status: 0, data: mnemonic };
+      }
+
+      case CMD.WORDS: {
+        // prefix in, then: count, and per suggestion a 2-byte word index plus the word
+        if (this.persisted) return { status: 1 };
+        const prefix = new TextDecoder().decode(data).toLowerCase();
+        const hits = prefix ? suggestWords(prefix) : [];
+        const parts = hits.map((h) => concat(new Uint8Array([h.index >> 8, h.index & 0xff]), ascii(`${h.word}\0`)));
+        return { status: 0, data: concat(new Uint8Array([hits.length]), ...parts) };
+      }
+
+      case CMD.RESTORE: {
+        if (this.persisted || data.length !== 24) return { status: 1 };
+        const indices = Array.from({ length: 12 }, (_, i) => (data[i * 2] << 8) | data[i * 2 + 1]);
+        const mnemonic = mnemonicFromIndices(indices);
+        if (!mnemonic) return { status: 2 }; // checksum failed: a word is wrong
+        this.wallet = walletFromMnemonic(mnemonic);
+        return { status: 0 };
       }
 
       case CMD.SET_PIN: {

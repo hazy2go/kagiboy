@@ -1,5 +1,5 @@
 import { Keypair } from "@solana/web3.js";
-import { entropyToMnemonic, mnemonicToSeedSync } from "@scure/bip39";
+import { entropyToMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256, sha512 } from "@noble/hashes/sha2.js";
@@ -16,6 +16,20 @@ export function newMnemonic(pool: Uint8Array): string {
   const trng = crypto.getRandomValues(new Uint8Array(32));
   const mixed = sha256(concat(pool, trng));
   return entropyToMnemonic(mixed.slice(0, 16), wordlist);
+}
+
+/** Up to `max` BIP-39 words starting with `prefix`, an exact match first. */
+export function suggestWords(prefix: string, max = 4): { index: number; word: string }[] {
+  const hits = wordlist.flatMap((word, index) => (word.startsWith(prefix) ? [{ index, word }] : []));
+  hits.sort((a, b) => Number(b.word === prefix) - Number(a.word === prefix));
+  return hits.slice(0, max);
+}
+
+/** Rebuilds a mnemonic from word indices; null if the checksum is wrong. */
+export function mnemonicFromIndices(indices: number[]): string | null {
+  if (indices.length !== 12 || indices.some((i) => !(i >= 0 && i < 2048))) return null;
+  const mnemonic = indices.map((i) => wordlist[i]).join(" ");
+  return validateMnemonic(mnemonic, wordlist) ? mnemonic : null;
 }
 
 export function walletFromMnemonic(mnemonic: string): Wallet {

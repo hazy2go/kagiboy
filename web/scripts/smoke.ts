@@ -7,6 +7,7 @@ import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
 import { parseEther, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
 import { CartChip, type Persisted, type SignResult } from "../src/chip/chip";
+import { walletFromMnemonic } from "../src/chip/keys";
 
 const out = process.argv[2] ?? "smoke-out";
 mkdirSync(out, { recursive: true });
@@ -221,3 +222,31 @@ for (let i = 0; i < 5; i++) {
 await frames(10);
 snap("wiped");
 console.log("state after 5 wrong PINs:", chip.state, "storage:", saved === null ? "erased" : "STILL THERE");
+
+// restore a known phrase from the start menu, letter by letter, like a person would
+const PHRASE = "legal winner thank year wave sausage worth useful legal winner thank yellow"; // BIP-39 test vector
+await press("A"); // leave the WIPED screen
+await frames(10);
+await press("DOWN");
+await press("A"); // RESTORE 12 WORDS
+await frames(10);
+for (const word of PHRASE.split(" ")) {
+  for (const ch of word.slice(0, 4)) {
+    const steps = ch.charCodeAt(0) - 97;
+    const key: Key = steps <= 13 ? "UP" : "DOWN";
+    for (let i = 0; i < (steps <= 13 ? steps : 26 - steps); i++) await press(key, 2);
+    await press("RIGHT", 2);
+  }
+  if (word === "legal") snap("restore-word"); // first time only matters
+  await press("A", 2);
+}
+await frames(20);
+snap("restore-pin");
+await press("A"); // PIN 0000
+await frames(20);
+const expected = walletFromMnemonic(PHRASE);
+console.log(
+  "restore:",
+  chip.state,
+  chip.addresses?.sol === expected.sol.publicKey.toBase58() && chip.addresses?.evm === expected.evm.address ? "addresses match" : "MISMATCH",
+);
