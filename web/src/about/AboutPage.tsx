@@ -143,7 +143,7 @@ export function AboutPage() {
             maybe give you a little of the magic I felt the first time I held one.
           </p>
           <p>
-            If the cartridge ever breaks, or the Game Boy does, your 12 words bring everything back. And one day you get
+            If the Game Boy breaks, any Game Boy will do. If the cartridge breaks, your 12 words bring everything back, in a new kagiboy or in a regular wallet app like Phantom or MetaMask. And one day you get
             to say: yes, my wallet is a Game Boy.
           </p>
           <p className="kagi">
