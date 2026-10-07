@@ -68,29 +68,7 @@ export function Landing() {
   const heroSlipRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState(false);
-  const [cta, setCta] = useState(false);
   const [railAt, setRailAt] = useState(0);
-
-  // phones: a floating "try the demo" between the 3D story and the demo/waitlist sections
-  useEffect(() => {
-    const ends = ["demo", "waitlist"].map((c) => document.querySelector(`.${c === "demo" ? "demo-cta" : c}`));
-    const seen = new Set<Element>();
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) e.isIntersecting ? seen.add(e.target) : seen.delete(e.target);
-      onScroll();
-    });
-    ends.forEach((el) => el && io.observe(el));
-    const onScroll = () => {
-      const stage = stageRef.current;
-      const pastStage = stage ? stage.getBoundingClientRect().bottom < window.innerHeight * 0.5 : false;
-      setCta(pastStage && seen.size === 0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
 
   // the menu sheet locks the page underneath
   useEffect(() => {
@@ -305,11 +283,6 @@ export function Landing() {
         </div>
       </div>
 
-      <div className={`float-cta ${cta && !menu ? "is-shown" : ""}`}>
-        <Link to="/demo" className="btn btn-ink" tabIndex={cta ? 0 : -1}>
-          Try the live demo
-        </Link>
-      </div>
 
       <section className="stage" ref={stageRef} aria-label="The cartridge, up close">
         <div className="stage-sticky">
@@ -525,7 +498,7 @@ export function Landing() {
       <section className="status">
         <header className="sec-head">
           <h2>Where it stands.</h2>
-          <p>The software is real and runs today. The cartridge is a design, and this is the plan to build it.</p>
+          <p>The software is real and runs today. The cartridge is in the works, and this is how we're building it.</p>
         </header>
         <ol className="road">
           {ROADMAP.map(([when, what], i) => (
@@ -559,8 +532,8 @@ export function Landing() {
 
       <footer className="kb-foot">
         <p>
-          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge hardware is
-          a design.
+          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge hardware is a
+          work in progress.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>

@@ -23,7 +23,6 @@
     radial-gradient(38% 40% at 86% 72%, rgba(255, 220, 232, 0.85), transparent 70%),
     radial-gradient(30% 34% at 18% 82%, rgba(230, 224, 255, 0.7), transparent 72%),
     #fff;
-  filter: saturate(1.05);
 }
 
 .stage-canvas,
@@ -950,7 +949,7 @@
   }
 
   .kb-foot {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    padding-bottom: calc(32px + env(safe-area-inset-bottom));
   }
 }
 
@@ -984,5 +983,264 @@
   .hero-aside .actions .btn {
     flex: 1;
     min-height: 52px;
+  }
+}
+
+/* ================================================================
+   Phones: the story is re-staged, not shrunk.
+   The console owns the top two thirds of the screen (scene.ts TALL_KEYS);
+   each chapter's words sit in the band below it, never over it.
+   ================================================================ */
+@media (max-width: 860px) {
+  .ch,
+  .ch-hero {
+    left: calc(22px + env(safe-area-inset-left));
+    right: calc(22px + env(safe-area-inset-right));
+    top: auto;
+    bottom: calc(26px + env(safe-area-inset-bottom));
+    translate: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .ch::before {
+    display: none;
+  }
+
+  .ch h2 {
+    font-size: 31px;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    margin-bottom: 10px;
+  }
+
+  .ch p {
+    font-size: 16px;
+    line-height: 1.45;
+    max-width: 24rem;
+  }
+
+  /* hero: the console above, the promise and the two actions in the thumb zone */
+  .ch-hero h1 {
+    font-size: clamp(34px, 9.4vw, 42px);
+    line-height: 1;
+    letter-spacing: -0.045em;
+  }
+
+  .ch-hero .lede {
+    display: none;
+  }
+
+  .hero-aside {
+    margin-top: 18px;
+    gap: 12px;
+  }
+
+  .hero-aside .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero-aside .actions .btn {
+    min-height: 52px;
+    padding: 0 12px;
+  }
+
+  .live-note {
+    font-size: 12.5px !important;
+  }
+
+  /* zoomed onto the screen the console fills the frame, so this chapter's words get their own card */
+  .ch-sign {
+    padding: 18px 20px 20px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 18px 40px -22px rgba(60, 70, 120, 0.45);
+  }
+
+  /* exploded view: the chips are the copy */
+  .ch-apart p {
+    display: none;
+  }
+
+  .chip-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .chip-list li {
+    display: grid;
+    gap: 2px;
+  }
+
+  .chip-list b {
+    font-size: 15px;
+    color: var(--kb-ink);
+  }
+
+  .callout-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  /* performance: filters repaint on every frame of a scroll or a print; phones get flat paper */
+  .strip,
+  .slip,
+  .receipt-wrap .receipt,
+  .bom,
+  .ticket,
+  .road-step,
+  .ghost-slip {
+    filter: none;
+  }
+
+  .slip-paper,
+  .receipt-wrap .receipt,
+  .bom,
+  .ticket,
+  .road-step,
+  .strip {
+    box-shadow: 0 12px 24px -16px rgba(70, 76, 128, 0.35);
+  }
+
+  .slip {
+    will-change: transform;
+  }
+
+  /* printing on phones: the paper slides out of its slot (transform only, on the compositor) */
+  html.kb-root .print-in {
+    clip-path: none;
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+
+  html.kb-root .print-in.is-in {
+    animation: kb-feed-phone 0.7s var(--kb-ease) calc(var(--i, 0) * 0.08s) both;
+  }
+}
+
+@keyframes kb-feed-phone {
+  from {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .setup,
+  .security,
+  .inside,
+  .status,
+  .demo-cta,
+  .waitlist {
+    padding-top: 96px;
+  }
+
+  .sec-head {
+    margin-bottom: 32px;
+  }
+
+  .sec-head h2 {
+    font-size: 34px;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+
+  .sec-head p {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  /* setup: one slip per swipe, centred, with its words under it at reading size */
+  .rail {
+    grid-auto-columns: 74vw;
+    gap: 16px;
+    padding: 26px 13vw 22px;
+    margin: 0 calc(-1 * (var(--kb-gutter) + env(safe-area-inset-left)));
+    scroll-padding: 0 13vw;
+  }
+
+  .strip {
+    scroll-snap-align: center;
+  }
+
+  .strip:nth-child(even) {
+    margin-top: 0;
+  }
+
+  .strip figcaption {
+    font-size: 15px;
+    margin-top: 14px;
+  }
+
+  /* status: a vertical timeline instead of four squeezed columns */
+  .road {
+    grid-template-columns: 1fr;
+    gap: 0;
+    position: relative;
+    padding-left: 26px;
+  }
+
+  .road::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: repeating-linear-gradient(180deg, rgba(31, 35, 48, 0.25) 0 6px, transparent 6px 12px);
+  }
+
+  .road-step {
+    position: relative;
+    background: none;
+    box-shadow: none;
+    -webkit-mask: none;
+    mask: none;
+    padding: 6px 0 28px;
+  }
+
+  .road-step::before {
+    content: "";
+    position: absolute;
+    left: -26px;
+    top: 10px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: inset 0 0 0 2px var(--kb-ink);
+  }
+
+  .road-step.is-now {
+    background: none;
+  }
+
+  .road-step.is-now::before {
+    background: var(--kb-pink);
+    box-shadow: inset 0 0 0 2px var(--kb-ink), 0 0 0 5px rgba(255, 220, 232, 0.8);
+  }
+
+  .road-step .perf {
+    display: none;
+  }
+
+  .road-step p {
+    font-size: 16px;
+    margin-top: 6px;
+  }
+
+  .demo-cta img {
+    border-radius: 24px;
   }
 }

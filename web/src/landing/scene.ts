@@ -19,7 +19,7 @@ interface Pose {
   lift: number; // cartridge raised out of the slot, metres
   tilt: number; // cartridge tipped back so its layers stack toward the camera, 0..1
   apart: number; // exploded view, 0..1
-  shift: number; // console pushed right of centre on wide screens, as a share of width
+  shift: number; // wide screens: console pushed right, share of width. Phones: console centre, share of height from the top
 }
 
 // keyframes along the stage's scroll, in metres and radians
@@ -37,12 +37,28 @@ const KEYS: [number, Pose][] = [
   [1.0, { az: 0, el: 0.04, dist: 0.68, tx: 0, ty: -0.062, lift: 0, tilt: 0, apart: 0, shift: 0.12 }],
 ];
 
+// phones (portrait): the console fills the top two thirds and the copy sits below it, never on top.
+// `shift` is reused as the console's vertical centre, as a share of the height from the top.
+const TALL_KEYS: [number, Pose][] = [
+  [0.0, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.045, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.12, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.045, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.3, { az: -2.45, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.36, { az: -2.55, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.52, { az: -3.0, el: 0.42, dist: 0.37, tx: -0.004, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.32 }],
+  [0.6, { az: -3.1, el: 0.42, dist: 0.37, tx: -0.004, ty: 0.13, lift: 0.085, tilt: 1, apart: 1, shift: 0.32 }],
+  [0.72, { az: -0.4, el: 0.12, dist: 0.5, tx: 0, ty: 0.02, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.84, { az: 0, el: 0.02, dist: 0.22, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.3 }],
+  [0.88, { az: 0, el: 0.02, dist: 0.22, tx: -0.0005, ty: 0.03, lift: 0, tilt: 0, apart: 0, shift: 0.3 }],
+  [0.95, { az: 0, el: 0.04, dist: 0.66, tx: 0, ty: -0.03, lift: 0, tilt: 0, apart: 0, shift: 0.31 }],
+  [1.0, { az: 0, el: 0.04, dist: 0.66, tx: 0, ty: -0.03, lift: 0, tilt: 0, apart: 0, shift: 0.31 }],
+];
+
 const smooth = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 
-function poseAt(p: number): Pose {
-  for (let i = 0; i < KEYS.length - 1; i++) {
-    const [a, pa] = KEYS[i];
-    const [b, pb] = KEYS[i + 1];
+function poseAt(p: number, keys = KEYS): Pose {
+  for (let i = 0; i < keys.length - 1; i++) {
+    const [a, pa] = keys[i];
+    const [b, pb] = keys[i + 1];
     if (p <= b) {
       const t = smooth(Math.min(1, Math.max(0, (p - a) / (b - a))));
       const out = {} as Pose;
@@ -50,7 +66,7 @@ function poseAt(p: number): Pose {
       return out;
     }
   }
-  return KEYS[KEYS.length - 1][1];
+  return keys[keys.length - 1][1];
 }
 
 export const PARTS = ["SecureElement", "MCU", "BLE", "Accel"] as const;
@@ -89,7 +105,8 @@ export class HeroScene {
     this.plainFraming = !!opts.plainFraming;
     if (opts.fixed) this.fixed = { ...KEYS[0][1], ...opts.fixed };
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // phones have 3x screens and less GPU: 1.75x keeps it sharp and the scroll smooth
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches ? 1.75 : 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.0;
@@ -181,7 +198,7 @@ export class HeroScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     // keep the console framed on tall phones
-    this.camera.fov = w / h < 0.8 && !this.plainFraming ? 42 : 30;
+    this.camera.fov = w / h < 0.8 && !this.plainFraming ? 34 : 30;
     this.camera.updateProjectionMatrix();
     this.needs = true;
   }
@@ -233,7 +250,8 @@ export class HeroScene {
     // ease toward the scroll position, so scrubbing feels weighted
     const diff = this.target - this.current;
     this.current = Math.abs(diff) < 1e-4 ? this.target : this.current + diff * (1 - Math.exp(-dt * 7));
-    const pose = this.fixed ?? poseAt(this.current);
+    const tall = this.camera.aspect < 0.8 && !this.plainFraming;
+    const pose = this.fixed ?? poseAt(this.current, tall ? TALL_KEYS : KEYS);
 
     // a slow breath while the hero is at rest
     const rest = this.still || this.fixed ? 0 : Math.max(0, 1 - this.current / 0.12); // the demo console holds still so its buttons are easy to hit
@@ -244,8 +262,7 @@ export class HeroScene {
     this.gb.rotation.z = jolt * 0.6;
 
     const c = this.camera;
-    const tall = c.aspect < 0.8 && !this.plainFraming;
-    const r = pose.dist * (tall ? 1.7 : 1);
+    const r = pose.dist;
     c.position.set(
       pose.tx + r * Math.cos(pose.el) * Math.sin(pose.az),
       pose.ty + r * Math.sin(pose.el),
@@ -255,7 +272,7 @@ export class HeroScene {
     // wide screens: console right of the copy; tall screens: console in the upper half
     if (this.plainFraming) c.clearViewOffset();
     else if (!tall) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
-    else c.setViewOffset(this.w, this.h, 0, this.h * 0.3, this.w, this.h);
+    else c.setViewOffset(this.w, this.h, 0, (0.5 - pose.shift) * this.h, this.w, this.h);
 
     // on tall screens the console body steps aside while the cartridge is apart, so nothing sits behind the copy
     if (this.body) this.body.visible = !(tall && pose.apart > 0.5);

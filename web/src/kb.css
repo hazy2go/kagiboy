@@ -369,47 +369,6 @@ html.kb-root .print-in.is-in {
   font-size: 18px;
 }
 
-/* ---------- floating call to action (phones) ---------- */
-
-.float-cta {
-  position: fixed;
-  left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 15;
-  translate: -50% 140%;
-  opacity: 0;
-  transition:
-    translate 0.5s var(--kb-ease),
-    opacity 0.3s;
-  pointer-events: none;
-  display: none;
-}
-
-.float-cta.is-shown {
-  translate: -50% 0;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* a soft wash under the pill so body copy doesn't run straight into it */
-.float-cta::before {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(110px + env(safe-area-inset-bottom));
-  z-index: -1;
-  background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.92) 70%);
-  pointer-events: none;
-}
-
-.float-cta .btn {
-  min-height: 52px;
-  padding: 0 26px;
-  box-shadow: 0 16px 34px -14px rgba(31, 35, 48, 0.7);
-}
-
 @media (max-width: 860px) {
   .kb-links {
     display: none;
@@ -419,7 +378,4 @@ html.kb-root .print-in.is-in {
     display: grid;
   }
 
-  .float-cta {
-    display: block;
-  }
 }
