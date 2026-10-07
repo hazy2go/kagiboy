@@ -46,7 +46,7 @@
 .rig {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px auto;
+  grid-template-columns: minmax(0, 1fr) 132px auto;
   align-items: center;
   gap: 8px;
   padding: 10px 0 40px;
@@ -67,6 +67,20 @@
   display: grid;
   justify-items: center;
   gap: 16px;
+}
+
+/* side by side: the console hugs the link to the phone instead of floating mid-column */
+@media (min-width: 981px) {
+  .rig > .rig-gb .device {
+    justify-items: end;
+  }
+
+  .rig > .rig-gb .device-controls,
+  .rig > .rig-gb .keys {
+    width: min(100%, 560px);
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .device-stage {
@@ -159,9 +173,11 @@
 .wire span {
   position: absolute;
   left: 50%;
-  top: -26px;
+  top: -24px;
   translate: -50% 0;
-  font-size: 16px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
   color: var(--kb-ink-3);
 }
 
