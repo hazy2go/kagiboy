@@ -439,9 +439,9 @@ export class CartChip {
  */
 function snapshot(req: SignRequest, wallet: Wallet): Snapshot {
   const snap = decodeRequest(req, wallet);
-  // rows on the sign screen: amount 2×18, fee 16, network 20, address 3×18
+  // room on the Game Boy sign screen: amount 2×18, fee 16, network 16, address 3×16
   const s = snap.shown;
-  if (s.amount.length > 36 || s.fee.length > 16 || s.network.length > 20 || s.to.length > 54) {
+  if (s.amount.length > 36 || s.fee.length > 16 || s.network.length > 16 || s.to.length > 48) {
     throw new Error("this transaction can't be shown in full on the Game Boy");
   }
   return snap;

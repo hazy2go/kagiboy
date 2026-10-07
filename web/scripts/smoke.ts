@@ -45,12 +45,14 @@ async function frames(n: number, each?: () => void) {
     await tick();
   }
 }
-async function press(key: Key, hold = 3) {
+// screens fade out and in (~12 frames), so give every press time to land
+async function press(key: Key, hold = 3, settle = 3) {
   gb.setKey(key, true);
   await frames(hold);
   gb.setKey(key, false);
-  await frames(3);
+  await frames(settle);
 }
+const step = (key: Key) => press(key, 3, 24);
 let shot = 0;
 function snap(name: string) {
   const scale = 2;
@@ -75,10 +77,10 @@ const keys: Key[] = ["A", "B", "UP", "DOWN", "LEFT", "RIGHT", "SELECT"];
 
 await frames(120);
 snap("boot");
-await press("START");
+await step("START");
 await frames(10);
 snap("start-menu");
-await press("A"); // CREATE NEW WALLET (restore is tested at the end)
+await step("A"); // CREATE NEW WALLET (restore is tested at the end)
 await frames(10);
 snap("mash-start");
 // mash until the ROM sends its final (empty) ENTROPY call
@@ -94,14 +96,14 @@ snap("shake-done");
 chip.accel = { x: 0, y: 0 };
 await frames(90);
 snap("words");
-await press("A");
+await step("A");
 await frames(10);
 await press("UP");
 await press("RIGHT");
 await press("UP");
 await press("UP");
 snap("set-pin"); // PIN 1200
-await press("A");
+await step("A");
 await frames(20);
 chip.setBalance("sol", 2_000_000_000n);
 chip.setBalance("evm", parseEther("0.05"));
@@ -123,18 +125,18 @@ function scanScreen() {
     }
   return jsQR(big, WIDTH * k, HEIGHT * k)?.data ?? null;
 }
-await press("A");
+await step("A");
 await frames(20);
 snap("receive-sol-qr");
 const solScan = scanScreen();
-await press("RIGHT");
+await step("RIGHT");
 await frames(20);
 snap("receive-eth-qr");
 const evmScan = scanScreen();
-await press("SELECT");
+await step("SELECT");
 await frames(10);
 snap("receive-eth-text");
-await press("B");
+await step("B");
 await frames(20);
 snap("home-after-receive");
 console.log("qr sol:", solScan === chip.addresses!.sol ? "OK" : `MISMATCH ${solScan}`);
@@ -175,7 +177,7 @@ await frames(40);
 snap("tx-confirmed");
 const statusReply = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
 console.log("phone text on screen:", statusReply.includes("41 4c 4c") /* "ALL" */ ? "LEAKED" : "blocked");
-await press("A");
+await step("A");
 
 // requests the chip must refuse outright
 const sepoliaTx = { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: parseEther("0.01"), nonce: 0, gas: 21000n, maxFeePerGas: 2n, maxPriorityFeePerGas: 1n, type: "eip1559" } as const;
@@ -203,7 +205,7 @@ let ethResult: SignResult | null = null;
 ethReq.result.then((r) => (ethResult = r));
 await frames(60);
 snap("eth-request");
-await press("B");
+await step("B");
 await frames(10);
 console.log("eth rejected:", ethResult && !(ethResult as SignResult).approved);
 await frames(100); // "REJECTED" screen, then home
@@ -229,24 +231,24 @@ chip.setTxStatus(ethReq.id, "CONFIRMED", { hash: "0x" + "cd".repeat(32) }); // s
 chip.setTxStatus(ethReq2.id, "CONFIRMED", { hash: "0x" + "ab".repeat(32) });
 await frames(40);
 snap("eth-confirmed");
-await press("A");
+await step("A");
 await frames(20);
 
 // power cycle: keys survive, RAM does not
 gb = new GameBoy(rom);
 chip.reset();
 await frames(120);
-await press("START");
+await step("START");
 await frames(10);
-await press("A"); // wrong PIN 0000
+await step("A"); // wrong PIN 0000
 await frames(10);
 snap("wrong-pin");
-await press("A");
+await step("A");
 await press("UP");
 await press("RIGHT");
 await press("UP");
 await press("UP");
-await press("A"); // 1200
+await step("A"); // 1200
 await frames(140);
 snap("unlocked-home");
 console.log("state after power cycle:", chip.state);
@@ -265,12 +267,12 @@ console.log("power cut resolves as rejected:", cut !== null && !(cut as SignResu
 
 // five wrong PINs wipe the cartridge
 await frames(120);
-await press("START");
+await step("START");
 await frames(10);
 for (let i = 0; i < 5; i++) {
-  await press("A"); // 0000 is wrong
+  await step("A"); // 0000 is wrong
   await frames(10);
-  if (i < 4) await press("A"); // "A: TRY AGAIN"
+  if (i < 4) await step("A"); // "A: TRY AGAIN"
 }
 await frames(10);
 snap("wiped");
@@ -278,10 +280,10 @@ console.log("state after 5 wrong PINs:", chip.state, "storage:", saved === null 
 
 // restore a known phrase from the start menu, letter by letter, like a person would
 const PHRASE = "legal winner thank year wave sausage worth useful legal winner thank yellow"; // BIP-39 test vector
-await press("A"); // leave the WIPED screen
+await step("A"); // leave the WIPED screen
 await frames(10);
 await press("DOWN");
-await press("A"); // RESTORE 12 WORDS
+await step("A"); // RESTORE 12 WORDS
 await frames(10);
 for (const word of PHRASE.split(" ")) {
   for (const ch of word.slice(0, 4)) {
@@ -295,7 +297,7 @@ for (const word of PHRASE.split(" ")) {
 }
 await frames(20);
 snap("restore-pin");
-await press("A"); // PIN 0000
+await step("A"); // PIN 0000
 await frames(20);
 const expected = walletFromMnemonic(PHRASE);
 console.log(
