@@ -80,15 +80,18 @@
   gap: 16px;
 }
 
-/* side by side: the console hugs the link to the phone instead of floating mid-column */
+/* side by side: console and phone as one centred pair, the Bluetooth link between them;
+   the console is sized so it and its Switch on button fit in the first screen */
 @media (min-width: 981px) {
-  .rig > .rig-gb .device {
-    justify-items: end;
+  .rig {
+    --gb-w: min(560px, max(340px, (100svh - 410px) * 0.8));
+    grid-template-columns: var(--gb-w) 150px auto;
+    justify-content: center;
   }
 
   .rig > .rig-gb .device-controls,
   .rig > .rig-gb .keys {
-    width: min(100%, 560px);
+    width: var(--gb-w);
     justify-content: center;
     text-align: center;
   }
@@ -100,10 +103,9 @@
   aspect-ratio: 4 / 5;
 }
 
-/* laptops: the console and its Switch on button both fit in the first screen */
 @media (min-width: 981px) {
-  .device-stage {
-    width: min(100%, 560px, max(320px, (100svh - 410px) * 0.8));
+  .rig .device-stage {
+    width: 100%;
   }
 }
 

@@ -470,7 +470,8 @@ def bezel_field():
         plate = rI(rbox2(X, Y, x0, y0, x1, y1, r, r, rbr, r), slab(Z, -0.15, 0.55), 0.22)
         win = rbox2(X, Y, *LCD, 0.5)
         plate = rD(plate, win, 0.12)
-        return rD(plate, circle2(X, Y, LED_C[0], LED_C[1], LED_R + 0.05), 0.06)
+        # the hole is a touch smaller than the LED, so the lens fills it with no sliver of body showing
+        return rD(plate, circle2(X, Y, LED_C[0], LED_C[1], LED_R - 0.08), 0.06)
     f.base(base)
     return f
 
@@ -687,7 +688,7 @@ def main():
     log("Bezel ...")
     f = bezel_field()
     to_gb(sdf_object("Bezel", f, gb_to_bl, gb_n_to_bl, C_RENDER, origin=center_bl(((BEZEL[0] + BEZEL[2]) / 2, (BEZEL[1] + BEZEL[3]) / 2, 0.0)),
-                     mats=[M["Bezel"]], adapt=0.05, glb_coll=C_GLB, glb_adapt=0.0, glb_target=30000))
+                     mats=[M["Bezel"]], adapt=0.05, glb_coll=C_GLB, glb_adapt=0.05))
     f = led_field()
     to_gb(sdf_object("LED", f, gb_to_bl, gb_n_to_bl, C_RENDER, origin=center_bl((*LED_C, 0.0)), mats=[M["LED"]],
                      glb_coll=C_GLB, glb_adapt=0.05, glb_target=2500))
@@ -709,16 +710,21 @@ def main():
     del f
 
     # Screen: a single quad, UV 0..1 over the 160x144 display (v=1 at the top in Blender -> glTF v=0 at top)
+    # the LCD sits down in the window (z 0.1, under the bezel top at 0.55) and runs 0.6 mm past the
+    # opening on every side, so its edges hide inside the bezel instead of cutting through the window walls
     x0, y0, x1, y1 = LCD
-    cS = np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.45])
+    x0, y0, x1, y1 = x0 - 0.6, y0 - 0.6, x1 + 0.6, y1 + 0.6
+    cS = np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.1])
     for coll, par in ((C_RENDER, gb), (C_GLB, gbL)):
         bm = bmesh.new()
         uvl = bm.loops.layers.uv.new("UVMap")
-        pts = np.array([[x0, y1, 0.45], [x1, y1, 0.45], [x1, y0, 0.45], [x0, y0, 0.45]])
+        pts = np.array([[x0, y1, 0.1], [x1, y1, 0.1], [x1, y0, 0.1], [x0, y0, 0.1]])
         V = gb_to_bl(pts) - gb_to_bl(cS[None])[0]
         vs = [bm.verts.new(tuple(v)) for v in V]
         face = bm.faces.new(vs)
-        for lp, (u, v) in zip(face.loops, [(0, 0), (1, 0), (1, 1), (0, 1)]):
+        # the picture still spans exactly the opening; the hidden margin samples past 0..1 (clamped)
+        eu, ev = 0.6 / (LCD[2] - LCD[0]), 0.6 / (LCD[3] - LCD[1])
+        for lp, (u, v) in zip(face.loops, [(-eu, -ev), (1 + eu, -ev), (1 + eu, 1 + ev), (-eu, 1 + ev)]):
             lp[uvl].uv = (u, v)
         face.normal_update()
         if face.normal.y > 0:
