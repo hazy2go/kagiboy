@@ -1260,3 +1260,36 @@
     }
   }
 }
+
+/* phones: the scroll cue as a single line of print under the hero's actions */
+@media (max-width: 860px) {
+  .scroll-hint {
+    display: block;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    font-family: var(--kb-px);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .scroll-hint::after {
+    display: none;
+  }
+
+  .ch-hero {
+    bottom: calc(48px + env(safe-area-inset-bottom));
+  }
+}
+
+@supports (height: 100lvh) {
+  @media (max-width: 860px) {
+    .scroll-hint {
+      bottom: calc(100lvh - 100svh + 14px + env(safe-area-inset-bottom));
+    }
+
+    .ch-hero {
+      bottom: calc(100lvh - 100svh + 48px + env(safe-area-inset-bottom));
+    }
+  }
+}

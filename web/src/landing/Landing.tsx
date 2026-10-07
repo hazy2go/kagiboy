@@ -376,7 +376,7 @@ export function Landing() {
           </div>
 
           <p className="scroll-hint" aria-hidden>
-            Scroll
+            Scroll down
           </p>
         </div>
       </section>
