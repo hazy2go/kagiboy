@@ -51,9 +51,15 @@ compromises the phone, and someone who sniffs Bluetooth.
   seed. The counter lives in the secure element, so it can't be reset by
   reflashing the MCU.
 - **What you see is what you sign.** The phone sends a transaction. The cartridge
-  decodes it itself and shows the amount and destination on the Game Boy screen,
-  which the phone can't draw on. Only the A button approves. Anything the firmware
-  can't decode is refused (no blind signing).
+  freezes its bytes, decodes them itself and shows the exact amount, fee,
+  network and destination on the Game Boy screen. The phone can't draw on that
+  screen: it only sends numbers and fixed status codes, and the cartridge writes
+  every word. Only the A button approves, and the cartridge signs exactly the
+  bytes it showed. Anything the firmware can't decode is refused (no blind
+  signing): today that means plain SOL and ETH transfers only.
+- **Spending limits on EVM.** The cartridge only signs on the network it was built
+  for (Sepolia in the demo), only 21000-gas plain transfers, and refuses fees
+  above a cap (0.01 ETH).
 - **Randomness.** The seed comes from the SE050's hardware RNG. Button-mash timing
   and accelerometer samples are hashed in on top. They can only add randomness,
   never take it away.
@@ -68,6 +74,10 @@ compromises the phone, and someone who sniffs Bluetooth.
   screen, so the firmware is signed and the board is potted.
 - The Game Boy itself is trusted only as a display and buttons. A modified
   console could fake button presses. Physical possession plus the PIN is the bar.
+- A Solana transaction doesn't say which cluster it's for (the recent blockhash
+  decides). The cartridge firmware is built for one cluster and labels it, but
+  can't prove a phone didn't use another cluster's blockhash. Keep testnet and
+  mainnet seeds separate.
 - Power: the radio draws more than a normal cartridge. DMG power budget testing is
   the first prototype task.
 

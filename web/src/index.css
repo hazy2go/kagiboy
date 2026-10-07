@@ -811,7 +811,8 @@ kbd {
 
 .activity li.confirmed .state { color: var(--ok); }
 .activity li.waiting .state,
-.activity li.broadcast .state { color: var(--warn); }
+.activity li.broadcast .state,
+.activity li.unknown .state { color: var(--warn); }
 .activity li.failed .state,
 .activity li.rejected .state { color: var(--bad); }
 

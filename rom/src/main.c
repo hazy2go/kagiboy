@@ -131,20 +131,24 @@ static void header(const char *title) {
     at(0, 1, "====================");
 }
 
-/* Prints s wrapped to width w starting at (x, y); returns the next free row. */
-static uint8_t wrap(uint8_t x, uint8_t y, uint8_t w, const char *s) {
+/* Prints s wrapped to width w from (x, y), at most `rows` rows (the rest is cut). */
+static void wrap_n(uint8_t x, uint8_t y, uint8_t w, const char *s, uint8_t rows) {
     uint8_t c = 0;
     gotoxy(x, y);
-    while (*s) {
+    while (*s && rows) {
         if (c == w) {
             c = 0;
             y++;
+            if (!--rows) break;
             gotoxy(x, y);
         }
         putchar(*s++);
         c++;
     }
-    return y + 1;
+}
+
+static void wrap(uint8_t x, uint8_t y, uint8_t w, const char *s) {
+    wrap_n(x, y, w, s, 4);
 }
 
 /* "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU" -> "7xKXtg..JosgAsU" */
@@ -540,7 +544,7 @@ static void draw_account(uint8_t chain, uint8_t y) {
     bal = resp + strlen(resp) + 1;
     short_addr(1, y, resp);
     clear_row(y + 1);
-    at(1, y + 1, bal);
+    wrap_n(1, y + 1, 18, bal, 1);
 }
 
 static void home_draw(void) {
@@ -634,13 +638,13 @@ static void tx_result(void) {
     for (;;) {
         if (chip_call(CMD_TXSTATUS, 0, 0, 0) == 0) {
             detail = resp + strlen(resp) + 1;
-            failed = !strcmp(resp, "FAILED");
+            failed = !strcmp(resp, "FAILED") || !strcmp(resp, "UNKNOWN");
             clear_row(8);
             center(8, resp);
             if (*detail) {
                 /* on failure the chip sends a reason instead of a signature */
                 at(1, 10, failed ? "WHY:" : "TX: ");
-                wrap(1, 11, 18, detail);
+                wrap_n(1, 11, 18, detail, 2);
             }
             if (failed || !strcmp(resp, "CONFIRMED")) break;
         }
@@ -657,25 +661,32 @@ static void tx_result(void) {
 }
 
 static void sign_request(void) {
-    uint8_t chain, held = 0, shown = 0, k;
+    uint8_t held = 0, shown = 0, k;
     uint16_t hold_start = 0, elapsed;
-    char *to, *amount;
+    char *to, *amount, *fee, *network;
     if (chip_call(CMD_PENDING, 0, 0, 0) != 0) return;
-    flush_input();
-    chain = (uint8_t)resp[0];
+    /* every field below was decoded and written by the chip, not the phone */
     to = resp + 1;
     amount = to + strlen(to) + 1;
+    fee = amount + strlen(amount) + 1;
+    network = fee + strlen(fee) + 1;
     beep(0xF0);
     header("!! SIGN REQUEST !!");
-    at(0, 3, chain == CHAIN_SOL ? "SOLANA DEVNET" : "ETH SEPOLIA");
-    at(0, 5, "SEND");
-    at(1, 6, amount);
+    wrap_n(0, 2, 20, network, 1);
+    at(0, 4, "SEND");
+    wrap_n(1, 5, 18, amount, 2);
+    at(0, 7, "FEE");
+    wrap_n(4, 7, 16, fee, 1);
     at(0, 8, "TO");
-    wrap(1, 9, 18, to);
+    wrap_n(1, 9, 18, to, 3);
     at(0, 14, "CHECK THE ADDRESS!");
     at(0, 16, "HOLD A: SIGN");
     at(0, 17, "B: REJECT");
     bar(12, 0, 60);
+    /* arm only once every button is up, so a press left over from the
+     * previous screen can neither reject nor start approving */
+    while (held_keys) vsync();
+    flush_input();
     for (;;) {
         vsync();
         frame++;
@@ -712,7 +723,15 @@ static void sign_request(void) {
     header("SIGNING");
     center(8, "SECURE CHIP IS");
     center(9, "SIGNING...");
-    expect_ok(chip_call(CMD_SIGN, 1, 0, 0));
+    if (chip_call(CMD_SIGN, 1, 0, 0) != 0) {
+        header("NOT SIGNED");
+        center(7, "THE CHIP COULD NOT");
+        center(8, "SIGN THIS REQUEST");
+        center(16, "A: OK");
+        flush_input();
+        while (!(wait_press() & J_A)) {}
+        return;
+    }
     tx_result();
 }
 

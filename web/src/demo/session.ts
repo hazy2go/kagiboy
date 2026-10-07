@@ -94,6 +94,7 @@ export class Session {
     this.pressedAt.clear();
     this.releaseAt.clear();
     this.chip.reset();
+    this.phone.clearBalances();
     this.powered = true;
     this.last = performance.now();
     this.debt = 0;
@@ -110,12 +111,21 @@ export class Session {
     this.gb = null;
     this.powered = false;
     this.chip.reset();
+    this.phone.clearBalances();
     const ctx = this.canvas?.getContext("2d");
     if (ctx && this.canvas) {
       ctx.fillStyle = "#8b9a3c";
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.notify();
+  }
+
+  /** Window lost focus: let go of everything, so a held A can't finish a sign by itself. */
+  releaseAll() {
+    if (!this.gb) return;
+    for (const k of ["UP", "DOWN", "LEFT", "RIGHT", "A", "B", "SELECT", "START"] as Key[]) this.gb.setKey(k, false);
+    this.pressedAt.clear();
+    this.releaseAt.clear();
   }
 
   /** Taps are held for at least 3 frames, or the ROM (which polls once per frame) would miss them. */
@@ -179,6 +189,7 @@ export class Session {
       this.debt -= FRAME_MS;
     }
     if (before !== "unlocked" && this.chip.state === "unlocked") this.phone.refreshBalances();
+    if (before === "unlocked" && this.chip.state !== "unlocked") this.phone.clearBalances();
     if (this.canvas && this.image) {
       gb.draw(this.image.data);
       this.canvas.getContext("2d")!.putImageData(this.image, 0, 0);

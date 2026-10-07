@@ -32,7 +32,7 @@ const STEPS = [
 const SECURITY = [
   ["Keys never leave the chip", "An NXP SE050 secure element creates your seed and signs inside itself. Plugging the cartridge into a reader gets a thief nothing."],
   ["Five wrong PINs and it wipes", "The retry counter lives inside the secure element, so reflashing the cartridge doesn't reset it."],
-  ["What you see is what you sign", "The phone can ask, but only the A button approves. The cartridge decodes each transaction itself and refuses anything it can't show you."],
+  ["What you see is what you sign", "The phone can ask, but only the A button approves. The cartridge freezes each transaction, shows the exact amount, fee and network, and signs exactly those bytes. Anything it can't show you, it refuses."],
   ["Bluetooth carries nothing secret", "Unsigned transactions go in and signatures come out. Someone listening learns what you sent, not how to sign."],
 ];
 

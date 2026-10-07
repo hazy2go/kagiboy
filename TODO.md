@@ -36,3 +36,20 @@ Deadline: Colosseum submission closes 2026-10-13 06:59 UTC (Oct 12 evening, Amer
 - [x] Wrong-PIN wipe flow end-to-end test (smoke: 5 wrong PINs → WIPED, storage erased)
 - [x] EVM sign path (smoke: approved ETH tx recovers to the wallet address)
 - [x] Power off mid-signing (smoke: pending request resolves as rejected)
+
+### Full review (independent pass, 14 findings) — all fixed
+- [x] Chip signed the phone's live object, not what it showed → snapshot bytes at request time, sign exactly those (smoke: swapped transfer still signs the shown one)
+- [x] EVM chain/gas/fee unchecked, network label hardcoded → Sepolia only, 21000 gas, 0.01 ETH fee cap, fee + network shown by the chip
+- [x] Phone could write text on the Game Boy screen → balances as base units, status as fixed codes, every field clipped to its rows
+- [x] One global tx status slot → per-request ids; stale updates ignored
+- [x] Signing failure hung the phone and claimed "signed" → resolves cleanly, ROM shows NOT SIGNED
+- [x] Errors after broadcast marked "failed" (double-send risk) → "status unknown, check explorer"
+- [x] PIN and restore words on the bus monitor → redacted
+- [x] Stale balances across wallets → cleared on lock/wipe/power, stale fetches dropped
+- [x] Loose amount parsing, rounded amounts → strict decimal to base units, exact amounts on screen
+- [x] Async reply surviving a power cycle → generation counter
+- [x] Sync throw froze the emulator → try/catch in tick
+- [x] Leftover B/A presses on the sign screen; keys stuck after window blur → arm only after release; release all on blur
+- [x] LOCK left a request queued; CREATE/SET_PIN could overwrite a stored seed → rejected / refused
+- [x] Docs and landing claims updated to match (incl. the Solana cluster limit)
+

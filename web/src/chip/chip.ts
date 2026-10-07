@@ -1,5 +1,5 @@
-import { SystemInstruction, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { formatEther, type TransactionSerializableEIP1559 } from "viem";
+import { Message, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
+import { formatUnits, getAddress, parseTransaction, serializeTransaction, type TransactionSerializableEIP1559 } from "viem";
 import { sha256 } from "@noble/hashes/sha2.js";
 import qrcode from "qrcode-generator";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
@@ -9,8 +9,10 @@ import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemo
  * Software stand-in for the cartridge's MCU + secure element.
  *
  * It owns the keys and answers the Game Boy over the mailbox. The phone can ask
- * it to sign, but only the Game Boy's buttons can approve, and the chip decodes
- * each transaction itself so the screen shows what is actually being signed.
+ * it to sign, but only the Game Boy's buttons can approve. The chip snapshots
+ * each transaction when it's requested, decodes that snapshot for the screen,
+ * and signs exactly those bytes. Every string on the Game Boy screen is written
+ * by the chip; the phone only supplies numbers and fixed status codes.
  */
 
 /** What the secure element keeps across power cycles. */
@@ -34,14 +36,25 @@ export type SignRequest =
 export type SignResult =
   | { approved: true; chain: "sol"; signed: Transaction }
   | { approved: true; chain: "evm"; signed: `0x${string}` }
-  | { approved: false };
+  | { approved: false; reason: "rejected" | "power" | "locked" | "error" };
+
+export type TxState = "SIGNED" | "BROADCAST" | "CONFIRMED" | "FAILED" | "UNKNOWN";
+
+/** Fixed texts the phone can pick from; it never sends free text to the screen. */
+export const FAIL_REASON = {
+  NO_FUNDS: "NOT ENOUGH FUNDS",
+  EXPIRED: "TOOK TOO LONG",
+  NETWORK: "NETWORK ERROR",
+  REJECTED: "NETWORK REJECTED IT",
+  CHECK_EXPLORER: "CHECK THE EXPLORER",
+} as const;
+export type FailReason = keyof typeof FAIL_REASON;
 
 export interface BusEvent {
   t: number;
   dir: "gb>chip" | "chip>gb";
   cmd: string;
   hex: string;
-  note?: string;
 }
 
 interface Reply {
@@ -49,14 +62,31 @@ interface Reply {
   data?: Uint8Array | string;
 }
 
-interface Pending {
-  req: SignRequest;
+/** What the Game Boy shows, decoded by the chip from its own snapshot. */
+interface Shown {
   to: string;
   amount: string;
+  fee: string;
+  network: string;
+}
+
+type Snapshot =
+  | { chain: "sol"; message: Uint8Array; shown: Shown }
+  | { chain: "evm"; tx: TransactionSerializableEIP1559; shown: Shown };
+
+interface Pending {
+  id: number;
+  snap: Snapshot;
   resolve: (r: SignResult) => void;
 }
 
 const MAX_TRIES = 5;
+const SEPOLIA_CHAIN_ID = 11155111;
+const PLAIN_TRANSFER_GAS = 21000n;
+const MAX_EVM_FEE_WEI = 10n ** 16n; // 0.01 ETH: anything above that is refused
+const SOL_FEE_PER_SIGNATURE = 5000n;
+
+const SECRET_CMDS = new Set<number>([CMD.CREATE, CMD.SET_PIN, CMD.UNLOCK, CMD.WORDS, CMD.RESTORE]);
 
 export class CartChip {
   private wallet: Wallet | null = null;
@@ -64,11 +94,13 @@ export class CartChip {
   private unlocked = false;
   private pool: Uint8Array = new Uint8Array(32);
   private lastSeq = 0;
+  private generation = 0; // bumped on power cycle so late async replies are dropped
   private inFlight: { seq: number; reply: Promise<Reply> } | null = null;
   private ready: { seq: number; reply: Reply } | null = null;
   private pending: Pending | null = null;
-  private balances: Record<Chain, string> = { sol: "-- SOL", evm: "-- ETH" };
-  private txStatus = { state: "", sig: "" };
+  private nextId = 1;
+  private balances: Record<Chain, bigint | null> = { sol: null, evm: null };
+  private txStatus: { id: number; state: TxState | ""; detail: string } = { id: 0, state: "", detail: "" };
   accel = { x: 0, y: 0 };
 
   private listeners = new Set<() => void>();
@@ -90,7 +122,7 @@ export class CartChip {
 
   /** Public addresses only; keys never leave the chip. */
   get addresses(): Record<Chain, string> | null {
-    if (!this.wallet) return null;
+    if (!this.wallet || !this.unlocked) return null;
     return { sol: this.wallet.sol.publicKey.toBase58(), evm: this.wallet.evm.address };
   }
 
@@ -98,26 +130,39 @@ export class CartChip {
     return this.pending !== null;
   }
 
-  setBalance(chain: Chain, text: string) {
-    this.balances[chain] = text;
+  /** Balances arrive as base units (lamports / wei); the chip formats them itself. */
+  setBalance(chain: Chain, baseUnits: bigint | null) {
+    this.balances[chain] = baseUnits;
   }
 
-  /** `detail` is a signature/hash (shortened for the screen) or, on failure, a short reason. */
-  setTxStatus(state: string, detail = "") {
-    const isHash = !detail.includes(" ") && detail.length > 20;
-    this.txStatus = { state, sig: isHash ? `${detail.slice(0, 8)}..${detail.slice(-8)}` : detail.slice(0, 36) };
+  /** Status for request `id` only; updates for older requests are ignored. */
+  setTxStatus(id: number, state: TxState, detail: { hash?: string; reason?: FailReason } = {}) {
+    if (id !== this.txStatus.id) return;
+    let text = "";
+    if (detail.reason) text = FAIL_REASON[detail.reason];
+    else if (detail.hash) {
+      const h = detail.hash.replace(/[^0-9A-Za-z]/g, "");
+      text = h.length > 20 ? `${h.slice(0, 8)}..${h.slice(-8)}` : h;
+    }
+    this.txStatus = { id, state, detail: text };
     this.emit();
   }
 
-  /** Resolves once the user approves or rejects on the Game Boy. */
-  requestSignature(req: SignRequest): Promise<SignResult> {
-    if (this.pending) return Promise.reject(new Error("a request is already waiting on the Game Boy"));
-    const { to, amount } = describe(req);
-    return new Promise((resolve) => {
-      this.pending = { req, to, amount, resolve };
-      this.txStatus = { state: "", sig: "" };
-      this.emit();
+  /**
+   * Snapshots the transaction now, so later changes to the phone's object can't
+   * change what gets signed. Throws if the chip can't show it on the Game Boy.
+   */
+  requestSignature(req: SignRequest): { id: number; result: Promise<SignResult> } {
+    if (!this.wallet || !this.unlocked) throw new Error("unlock the cartridge first");
+    if (this.pending) throw new Error("a request is already waiting on the Game Boy");
+    const snap = snapshot(req, this.wallet);
+    const id = this.nextId++;
+    const result = new Promise<SignResult>((resolve) => {
+      this.pending = { id, snap, resolve };
     });
+    this.txStatus = { id, state: "", detail: "" };
+    this.emit();
+    return { id, result };
   }
 
   subscribe(fn: () => void) {
@@ -127,14 +172,15 @@ export class CartChip {
 
   /** Power cycle: RAM state goes, the secure element's storage stays. */
   reset() {
+    this.generation++;
     this.unlocked = false;
     this.wallet = null;
     this.lastSeq = 0;
     this.inFlight = null;
     this.ready = null;
     this.pool = new Uint8Array(32);
-    this.pending?.resolve({ approved: false });
-    this.pending = null;
+    this.balances = { sol: null, evm: null };
+    this.dropPending("power");
     this.emit();
   }
 
@@ -168,14 +214,22 @@ export class CartChip {
     for (let i = 0; i < len; i++) data[i] = r(MB.REQ + i);
     this.record("gb>chip", cmd, concat(new Uint8Array([cmd, arg]), data));
 
-    const result = this.handle(cmd, arg, data);
+    let result: Reply | Promise<Reply>;
+    try {
+      result = this.handle(cmd, arg, data);
+    } catch (e) {
+      console.error(e);
+      result = { status: 0xff };
+    }
     if (result instanceof Promise) {
+      const gen = this.generation;
       const reply = result.catch((e): Reply => {
         console.error(e);
         return { status: 0xff };
       });
       this.inFlight = { seq, reply };
       reply.then((rep) => {
+        if (gen !== this.generation) return; // the Game Boy was power-cycled meanwhile
         this.inFlight = null;
         this.ready = { seq, reply: rep };
       });
@@ -205,9 +259,11 @@ export class CartChip {
         return { status: 0, data: this.pool.slice(0, 4) };
 
       case CMD.CREATE: {
+        if (this.persisted) return { status: 1 }; // never overwrite a stored seed
         const mnemonic = newMnemonic(this.pool);
         this.pool = new Uint8Array(32);
         this.wallet = walletFromMnemonic(mnemonic);
+        this.balances = { sol: null, evm: null };
         return { status: 0, data: mnemonic };
       }
 
@@ -226,11 +282,13 @@ export class CartChip {
         const mnemonic = mnemonicFromIndices(indices);
         if (!mnemonic) return { status: 2 }; // checksum failed: a word is wrong
         this.wallet = walletFromMnemonic(mnemonic);
+        this.balances = { sol: null, evm: null };
         return { status: 0 };
       }
 
       case CMD.SET_PIN: {
-        if (!this.wallet || data.length !== 4) return { status: 1 };
+        // only during setup; changing an existing PIN would need the old one
+        if (this.persisted || !this.wallet || data.length !== 4) return { status: 1 };
         const pinSalt = hex(crypto.getRandomValues(new Uint8Array(16)));
         this.persisted = {
           mnemonic: this.wallet.mnemonic,
@@ -245,7 +303,7 @@ export class CartChip {
 
       case CMD.UNLOCK: {
         const p = this.persisted;
-        if (!p) return { status: 2 };
+        if (!p) return { status: 3 }; // no wallet
         if (pinHash(p.pinSalt, data) === p.pinHash) {
           p.triesLeft = MAX_TRIES;
           this.storage.save(p);
@@ -263,17 +321,19 @@ export class CartChip {
       }
 
       case CMD.ACCOUNT: {
-        if (!this.unlocked || !this.addresses) return { status: 1 };
+        const a = this.addresses;
+        if (!a) return { status: 1 };
         const chain: Chain = arg === 0 ? "sol" : "evm";
-        return { status: 0, data: `${this.addresses[chain]}\0${this.balances[chain]}\0` };
+        return { status: 0, data: `${a[chain]}\0${balanceText(chain, this.balances[chain])}\0` };
       }
 
       case CMD.PENDING: {
         if (!this.unlocked || !this.pending) return { status: 1 };
-        const { req, to, amount } = this.pending;
+        const { snap } = this.pending;
+        const { to, amount, fee, network } = snap.shown;
         return {
           status: 0,
-          data: concat(new Uint8Array([req.chain === "sol" ? 0 : 1]), ascii(`${to}\0${amount}\0`)),
+          data: concat(new Uint8Array([snap.chain === "sol" ? 0 : 1]), ascii(`${to}\0${amount}\0${fee}\0${network}\0`)),
         };
       }
 
@@ -282,24 +342,27 @@ export class CartChip {
         if (!this.unlocked || !this.wallet || !p) return { status: 1 };
         this.pending = null;
         if (arg !== 1) {
-          p.resolve({ approved: false });
-          this.setTxStatus("REJECTED");
+          p.resolve({ approved: false, reason: "rejected" });
+          this.emit();
           return { status: 0 };
         }
-        return this.sign(this.wallet, p).then(() => ({ status: 0 }));
+        return this.sign(this.wallet, p);
       }
 
       case CMD.QR: {
-        if (!this.unlocked || !this.addresses) return { status: 1 };
-        return { status: 0, data: qrBits(this.addresses[arg === 0 ? "sol" : "evm"]) };
+        const a = this.addresses;
+        if (!a) return { status: 1 };
+        return { status: 0, data: qrBits(a[arg === 0 ? "sol" : "evm"]) };
       }
 
       case CMD.TXSTATUS:
-        return { status: 0, data: `${this.txStatus.state}\0${this.txStatus.sig}\0` };
+        return { status: 0, data: `${this.txStatus.state}\0${this.txStatus.detail}\0` };
 
       case CMD.LOCK:
         this.unlocked = false;
         this.wallet = null;
+        this.balances = { sol: null, evm: null };
+        this.dropPending("locked");
         return { status: 0 };
 
       case CMD.WIPE:
@@ -311,16 +374,31 @@ export class CartChip {
     }
   }
 
-  private async sign(wallet: Wallet, p: Pending) {
-    this.setTxStatus("SIGNED");
-    if (p.req.chain === "sol") {
-      const tx = p.req.tx;
-      tx.partialSign(wallet.sol);
-      p.resolve({ approved: true, chain: "sol", signed: tx });
-    } else {
-      const signed = await wallet.evm.signTransaction(p.req.tx);
-      p.resolve({ approved: true, chain: "evm", signed });
+  /** Signs the snapshot taken at request time, never the phone's live object. */
+  private async sign(wallet: Wallet, p: Pending): Promise<Reply> {
+    try {
+      if (p.snap.chain === "sol") {
+        const tx = Transaction.populate(Message.from(p.snap.message));
+        tx.partialSign(wallet.sol);
+        if (!bytesEqual(tx.serializeMessage(), p.snap.message)) throw new Error("message changed while signing");
+        p.resolve({ approved: true, chain: "sol", signed: tx });
+      } else {
+        const signed = await wallet.evm.signTransaction(p.snap.tx);
+        p.resolve({ approved: true, chain: "evm", signed });
+      }
+    } catch (e) {
+      console.error(e);
+      p.resolve({ approved: false, reason: "error" });
+      return { status: 1 };
     }
+    this.txStatus = { id: p.id, state: "SIGNED", detail: "" };
+    this.emit();
+    return { status: 0 };
+  }
+
+  private dropPending(reason: "power" | "locked") {
+    this.pending?.resolve({ approved: false, reason });
+    this.pending = null;
   }
 
   private wipe() {
@@ -328,17 +406,18 @@ export class CartChip {
     this.persisted = null;
     this.wallet = null;
     this.unlocked = false;
-    this.pending?.resolve({ approved: false });
-    this.pending = null;
+    this.balances = { sol: null, evm: null };
+    this.dropPending("locked");
   }
 
   private record(dir: BusEvent["dir"], cmd: number, bytes: Uint8Array) {
-    const secret = cmd === CMD.CREATE && dir === "chip>gb";
+    // PINs, recovery words and typed word prefixes stay off the monitor
+    const secret = SECRET_CMDS.has(cmd);
     this.log.push({
       t: Date.now(),
       dir,
       cmd: CMD_NAME[cmd] ?? `0x${cmd.toString(16)}`,
-      hex: secret ? "** recovery words, shown on the Game Boy only **" : hex(bytes.slice(0, 24)) + (bytes.length > 24 ? " .." : ""),
+      hex: secret ? "** hidden: PIN / recovery words stay on the Game Boy **" : hex(bytes.slice(0, 24)) + (bytes.length > 24 ? " .." : ""),
     });
     if (this.log.length > 200) this.log.splice(0, this.log.length - 200);
   }
@@ -349,21 +428,55 @@ export class CartChip {
 }
 
 /**
- * The chip decodes the transaction itself instead of trusting the phone's
- * summary. Anything it can't decode, it refuses to sign (no blind signing).
+ * Freezes the request into bytes the chip owns, then decodes those bytes.
+ * Anything the Game Boy can't show faithfully is refused (no blind signing).
  */
-function describe(req: SignRequest): { to: string; amount: string } {
+function snapshot(req: SignRequest, wallet: Wallet): Snapshot {
   if (req.chain === "sol") {
-    const ixs = req.tx.instructions;
+    const message = new Uint8Array(req.tx.serializeMessage());
+    const tx = Transaction.populate(Message.from(message));
+    const me = wallet.sol.publicKey;
+    if (!tx.feePayer?.equals(me)) throw new Error("the fee payer must be this cartridge's wallet");
+    const ixs = tx.instructions;
     if (ixs.length !== 1 || !ixs[0].programId.equals(SystemProgram.programId)) {
       throw new Error("only plain SOL transfers can be shown on the Game Boy yet");
     }
-    const { toPubkey, lamports } = SystemInstruction.decodeTransfer(ixs[0]);
-    return { to: toPubkey.toBase58(), amount: `${fmt(Number(lamports) / LAMPORTS_PER_SOL)} SOL` };
+    if (SystemInstruction.decodeInstructionType(ixs[0]) !== "Transfer") throw new Error("only plain SOL transfers are supported");
+    const { fromPubkey, toPubkey, lamports } = SystemInstruction.decodeTransfer(ixs[0]);
+    if (!fromPubkey.equals(me)) throw new Error("the transfer must come from this cartridge's wallet");
+    const signers = Message.from(message).header.numRequiredSignatures;
+    return {
+      chain: "sol",
+      message,
+      shown: {
+        to: new PublicKey(toPubkey).toBase58(),
+        amount: `${exact(BigInt(lamports), 9)} SOL`,
+        fee: `${exact(SOL_FEE_PER_SIGNATURE * BigInt(signers), 9)} SOL`,
+        // a Solana transaction doesn't name its cluster; the cartridge firmware is built per network
+        network: "SOLANA DEVNET",
+      },
+    };
   }
-  if (!req.tx.to) throw new Error("contract deployment is not supported");
-  if (req.tx.data && req.tx.data !== "0x") throw new Error("only plain ETH transfers can be shown on the Game Boy yet");
-  return { to: req.tx.to, amount: `${fmt(Number(formatEther(req.tx.value ?? 0n)))} ETH` };
+
+  // round-trip through the wire format so later edits to the phone's object can't leak in
+  const tx = parseTransaction(serializeTransaction({ ...req.tx, type: "eip1559" })) as TransactionSerializableEIP1559;
+  if (tx.chainId !== SEPOLIA_CHAIN_ID) throw new Error("this cartridge only signs on Sepolia");
+  if (!tx.to) throw new Error("contract deployment is not supported");
+  if (tx.data && tx.data !== "0x") throw new Error("only plain ETH transfers can be shown on the Game Boy yet");
+  if (tx.accessList?.length) throw new Error("access lists are not supported");
+  if (tx.gas !== PLAIN_TRANSFER_GAS) throw new Error("a plain transfer uses exactly 21000 gas");
+  const maxFee = PLAIN_TRANSFER_GAS * (tx.maxFeePerGas ?? 0n);
+  if (maxFee > MAX_EVM_FEE_WEI) throw new Error("the fee is above the cartridge's 0.01 ETH limit");
+  return {
+    chain: "evm",
+    tx,
+    shown: {
+      to: getAddress(tx.to), // checksummed, so the mixed case can be compared with the phone
+      amount: `${exact(tx.value ?? 0n, 18)} ETH`,
+      fee: `MAX ${ceilDecimals(maxFee, 18, 6)} ETH`,
+      network: "ETH SEPOLIA",
+    },
+  };
 }
 
 /**
@@ -387,8 +500,28 @@ export function qrBits(text: string): Uint8Array {
   return out;
 }
 
-function fmt(n: number) {
-  return n.toFixed(n !== 0 && n < 0.0001 ? 8 : 4);
+/** Exact decimal amount: nothing rounded away, trailing zeros trimmed. */
+export function exact(units: bigint, decimals: number) {
+  return formatUnits(units, decimals);
+}
+
+/** Rounded up to `places` decimals, for a fee ceiling. */
+function ceilDecimals(units: bigint, decimals: number, places: number) {
+  const step = 10n ** BigInt(decimals - places);
+  return formatUnits(((units + step - 1n) / step) * step, decimals);
+}
+
+/** Home-screen balance, at most 18 characters. */
+function balanceText(chain: Chain, units: bigint | null) {
+  const sym = chain === "sol" ? "SOL" : "ETH";
+  if (units === null) return `-- ${sym}`;
+  const [whole, frac = ""] = formatUnits(units, chain === "sol" ? 9 : 18).split(".");
+  const text = `${whole}.${frac.padEnd(4, "0").slice(0, 4)} ${sym}`;
+  return text.length <= 18 ? text : `>999999999 ${sym}`;
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array) {
+  return a.length === b.length && a.every((x, i) => x === b[i]);
 }
 
 function pinHash(salt: string, pin: Uint8Array) {
@@ -398,7 +531,7 @@ function pinHash(salt: string, pin: Uint8Array) {
 function ascii(s: string) {
   return Uint8Array.from(s, (c) => {
     const code = c.charCodeAt(0);
-    return code < 128 ? code : 63;
+    return code >= 32 && code < 127 ? code : code === 0 ? 0 : 63;
   });
 }
 

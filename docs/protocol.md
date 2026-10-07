@@ -29,8 +29,17 @@ The two sides talk through a 256-byte mailbox.
 | `0xF2` | 1 | chip | accelerometer Y, signed |
 | `0xF3` | 1 | chip | `1` while the phone has a transaction waiting for approval |
 
-One writer per byte, so there are no races. The Game Boy waits until
-`resp_seq == req_seq`, then copies the response out.
+One writer per byte, so the two sides never overwrite each other. The Game Boy
+waits until `resp_seq == req_seq`, then copies the response out. Replies that
+take time (signing) are tagged with the power cycle they belong to, so a reply
+that finishes after the Game Boy restarts is dropped.
+
+## What the phone can and can't put on the screen
+
+The phone sends balances as numbers (lamports, wei) and transaction status as
+fixed codes. The chip turns those into text. Transactions are snapshotted when
+requested; the chip decodes and signs the snapshot, so editing the request
+afterwards changes nothing.
 
 ## Commands
 
@@ -40,12 +49,12 @@ One writer per byte, so there are no races. The Game Boy waits until
 | `0x02` | ENTROPY | raw bytes (button timings, accelerometer samples) | `data[0..3]` = pool fingerprint |
 | `0x03` | CREATE | | 12 words, space separated |
 | `0x04` | SET_PIN | 4 digits | |
-| `0x05` | UNLOCK | 4 digits | status 0 ok, 1 wrong (`data[0]` = tries left), 2 wiped |
+| `0x05` | UNLOCK | 4 digits | status 0 ok, 1 wrong (`data[0]` = tries left), 2 wiped, 3 no wallet |
 | `0x06` | ACCOUNT | `arg` = chain (0 Solana, 1 EVM) | `address\0balance\0` |
-| `0x07` | PENDING | | `chain, to\0amount\0` (status 1 = nothing pending) |
-| `0x08` | SIGN | `arg` = 1 approve, 0 reject | |
+| `0x07` | PENDING | | `chain, to\0amount\0fee\0network\0`, all decoded by the chip from its own snapshot of the transaction (status 1 = nothing pending) |
+| `0x08` | SIGN | `arg` = 1 approve, 0 reject | status 0 signed, 1 could not sign (nothing was signed) |
 | `0x09` | WIPE | | |
-| `0x0A` | TXSTATUS | | `state\0short-signature\0` |
+| `0x0A` | TXSTATUS | | `state\0detail\0`: state is SIGNED, BROADCAST, CONFIRMED, FAILED or UNKNOWN; detail is a shortened hash or a fixed reason. Both are chosen by the chip from codes; the phone never sends text |
 | `0x0B` | LOCK | | |
 | `0x0C` | QR | `arg` = chain | `size`, then `size×size` bits row by row (1 = dark). 29×29 for both address types; the ROM draws it with 16 tiles, one per 2×2 block |
 | `0x0D` | WORDS | word prefix (lowercase) | `count`, then per suggestion a 2-byte word index and the word, 0-terminated (max 4, exact match first) |

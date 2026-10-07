@@ -42,11 +42,14 @@ export function GameBoyShell() {
       const k = KEYBOARD[e.key];
       if (k) s.key(k, false);
     };
+    const blur = () => s.releaseAll();
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
     };
   }, [s]);
 

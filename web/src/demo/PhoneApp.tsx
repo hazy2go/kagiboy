@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import qrcode from "qrcode-generator";
 import brand from "../../../brand.json";
 import type { Chain } from "../chip/protocol";
+import { formatUnits } from "viem";
 import { explorer, type Activity } from "../phone/phone";
 import { useSession } from "./session";
 
@@ -51,7 +52,7 @@ function Empty({ title, body }: { title: string; body: string }) {
   );
 }
 
-function Balances({ sol, evm, addr }: { sol: number | null; evm: number | null; addr: Record<Chain, string> }) {
+function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; addr: Record<Chain, string> }) {
   const s = useSession();
   const [airdrop, setAirdrop] = useState<"idle" | "busy" | "failed">("idle");
   const doAirdrop = async () => {
@@ -72,7 +73,7 @@ function Balances({ sol, evm, addr }: { sol: number | null; evm: number | null; 
             Explorer ↗
           </a>
         </div>
-        <div className="amount">{sol == null ? "…" : sol.toFixed(4)} <small>SOL</small></div>
+        <div className="amount">{show(sol, 9)} <small>SOL</small></div>
         <Copy text={addr.sol} />
         <div className="card-actions">
           <button onClick={doAirdrop} disabled={airdrop === "busy"}>
@@ -92,7 +93,7 @@ function Balances({ sol, evm, addr }: { sol: number | null; evm: number | null; 
             Explorer ↗
           </a>
         </div>
-        <div className="amount">{evm == null ? "…" : evm.toFixed(4)} <small>ETH</small></div>
+        <div className="amount">{show(evm, 18)} <small>ETH</small></div>
         <Copy text={addr.evm} />
         <div className="card-actions">
           <a href={SEPOLIA_FAUCET} target="_blank" rel="noreferrer" className="hint">
@@ -102,6 +103,13 @@ function Balances({ sol, evm, addr }: { sol: number | null; evm: number | null; 
       </article>
     </section>
   );
+}
+
+/** Balance with 4 decimals, rounded down. */
+function show(units: bigint | null, decimals: number) {
+  if (units == null) return "…";
+  const [whole, frac = ""] = formatUnits(units, decimals).split(".");
+  return `${whole}.${frac.padEnd(4, "0").slice(0, 4)}`;
 }
 
 function Copy({ text }: { text: string }) {
@@ -195,8 +203,8 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
             Amount
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
           </label>
-          <button className="primary" disabled={!to || !amount}>
-            Ask cartridge to sign
+          <button className="primary" disabled={!to || !amount || s.phone.sending}>
+            {s.phone.sending ? "Preparing…" : "Ask cartridge to sign"}
           </button>
           {error && <p className="error">{error}</p>}
         </form>
@@ -211,6 +219,7 @@ const STATE_LABEL: Record<Activity["state"], string> = {
   broadcast: "Sent, confirming",
   confirmed: "Confirmed",
   failed: "Failed",
+  unknown: "Sent, status unknown",
 };
 
 function ActivityList({ items }: { items: Activity[] }) {

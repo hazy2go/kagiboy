@@ -3,8 +3,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
-import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { parseEther, recoverTransactionAddress } from "viem";
+import { Keypair, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
+import { parseEther, parseTransaction, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
 import { CartChip, type Persisted, type SignResult } from "../src/chip/chip";
 import { walletFromMnemonic } from "../src/chip/keys";
@@ -85,8 +85,8 @@ await press("UP");
 snap("set-pin"); // PIN 1200
 await press("A");
 await frames(20);
-chip.setBalance("sol", "2.0000 SOL");
-chip.setBalance("evm", "0.0500 ETH");
+chip.setBalance("sol", 2_000_000_000n);
+chip.setBalance("evm", parseEther("0.05"));
 await frames(130);
 snap("home");
 console.log("addresses", chip.addresses);
@@ -122,33 +122,59 @@ snap("home-after-receive");
 console.log("qr sol:", solScan === chip.addresses!.sol ? "OK" : `MISMATCH ${solScan}`);
 console.log("qr evm:", evmScan === chip.addresses!.evm ? "OK" : `MISMATCH ${evmScan}`);
 
-// phone asks for a signature
+// phone asks for a signature, then (a compromised phone) swaps the transfer after the Game Boy shows it
 const from = new PublicKey(chip.addresses!.sol);
+const shownTo = Keypair.generate().publicKey;
+const attacker = Keypair.generate().publicKey;
 const tx = new Transaction({ feePayer: from, recentBlockhash: Keypair.generate().publicKey.toBase58() }).add(
-  SystemProgram.transfer({ fromPubkey: from, toPubkey: Keypair.generate().publicKey, lamports: 250_000_000 }),
+  SystemProgram.transfer({ fromPubkey: from, toPubkey: shownTo, lamports: 250_000_000 }),
 );
+const solReq = chip.requestSignature({ chain: "sol", tx });
 let result: SignResult | null = null;
-chip.requestSignature({ chain: "sol", tx }).then((r) => (result = r));
+solReq.result.then((r) => (result = r));
 await frames(30);
 snap("sign-request");
+tx.instructions = [SystemProgram.transfer({ fromPubkey: from, toPubkey: attacker, lamports: 5_000_000_000 })];
 gb.setKey("A", true);
 await frames(70);
 gb.setKey("A", false);
 await frames(20);
-console.log("sol approved:", result && (result as SignResult).approved, "verified:", tx.verifySignatures());
-chip.setTxStatus("CONFIRMED", "5Yh3kQx9dLwPmn2R8sTuVc4aBjE7fGhK1MnoPqRsTuVwXyZ");
+const solRes = result as SignResult | null;
+if (solRes?.approved && solRes.chain === "sol") {
+  const ix = SystemInstruction.decodeTransfer(solRes.signed.instructions[0]);
+  console.log(
+    "sol signed what was shown:",
+    solRes.signed.verifySignatures() && ix.toPubkey.equals(shownTo) && Number(ix.lamports) === 250_000_000 ? "OK" : "WRONG",
+  );
+} else console.log("sol approve FAILED:", solRes);
+chip.setTxStatus(solReq.id, "CONFIRMED", { hash: "5Yh3kQx9dLwPmn2R8sTuVc4aBjE7fGhK1MnoPqRsTuVwXyZ" });
 await frames(40);
 snap("tx-confirmed");
 await press("A");
 
+// requests the chip must refuse outright
+const sepoliaTx = { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: parseEther("0.01"), nonce: 0, gas: 21000n, maxFeePerGas: 2n, maxPriorityFeePerGas: 1n, type: "eip1559" } as const;
+const refused = (label: string, req: Parameters<typeof chip.requestSignature>[0]) => {
+  try {
+    chip.requestSignature(req);
+    console.log(`refuse ${label}: NOT REFUSED`);
+  } catch (e) {
+    console.log(`refuse ${label}: OK (${(e as Error).message})`);
+  }
+};
+refused("mainnet chainId", { chain: "evm", tx: { ...sepoliaTx, chainId: 1 } });
+refused("huge gas", { chain: "evm", tx: { ...sepoliaTx, gas: 1_000_000n } });
+refused("huge fee", { chain: "evm", tx: { ...sepoliaTx, maxFeePerGas: 10n ** 15n } });
+refused("calldata", { chain: "evm", tx: { ...sepoliaTx, data: "0xa9059cbb" } });
+refused(
+  "foreign fee payer",
+  { chain: "sol", tx: new Transaction({ feePayer: attacker, recentBlockhash: Keypair.generate().publicKey.toBase58() }).add(SystemProgram.transfer({ fromPubkey: from, toPubkey: attacker, lamports: 1 })) },
+);
+
 // ETH request, rejected with B
+const ethReq = chip.requestSignature({ chain: "evm", tx: { ...sepoliaTx } });
 let ethResult: SignResult | null = null;
-chip
-  .requestSignature({
-    chain: "evm",
-    tx: { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: parseEther("0.01"), nonce: 0, gas: 21000n, maxFeePerGas: 2n, maxPriorityFeePerGas: 1n, type: "eip1559" },
-  })
-  .then((r) => (ethResult = r));
+ethReq.result.then((r) => (ethResult = r));
 await frames(60);
 snap("eth-request");
 await press("B");
@@ -157,13 +183,11 @@ console.log("eth rejected:", ethResult && !(ethResult as SignResult).approved);
 await frames(100); // "REJECTED" screen, then home
 
 // ETH approved: the async signing path; the signature must recover to our address
+const ethTx = { ...sepoliaTx };
+const ethReq2 = chip.requestSignature({ chain: "evm", tx: ethTx });
 let ethSigned: SignResult | null = null;
-chip
-  .requestSignature({
-    chain: "evm",
-    tx: { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: parseEther("0.01"), nonce: 0, gas: 21000n, maxFeePerGas: 2n, maxPriorityFeePerGas: 1n, type: "eip1559" },
-  })
-  .then((r) => (ethSigned = r));
+ethReq2.result.then((r) => (ethSigned = r));
+ethTx.value = parseEther("9"); // later edits to the phone's object must not matter
 await frames(30);
 gb.setKey("A", true);
 await frames(70);
@@ -172,10 +196,13 @@ await frames(20);
 const signedEth = ethSigned as SignResult | null;
 if (signedEth?.approved && signedEth.chain === "evm") {
   const signer = await recoverTransactionAddress({ serializedTransaction: signedEth.signed as never });
-  console.log("eth signer matches:", signer === chip.addresses!.evm);
+  const parsed = parseTransaction(signedEth.signed);
+  console.log("eth signer matches:", signer === chip.addresses!.evm, "value as shown:", parsed.value === parseEther("0.01"));
 } else console.log("eth approve FAILED:", signedEth);
-chip.setTxStatus("CONFIRMED", "0x" + "ab".repeat(32));
+chip.setTxStatus(ethReq.id, "CONFIRMED", { hash: "0x" + "cd".repeat(32) }); // stale id: must be ignored
+chip.setTxStatus(ethReq2.id, "CONFIRMED", { hash: "0x" + "ab".repeat(32) });
 await frames(40);
+snap("eth-confirmed");
 await press("A");
 await frames(20);
 
@@ -203,7 +230,7 @@ let cut: SignResult | null = null;
 const cutTx = new Transaction({ feePayer: from, recentBlockhash: Keypair.generate().publicKey.toBase58() }).add(
   SystemProgram.transfer({ fromPubkey: from, toPubkey: Keypair.generate().publicKey, lamports: 1 }),
 );
-chip.requestSignature({ chain: "sol", tx: cutTx }).then((r) => (cut = r));
+chip.requestSignature({ chain: "sol", tx: cutTx }).result.then((r) => (cut = r));
 await frames(30);
 gb = new GameBoy(rom);
 chip.reset();
@@ -250,3 +277,5 @@ console.log(
   chip.state,
   chip.addresses?.sol === expected.sol.publicKey.toBase58() && chip.addresses?.evm === expected.evm.address ? "addresses match" : "MISMATCH",
 );
+
+console.log("PIN on bus monitor:", chip.log.some((e) => e.cmd === "UNLOCK" && e.hex.includes("00 00 00 00")) ? "LEAKED" : "hidden");
