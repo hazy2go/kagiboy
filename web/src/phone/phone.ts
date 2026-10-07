@@ -107,6 +107,10 @@ export class Phone {
     if (balance != null && units > balance) {
       throw new Error(`You only have ${formatUnits(balance, DECIMALS[chain])} ${SYMBOL[chain]}.`);
     }
+    // a SOL transfer costs 5000 lamports; leave room for it before asking the Game Boy
+    if (chain === "sol" && balance != null && units + SOL_FEE > balance) {
+      throw new Error(`Leave ${formatUnits(SOL_FEE, 9)} SOL for the network fee.`);
+    }
 
     this.sending = true;
     const item: Activity = {
@@ -206,6 +210,10 @@ export class Phone {
       this.evm.getTransactionCount({ address: from, blockTag: "pending" }),
       this.evm.estimateFeesPerGas(),
     ]);
+    const maxCost = wei + 21000n * fees.maxFeePerGas;
+    if (this.balances.evm != null && maxCost > this.balances.evm) {
+      throw new Error(`With the network fee this needs up to ${formatUnits(maxCost, 18)} ETH.`);
+    }
     const { id, result } = this.chip.requestSignature({
       chain: "evm",
       tx: {
@@ -227,12 +235,14 @@ export class Phone {
       update,
       () => this.evm.sendRawTransaction({ serializedTransaction: signed.signed }),
       async (hash) => {
-        const receipt = await this.evm.waitForTransactionReceipt({ hash: hash as `0x${string}` });
+        const receipt = await this.evm.waitForTransactionReceipt({ hash: hash as `0x${string}`, timeout: 180_000 });
         if (receipt.status !== "success") throw new OnChainError("Reverted on-chain.");
       },
     );
   }
 }
+
+const SOL_FEE = 5000n;
 
 class OnChainError extends Error {}
 
@@ -281,6 +291,9 @@ function isDefiniteRejection(e: unknown) {
 export function explainError(e: unknown): { short: FailReason; long: string } {
   const raw = e instanceof Error ? e.message : String(e);
   const msg = raw.toLowerCase();
+  if (/insufficient funds for rent|rent-exempt|\brent\b/.test(msg)) {
+    return { short: "NO_FUNDS", long: "A new Solana address needs at least 0.00089 SOL to exist. Send a bit more, or leave more behind." };
+  }
   if (msg.includes("prior credit") || msg.includes("insufficient")) {
     return { short: "NO_FUNDS", long: "Not enough funds to cover the amount and the fee." };
   }

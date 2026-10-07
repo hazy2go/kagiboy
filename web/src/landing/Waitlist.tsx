@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 type State =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "done"; position: number; already: boolean }
+  | { kind: "done"; position: number | null; already: boolean }
   | { kind: "error"; message: string };
 
 /** Email sign-up that prints a numbered ticket on success. */
@@ -26,14 +26,14 @@ export function Waitlist() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Couldn't save that. Try again in a minute.");
-      setState({ kind: "done", position: body.position, already: !!body.already });
+      setState({ kind: "done", position: typeof body.position === "number" ? body.position : null, already: !!body.already });
     } catch (err) {
       setState({ kind: "error", message: err instanceof Error ? err.message : "Couldn't save that." });
     }
   };
 
   if (state.kind === "done") {
-    const n = String(state.position).padStart(4, "0");
+    const n = state.position == null ? "----" : String(state.position).padStart(4, "0");
     return (
       <div className="ticket print-in is-in" role="status">
         <div className="ticket-perf" aria-hidden />

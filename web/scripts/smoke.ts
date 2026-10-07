@@ -5,7 +5,7 @@ import { PNG } from "pngjs";
 import jsQR from "jsqr";
 import bs58 from "bs58";
 import { Keypair, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
-import { parseEther, parseTransaction, recoverTransactionAddress } from "viem";
+import { keccak256, parseEther, parseTransaction, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
 import { CartChip, type Persisted, type SignResult } from "../src/chip/chip";
 import { walletFromMnemonic } from "../src/chip/keys";
@@ -229,9 +229,17 @@ if (signedEth?.approved && signedEth.chain === "evm") {
   console.log("eth signer matches:", signer === chip.addresses!.evm, "value as shown:", parsed.value === parseEther("0.01"));
 } else console.log("eth approve FAILED:", signedEth);
 chip.setTxStatus(ethReq.id, "CONFIRMED", { hash: "0x" + "cd".repeat(32) }); // stale id: must be ignored
+// a well-formed hash that isn't the signed tx's must not reach the screen
 chip.setTxStatus(ethReq2.id, "CONFIRMED", { hash: "0x" + "ab".repeat(32) });
+await frames(20);
+const forged = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+console.log("forged hash on screen:", /30 78 61 62 61 62/.test(forged) /* "0xabab" */ ? "LEAKED" : "blocked");
+const ethHash = signedEth?.approved && signedEth.chain === "evm" ? keccak256(signedEth.signed) : "";
+chip.setTxStatus(ethReq2.id, "CONFIRMED", { hash: ethHash });
 await frames(40);
 snap("eth-confirmed");
+const realStatus = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+console.log("real hash on screen:", realStatus.includes("43 4f 4e 46") /* "CONF" */ ? "OK" : "WRONG");
 await step("A");
 await frames(20);
 

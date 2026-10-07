@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 /**
@@ -108,7 +109,8 @@ export class HeroScene {
   }
 
   async load(url: string) {
-    const gltf = await new GLTFLoader().loadAsync(url);
+    // the model ships meshopt-compressed: npx @gltf-transform/cli meshopt in.glb kagiboy.glb (2.8 MB -> 1 MB)
+    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
     const root = gltf.scene;
     this.gb.add(root);
     root.traverse((o) => {

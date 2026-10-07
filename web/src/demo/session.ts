@@ -128,6 +128,23 @@ export class Session {
     this.notify();
   }
 
+  /** The demo page left the screen: stop the emulator and the balance polling, keep the state. */
+  suspend() {
+    cancelAnimationFrame(this.raf);
+    clearInterval(this.balanceTimer);
+    this.releaseAll();
+  }
+
+  resume() {
+    if (!this.gb) return;
+    this.last = performance.now();
+    this.debt = 0;
+    cancelAnimationFrame(this.raf);
+    this.raf = requestAnimationFrame(this.loop);
+    clearInterval(this.balanceTimer);
+    this.balanceTimer = window.setInterval(() => this.phone.refreshBalances(), 15000);
+  }
+
   /** Window lost focus: let go of everything, so a held A can't finish a sign by itself. */
   releaseAll() {
     if (!this.gb) return;

@@ -98,7 +98,11 @@ export function Landing() {
     document.documentElement.style.overflow = menu ? "hidden" : "";
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
     window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
+    return () => {
+      // leaving the page from inside the menu (e.g. "Try the live demo") must not leave the next page locked
+      document.documentElement.style.overflow = "";
+      window.removeEventListener("keydown", esc);
+    };
   }, [menu]);
 
   useEffect(() => {
@@ -277,7 +281,7 @@ export function Landing() {
         </button>
       </nav>
 
-      <div className={`menu-sheet ${menu ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Menu" hidden={!menu && undefined}>
+      <div className={`menu-sheet ${menu ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Menu">
         <header>
           <span className="kb-word">kagiboy</span>
           <button className="menu-btn" aria-label="Close menu" onClick={() => setMenu(false)}>

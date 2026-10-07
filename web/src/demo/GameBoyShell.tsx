@@ -64,6 +64,7 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
     screen.width = 160;
     screen.height = 144;
     s.attach(screen);
+    s.resume();
 
     const placeZones = (scene: HeroScene) => {
       const a = scene.project("ButtonA");
@@ -126,6 +127,7 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
       disposed = true;
       cancelAnimationFrame(raf);
       cleanup();
+      s.suspend();
     };
   }, [s]);
 
@@ -137,7 +139,10 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
   useEffect(() => {
     const isTyping = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      return t?.tagName === "INPUT" || t?.tagName === "TEXTAREA";
+      if (t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || t?.tagName === "SELECT") return true;
+      // Enter and Space belong to a focused link or button elsewhere on the page (the phone, the nav);
+      // the console's own controls hand them to the Game Boy
+      return (e.key === "Enter" || e.key === " ") && !!t?.closest("a, button") && !t?.closest(".device");
     };
     const down = (e: KeyboardEvent) => {
       const k = KEYBOARD[e.key];

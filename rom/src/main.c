@@ -112,7 +112,7 @@ static void demo_wipe(void) {
     demo_tx_chain = 0;
 }
 
-static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
+static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
     uint8_t i, n;
     resp_len = 0;
     resp[0] = 0;
@@ -227,6 +227,15 @@ static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
     return 0xFF;
 }
 
+/* every reply ends in a NUL at resp_len, like the real mailbox copy */
+static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t len) {
+    uint8_t st = demo_call(cmd, arg, data, len);
+    resp[resp_len] = 0;
+    return st;
+}
+
+#define clear_req(len)
+
 /* What the phone does in the demo: a held START on the home screen raises a
  * request, Solana first, then Ethereum, alternating. */
 static void demo_raise(void) {
@@ -274,10 +283,35 @@ static uint8_t chip_present(void) {
     return MB[MB_MAGIC] == CHIP_MAGIC;
 }
 
+/* Scrub a secret request (PIN, word indices) from the mailbox once answered. */
+static void clear_req(uint8_t len) {
+    uint8_t i;
+    for (i = 0; i < len; i++) MB[MB_REQ + i] = 0;
+    MB[MB_REQ_LEN] = 0;
+}
+
 #define ACCEL_X() ((int8_t)MB[MB_ACCEL_X])
 #define ACCEL_Y() ((int8_t)MB[MB_ACCEL_Y])
 #define TX_PENDING() (MB[MB_PENDING])
 #endif
+
+/* ---------- reading chip replies ---------- */
+
+/* Every parse stays inside the reply: resp[resp_len] is always a NUL, and a
+ * field cursor never moves past it, whatever counts or NULs the chip sends. */
+#define RESP_END (resp + resp_len)
+
+/* The field after the NUL-terminated one at s ("" when the reply runs out). */
+static char *next_field(char *s) {
+    while (s < RESP_END && *s) s++;
+    return s < RESP_END ? s + 1 : RESP_END;
+}
+
+/* Drop a reply that held secrets (recovery words, word suggestions). */
+static void forget_resp(void) {
+    memset(resp, 0, sizeof(resp));
+    resp_len = 0;
+}
 
 /* ---------- sound ---------- */
 
@@ -388,6 +422,34 @@ static uint8_t wait_press(void) {
 static void wait_a(void) {
     flush_input();
     while (!(wait_press() & J_A)) {}
+}
+
+/* Polled once a frame by every idle screen of an unlocked wallet. */
+static uint8_t request_waiting(void) {
+#ifdef DEMO_CHIP
+    /* the demo's stand-in for the phone: a held START raises a request */
+    static uint8_t start_held;
+    if (held_keys == J_START) {
+        if (++start_held == 60) demo_raise();
+    } else {
+        start_held = 0;
+    }
+#endif
+    return TX_PENDING() ? 1 : 0;
+}
+
+/* Like wait_press, but gives up with 0 as soon as a sign request arrives. */
+static uint8_t wait_press_or_request(void) {
+    uint8_t p;
+    for (;;) {
+        vsync();
+        anim_tick(++frame);
+        if (request_waiting()) return 0;
+        p = pressed();
+        if (p) break;
+    }
+    beep(0xC0);
+    return p;
 }
 
 /* ---------- shared screens ---------- */
@@ -583,6 +645,7 @@ static void show_words(void) {
     hint(4, 17, BTN_A, "I WROTE THEM");
     screen_end();
     wait_a();
+    forget_resp(); /* the words are on paper now, not in RAM */
 }
 
 /* ---------- PIN ---------- */
@@ -648,26 +711,53 @@ static uint8_t start_menu(void) {
     }
 }
 
-/* resp after CMD_WORDS: count, then per word a 2-byte index and the word, 0-terminated */
+/* resp after CMD_WORDS: count, then per word a 2-byte index and the word, 0-terminated.
+ * How many whole entries the reply really holds (at most 4, the rows on screen). */
+static uint8_t words_count(void) {
+    char *w = resp + 1;
+    uint8_t n = 0, want = resp_len ? (uint8_t)resp[0] : 0;
+    if (want > 4) want = 4;
+    while (n < want && w + 2 < RESP_END && w[2]) {
+        w = next_field(w + 2);
+        n++;
+    }
+    return n;
+}
+
+/* Entry k (< words_count()). Never walks past the reply. */
 static char *word_at(uint8_t k, uint16_t *index) {
     char *w = resp + 1;
-    while (k--) w += 2 + strlen(w + 2) + 1;
+    while (k-- && w + 2 < RESP_END) w = next_field(w + 2);
+    if (w + 2 >= RESP_END) {
+        *index = 0;
+        return RESP_END;
+    }
     *index = ((uint16_t)(uint8_t)w[0] << 8) | (uint8_t)w[1];
     return w + 2;
+}
+
+/* The letter being picked, drawn as an inverted block so it can't be read as
+ * part of the word: tile T_PICK is rebuilt from the font for each letter. */
+#define T_PICK ((uint8_t)(T_UI + N_UI))
+
+static void pick_draw(uint8_t x, char c) {
+    uint8_t tile[16], i;
+    const uint8_t *g = font_ink_tiles + (uint16_t)((uint8_t)c - 32) * 16;
+    for (i = 0; i < 16; i++) tile[i] = (uint8_t)~g[i];
+    set_bkg_data(T_PICK, 1, tile);
+    put(x, 5, T_PICK);
 }
 
 /* fresh = 1 fades in a new word; later letters redraw in place without a fade */
 static void word_entry_draw(uint8_t n, const char *prefix, uint8_t len, uint8_t count, uint8_t fresh) {
     uint8_t k;
     uint16_t index;
-    char sub[13];
-    memcpy(sub, "WORD    OF 12", 14);
-    if (n + 1 >= 10) {
-        sub[5] = '1';
-        sub[6] = '0' + (n + 1) % 10;
-    } else {
-        sub[5] = '0' + n + 1;
-    }
+    char sub[14];
+    memcpy(sub, "WORD ", 5);
+    k = 5;
+    if (n + 1 >= 10) sub[k++] = '1';
+    sub[k++] = '0' + (n + 1) % 10;
+    memcpy(sub + k, " OF 12", 7);
     if (fresh) screen_begin();
     else {
         sprites_hide();
@@ -687,12 +777,17 @@ static void word_entry_draw(uint8_t n, const char *prefix, uint8_t len, uint8_t 
         cursor(2, 8);
     }
     cap(1, 16, "UP/DN LETTER  R ADD");
-    if (count && len) hint(1, 17, BTN_A, "USE TOP WORD");
-    else hint(1, 17, BTN_B, len ? "L DELETE" : "BACK");
+    if (count && len) {
+        hint(0, 17, BTN_A, "USE TOP WORD");
+        hint(15, 17, BTN_B, "DEL");
+    } else {
+        hint(1, 17, BTN_B, len ? "DELETE" : n ? "PREVIOUS WORD" : "BACK");
+    }
     if (fresh) screen_end();
 }
 
-/* Letter picker with suggestions from the chip. Returns 0 if cancelled.
+/* Letter picker with suggestions from the chip. Returns 0 when B leaves an
+ * empty word (back one word, or to the menu from the first).
  * UP/DOWN only redraw the one letter so fast presses aren't dropped. */
 static uint8_t word_entry(uint8_t n) {
     char prefix[9];
@@ -701,7 +796,7 @@ static uint8_t word_entry(uint8_t n) {
     uint16_t index;
     word_entry_draw(n, prefix, len, count, 1);
     for (;;) {
-        put(3 + len, 5, (uint8_t)cur - 32);
+        pick_draw(3 + len, cur);
         if (!(count && len)) marker(3 + len, 6);
         p = wait_press();
         if (p & J_UP) cur = cur == 'z' ? 'a' : cur + 1;
@@ -710,14 +805,17 @@ static uint8_t word_entry(uint8_t n) {
             prefix[len++] = cur;
             cur = 'a';
             count = 0;
-            if (chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = (uint8_t)resp[0];
+            if (chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = words_count();
             word_entry_draw(n, prefix, len, count, 0);
-        }
-        if ((p & J_LEFT) && len) {
-            cur = prefix[--len];
+        } else if ((p & (J_LEFT | J_B)) && len) {
+            /* LEFT steps back onto the letter, B deletes it */
+            cur = (p & J_LEFT) ? prefix[len - 1] : 'a';
+            len--;
             count = 0;
-            if (len && chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = (uint8_t)resp[0];
+            if (len && chip_call(CMD_WORDS, 0, (uint8_t *)prefix, len) == 0) count = words_count();
             word_entry_draw(n, prefix, len, count, 0);
+        } else if ((p & J_B) && !len) {
+            return 0;
         }
         if ((p & J_A) && count && len) {
             word_at(0, &index);
@@ -725,19 +823,24 @@ static uint8_t word_entry(uint8_t n) {
             word_idx[n * 2 + 1] = index & 0xFF;
             return 1;
         }
-        if ((p & J_B) && !len) return 0;
     }
 }
 
 /* Returns 1 when the chip accepted the words, 0 to go back to the menu. */
 static uint8_t restore(void) {
-    uint8_t n, st;
-    for (n = 0; n < 12; n++) {
-        if (!word_entry(n)) return 0;
+    uint8_t n = 0, st;
+    while (n < 12) {
+        if (word_entry(n)) n++;
+        else if (n) n--;
+        else return 0;
     }
     message(T_ICON_KEY_0, "Checking words", "ONE MOMENT", 0);
     screen_end();
     st = chip_call(CMD_RESTORE, 0, word_idx, 24);
+    /* the 24 bytes are the whole seed: gone from RAM and the mailbox */
+    memset(word_idx, 0, sizeof(word_idx));
+    clear_req(24);
+    forget_resp();
     expect_ok(st);
     if (st == 0) return 1;
     message(T_ICON_SHIELD_0, "Words don't match", "ONE IS WRONG OR", "OUT OF ORDER");
@@ -747,10 +850,20 @@ static uint8_t restore(void) {
     return 0;
 }
 
+/* The PIN leaves RAM and the mailbox as soon as the chip has answered. */
+static void forget_pin(void) {
+    memset(pin, 0, sizeof(pin));
+    clear_req(4);
+}
+
 static void new_wallet(void) {
+    uint8_t restored = 0, st;
     for (;;) {
         if (start_menu() == 1) {
-            if (restore()) break;
+            if (restore()) {
+                restored = 1;
+                break;
+            }
             continue;
         }
         entropy_buttons();
@@ -761,8 +874,10 @@ static void new_wallet(void) {
         show_words();
         break;
     }
-    pin_entry("Choose a PIN", "STEP 3 OF 3");
-    expect_ok(chip_call(CMD_SET_PIN, 0, pin, 4));
+    pin_entry("Choose a PIN", restored ? "WORDS ACCEPTED" : "STEP 3 OF 3");
+    st = chip_call(CMD_SET_PIN, 0, pin, 4);
+    forget_pin();
+    expect_ok(st);
 }
 
 /* Returns 1 when unlocked, 0 when the chip wiped itself. */
@@ -771,6 +886,7 @@ static uint8_t unlock(void) {
     for (;;) {
         pin_entry("Welcome back", "ENTER YOUR PIN");
         st = chip_call(CMD_UNLOCK, 0, pin, 4);
+        forget_pin();
         expect_ok(st);
         if (st == 0) return 1;
         if (st == 2) {
@@ -782,7 +898,7 @@ static uint8_t unlock(void) {
         }
         message(T_ICON_LOCK_0, "Wrong PIN", 0, 0);
         num(6, 9, (uint8_t)resp[0]);
-        cap(8, 9, "TRIES LEFT");
+        cap(8, 9, resp[0] == 1 ? "TRY LEFT" : "TRIES LEFT");
         hint(4, 17, BTN_A, "TRY AGAIN");
         screen_end();
         wait_a();
@@ -796,7 +912,7 @@ static void draw_account(uint8_t chain, uint8_t y) {
     char *bal, *unit;
     uint8_t w;
     if (chip_call(CMD_ACCOUNT, chain, 0, 0) != 0) return;
-    bal = resp + strlen(resp) + 1;
+    bal = next_field(resp);
     unit = bal;
     while (*unit && *unit != ' ') unit++;
     fill_bkg_rect(2, y + 1, 16, 4, T_FONT_INK);
@@ -849,6 +965,7 @@ static uint8_t qr_dark(uint8_t r, uint8_t c) {
     uint16_t i;
     if (r >= n || c >= n) return 0;
     i = (uint16_t)r * n + c;
+    if (1 + (i >> 3) >= resp_len) return 0; /* short reply: never read past it */
     return ((uint8_t)resp[1 + (i >> 3)] >> (7 - (i & 7))) & 1;
 }
 
@@ -868,15 +985,17 @@ static void qr_draw(uint8_t x0, uint8_t y0) {
     }
 }
 
-static void receive(void) {
+static void sign_request(void);
+
+/* Returns 1 when a sign request cut in (it has been handled; go home). */
+static uint8_t receive(void) {
     uint8_t chain = CHAIN_SOL, as_text = 0, p;
     for (;;) {
         screen_begin();
-        /* rows 1 and 17 stay blank in QR view: phone cameras need a quiet zone */
-        cap(0, 0, "<");
-        txtc(0, chain == CHAIN_SOL ? "Solana" : "Ethereum");
-        cap(19, 0, ">");
         if (as_text) {
+            cap(0, 0, "<");
+            txtc(0, chain == CHAIN_SOL ? "Solana" : "Ethereum");
+            cap(19, 0, ">");
             rule(1);
             capc(3, chain == CHAIN_SOL ? "DEVNET ADDRESS" : "SEPOLIA ADDRESS");
             box(1, 5, 18, 5);
@@ -885,14 +1004,25 @@ static void receive(void) {
             capc(13, "ONLY");
             hint(1, 17, BTN_SEL, "QR CODE");
             hint(13, 17, BTN_B, "BACK");
-        } else if (chip_call(CMD_QR, chain, 0, 0) == 0) {
-            qr_draw(2, 2);
+        } else {
+            /* rows 1 and 17 stay blank in QR view: phone cameras need a quiet
+             * zone, so the title moves left to make room for the B hint */
+            cap(0, 0, "<");
+            cap(txt(2, 0, chain == CHAIN_SOL ? "Solana" : "Ethereum") + 3, 0, ">");
+            hint(14, 0, BTN_B, "BACK");
+            if (chip_call(CMD_QR, chain, 0, 0) == 0) qr_draw(2, 2);
         }
         screen_end();
-        p = wait_press();
+        do {
+            p = wait_press_or_request();
+            if (!p) {
+                sign_request();
+                return 1;
+            }
+        } while (!(p & (J_LEFT | J_RIGHT | J_SELECT | J_B)));
+        if (p & J_B) return 0;
         if (p & (J_LEFT | J_RIGHT)) chain ^= 1;
         if (p & J_SELECT) as_text ^= 1;
-        if (p & J_B) return;
     }
 }
 
@@ -906,8 +1036,15 @@ static void tx_result(void) {
     jingle_ok();
     for (;;) {
         if (chip_call(CMD_TXSTATUS, 0, 0, 0) == 0) {
-            detail = resp + strlen(resp) + 1;
+            detail = next_field(resp);
             failed = !strcmp(resp, "FAILED") || !strcmp(resp, "UNKNOWN");
+            if (failed) {
+                /* not a success: swap the check and "Signed" for a neutral state */
+                fill_bkg_rect(0, 4, SCREEN_W, 6, T_FONT_INK);
+                icon(9, 4, T_ICON_PHONE_0); /* the phone's report, no check mark */
+                txtc(7, resp[0] == 'F' ? "Transaction failed" : "Status unknown");
+                capc(9, "REPORTED BY PHONE");
+            }
             clear_rows(11, 4);
             capc(11, resp);
             /* on failure the chip sends a reason instead of a signature */
@@ -930,11 +1067,12 @@ static void sign_request(void) {
     uint16_t hold_start = 0, elapsed;
     char *to, *amount, *fee, *network, *unit;
     if (chip_call(CMD_PENDING, 0, 0, 0) != 0) return;
-    /* every field below was decoded and written by the chip, not the phone */
-    to = resp + 1;
-    amount = to + strlen(to) + 1;
-    fee = amount + strlen(amount) + 1;
-    network = fee + strlen(fee) + 1;
+    /* every field below was decoded and written by the chip, not the phone;
+     * the cursor stops at the end of the reply, so a malformed one shows blanks */
+    to = resp_len ? resp + 1 : RESP_END;
+    amount = next_field(to);
+    fee = next_field(amount);
+    network = next_field(fee);
     beep(0xF0);
     screen_begin();
     header(T_ICON_SHIELD_0, "Approve?", network);
@@ -1017,7 +1155,8 @@ static void sign_request(void) {
 
 /* ---------- menu ---------- */
 
-/* Returns 1 to re-lock, 2 after a wipe. */
+/* Returns 1 to re-lock, 2 after a wipe, 0 to go home (also after a sign
+ * request cut in). */
 static uint8_t menu(void) {
     uint8_t sel = 0, p, i;
     static const char *const items[] = {"Receive", "Lock", "Wipe cartridge", "Back"};
@@ -1030,14 +1169,18 @@ static uint8_t menu(void) {
         cursor(2, 5 + sel * 2);
         screen_end();
         for (;;) {
-            p = wait_press();
+            p = wait_press_or_request();
+            if (!p) {
+                sign_request();
+                return 0;
+            }
             if ((p & J_UP) && sel) sel--;
             if ((p & J_DOWN) && sel < 3) sel++;
             cursor(2, 5 + sel * 2);
             if (p & (J_A | J_B)) break;
         }
         if (p & J_B) return 0;
-        if (sel == 0) receive();
+        if (sel == 0 && receive()) return 0;
         if (sel == 1) {
             chip_call(CMD_LOCK, 0, 0, 0);
             return 1;
@@ -1049,13 +1192,28 @@ static uint8_t menu(void) {
             screen_end();
             for (;;) {
                 vsync();
+                anim_tick(++frame);
+                if (request_waiting()) {
+                    sign_request();
+                    return 0;
+                }
                 p = held_keys;
                 if ((p & (J_SELECT | J_A)) == (J_SELECT | J_A)) {
                     chip_call(CMD_WIPE, 0, 0, 0);
+                    /* the SELECT and A just pressed must not pick "New wallet" */
+                    flush_input();
+                    beep(0x40);
+                    message(T_ICON_SHIELD_0, "Cartridge wiped", "THE KEYS ARE GONE", "12 WORDS RESTORE IT");
+                    hint(5, 17, BTN_A, "CONTINUE");
+                    screen_end();
+                    wait_a();
                     return 2;
                 }
                 if (p & J_B) break;
             }
+            /* B cancels back to this menu: its queued press must not also leave it */
+            beep(0xC0);
+            flush_input();
         }
         if (sel == 3) return 0;
     }
@@ -1064,21 +1222,11 @@ static uint8_t menu(void) {
 static void home(void) {
     uint8_t p, r;
     uint16_t refresh = 0;
-#ifdef DEMO_CHIP
-    uint8_t start_held = 0;
-#endif
     home_draw();
     for (;;) {
         vsync();
         anim_tick(++frame);
-#ifdef DEMO_CHIP
-        if (held_keys == J_START) {
-            if (++start_held == 60) demo_raise();
-        } else {
-            start_held = 0;
-        }
-#endif
-        if (TX_PENDING()) {
+        if (request_waiting()) {
             sign_request();
             home_draw();
             refresh = 0;

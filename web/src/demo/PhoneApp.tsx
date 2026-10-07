@@ -27,7 +27,7 @@ export function PhoneApp({ bare = false }: { bare?: boolean }) {
         <div className="app-body">
 
         {state === "off" && <Empty title="Switch on your Game Boy" body="The app pairs with the cartridge over Bluetooth once it's powered." />}
-        {state === "none" && <Empty title="Set up on the Game Boy" body="Mash buttons, shake it, write down your 12 words, choose a PIN. Keys are made inside the cartridge and never come to this phone." />}
+        {state === "none" && <Empty title="Set up on the Game Boy" body="Mash buttons, shake it, write down your 12 words, choose a PIN. Keys are made inside the cartridge and never come to this phone." note="Testnet demo: never restore a real recovery phrase here." />}
         {state === "locked" && <Empty title="Locked" body="Enter your PIN on the Game Boy to unlock." />}
 
         {state === "unlocked" && addr && (
@@ -43,11 +43,12 @@ export function PhoneApp({ bare = false }: { bare?: boolean }) {
   );
 }
 
-function Empty({ title, body }: { title: string; body: string }) {
+function Empty({ title, body, note }: { title: string; body: string; note?: string }) {
   return (
     <div className="empty">
       <h3>{title}</h3>
       <p>{body}</p>
+      {note && <p className="empty-note">{note}</p>}
     </div>
   );
 }
@@ -170,7 +171,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
       <h4>Send</h4>
       {latest && !pending && (
         <p className={`last-tx ${latest.state}`}>
-          Last: {latest.amount} · {STATE_LABEL[latest.state]}
+          Last: {latest.amount} · {label(latest)}
           {latest.hash && (
             <>
               {" · "}
@@ -222,6 +223,11 @@ const STATE_LABEL: Record<Activity["state"], string> = {
   unknown: "Sent, status unknown",
 };
 
+// "rejected" with a reason means the request was dropped (switched off, locked), not refused
+function label(a: Activity) {
+  return a.state === "rejected" && a.error ? "Cancelled" : STATE_LABEL[a.state];
+}
+
 function ActivityList({ items }: { items: Activity[] }) {
   if (!items.length) return null;
   return (
@@ -235,7 +241,7 @@ function ActivityList({ items }: { items: Activity[] }) {
               <span>to {a.to.slice(0, 6)}…{a.to.slice(-4)}</span>
             </div>
             <div className="right">
-              <span className="state">{STATE_LABEL[a.state]}</span>
+              <span className="state">{label(a)}</span>
               {a.hash && (
                 <a href={explorer[a.chain](a.hash)} target="_blank" rel="noreferrer">
                   View <Out />

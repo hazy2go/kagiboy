@@ -1,7 +1,8 @@
 import { Message, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
-import { formatUnits, getAddress, parseTransaction, serializeTransaction, type TransactionSerializableEIP1559 } from "viem";
+import { formatUnits, getAddress, keccak256, parseTransaction, serializeTransaction, type TransactionSerializableEIP1559 } from "viem";
 import { sha256 } from "@noble/hashes/sha2.js";
 import qrcode from "qrcode-generator";
+import bs58 from "bs58";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
 import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemonic, type Wallet } from "./keys";
 
@@ -101,7 +102,7 @@ export class CartChip {
   private pending: Pending | null = null;
   private nextId = 1;
   private balances: Record<Chain, bigint | null> = { sol: null, evm: null };
-  private txStatus: { id: number; chain: Chain | null; state: TxState | ""; detail: string } = { id: 0, chain: null, state: "", detail: "" };
+  private txStatus: { id: number; chain: Chain | null; state: TxState | ""; detail: string; hash?: string } = { id: 0, chain: null, state: "", detail: "" };
   accel = { x: 0, y: 0 };
 
   private listeners = new Set<() => void>();
@@ -146,8 +147,8 @@ export class CartChip {
       if (!Object.hasOwn(FAIL_REASON, detail.reason)) return;
       text = FAIL_REASON[detail.reason];
     } else if (detail.hash !== undefined) {
-      const ok = cur.chain === "evm" ? /^0x[0-9a-fA-F]{64}$/.test(detail.hash) : /^[1-9A-HJ-NP-Za-km-z]{86,88}$/.test(detail.hash);
-      if (!ok) return;
+      // the chip knows the hash of what it signed; the phone can't put any other on the screen
+      if (!cur.hash || detail.hash.toLowerCase() !== cur.hash.toLowerCase()) return;
       text = `${detail.hash.slice(0, 8)}..${detail.hash.slice(-8)}`;
     }
     this.txStatus = { ...cur, state, detail: text };
@@ -382,14 +383,17 @@ export class CartChip {
 
   /** Signs the snapshot taken at request time, never the phone's live object. */
   private async sign(wallet: Wallet, p: Pending): Promise<Reply> {
+    let hash = "";
     try {
       if (p.snap.chain === "sol") {
         const tx = Transaction.populate(Message.from(p.snap.message));
         tx.partialSign(wallet.sol);
         if (!bytesEqual(tx.serializeMessage(), p.snap.message)) throw new Error("message changed while signing");
+        hash = bs58.encode(tx.signature!);
         p.resolve({ approved: true, chain: "sol", signed: tx });
       } else {
         const signed = await wallet.evm.signTransaction(p.snap.tx);
+        hash = keccak256(signed);
         p.resolve({ approved: true, chain: "evm", signed });
       }
     } catch (e) {
@@ -397,7 +401,7 @@ export class CartChip {
       p.resolve({ approved: false, reason: "error" });
       return { status: 1 };
     }
-    this.txStatus = { id: p.id, chain: p.snap.chain, state: "SIGNED", detail: "" };
+    this.txStatus = { id: p.id, chain: p.snap.chain, state: "SIGNED", detail: "", hash };
     this.emit();
     return { status: 0 };
   }
