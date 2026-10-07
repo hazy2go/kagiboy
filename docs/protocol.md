@@ -41,6 +41,34 @@ fixed codes. The chip turns those into text. Transactions are snapshotted when
 requested; the chip decodes and signs the snapshot, so editing the request
 afterwards changes nothing.
 
+## EVM networks
+
+One key and one address (`m/44'/60'/0'/0/0`) serve every EVM network. The chip
+signs only for chain ids on its allowlist (`web/src/chip/networks.ts`), and the
+network on the approve screen comes from the transaction's own `chainId`, not
+from the phone's picker.
+
+| Chain id | Network | Coin | Approve screen |
+|---|---|---|---|
+| 11155111 | Ethereum Sepolia | ETH | `ETHEREUM` |
+| 84532 | Base Sepolia | ETH | `BASE` |
+| 421614 | Arbitrum Sepolia | ETH | `ARBITRUM` |
+| 998 | HyperEVM testnet | HYPE | `HYPEREVM` |
+| 46630 | Robinhood Chain testnet | ETH | `ROBINHOOD CHAIN` |
+
+Other rules for an EVM request: EIP-1559 only, a `to` address, empty `data`, no
+access list, gas limit between 21000 and 600000 (rollups such as Arbitrum and
+Robinhood Chain count their L1 cost in gas, so a plain transfer can need more
+than 21000), and `gas × maxFeePerGas` at most 0.01 of the network's coin. The
+fee line shows that product as `MAX …`, rounded up.
+
+On OP-stack chains (Base) the L1 data fee is charged on top of
+`gas × maxFeePerGas`, so `MAX` is not a strict cap there. Today that extra is
+negligible (measured upper bound around 2×10⁻¹⁶ ETH on Base Sepolia).
+
+Solana transactions don't name their cluster. The chip signs one plain System
+transfer from its own key and labels it `SOLANA`; the phone uses devnet.
+
 ## Commands
 
 | Cmd | Name | Request | Response |
@@ -50,7 +78,7 @@ afterwards changes nothing.
 | `0x03` | CREATE | | 12 words, space separated |
 | `0x04` | SET_PIN | 4 digits | |
 | `0x05` | UNLOCK | 4 digits | status 0 ok, 1 wrong (`data[0]` = tries left), 2 wiped, 3 no wallet |
-| `0x06` | ACCOUNT | `arg` = chain (0 Solana, 1 EVM) | `address\0balance\0` |
+| `0x06` | ACCOUNT | `arg` = chain (0 Solana, 1 EVM) | `address\0balance\0name\0`. `balance` is formatted by the chip from base units (at most 18 characters, e.g. `0.5000 HYPE`, `-- ETH` while unknown). `name` is the network shown on the Game Boy's home screen: `Solana`, or for EVM the network the phone has selected (`Ethereum`, `Base`, `Arbitrum`, `HyperEVM`, `Robinhood`) |
 | `0x07` | PENDING | | `chain, to\0amount\0fee\0network\0`, all decoded by the chip from its own snapshot of the transaction (status 1 = nothing pending) |
 | `0x08` | SIGN | `arg` = 1 approve, 0 reject | status 0 signed, 1 could not sign (nothing was signed) |
 | `0x09` | WIPE | | |

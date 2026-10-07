@@ -378,3 +378,33 @@ html.kb-root .print-in.is-in {
   }
 
 }
+
+/* ---------- 404 ---------- */
+
+.not-found main {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 18px;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 var(--kb-gutter);
+}
+
+.not-found main > p {
+  color: var(--kb-ink-2);
+  font-size: 18px;
+}
+
+.not-found main > .px {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--kb-ink-3);
+}
+
+.not-found .actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}

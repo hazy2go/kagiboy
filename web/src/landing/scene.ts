@@ -146,6 +146,8 @@ export class HeroScene {
     const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
     const root = gltf.scene;
     this.gb.add(root);
+    // left the page while the model was downloading: free it straight away
+    if (this.disposed) return freeObject(root);
     root.traverse((o) => {
       if (!(o as THREE.Mesh).isMesh) return;
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial;
@@ -254,6 +256,17 @@ export class HeroScene {
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
+  /** A corner of a part's world bounding box on screen: sx/sy pick the side (-1 min, 1 max). */
+  projectCorner(name: string, sx: number, sy: number): { x: number; y: number } | null {
+    const obj = this.gb.getObjectByName(name);
+    if (!obj) return null;
+    const b = new THREE.Box3().setFromObject(obj);
+    const c = b.getCenter(new THREE.Vector3());
+    const v = new THREE.Vector3(sx > 0 ? b.max.x : b.min.x, sy > 0 ? b.max.y : b.min.y, c.z).project(this.camera);
+    const r = this.canvas.getBoundingClientRect();
+    return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
+  }
+
   get progress() {
     return this.current;
   }
@@ -347,9 +360,30 @@ export class HeroScene {
   }
 
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
     this.texture?.dispose();
+    this.scene.environment?.dispose();
+    freeObject(this.scene);
     this.renderer.dispose();
+    // hand the GPU context back now; browsers cap live contexts and drop the oldest
+    this.renderer.forceContextLoss();
   }
+
+  private disposed = false;
+}
+
+/** Free every geometry, material and texture under an object. */
+function freeObject(root: THREE.Object3D) {
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh) return;
+    m.geometry.dispose();
+    for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+      for (const v of Object.values(mat)) if (v instanceof THREE.Texture) v.dispose();
+      mat.dispose();
+    }
+  });
 }
 
 /** A soft round shadow under the console, so it sits on the page instead of floating. */

@@ -1,5 +1,9 @@
 /* Live demo: the real Game Boy model beside a pastel companion app, the bus as printed tape. */
 
+.kb.demo {
+  overflow-x: clip;
+}
+
 .demo {
   max-width: 1320px;
   margin: 0 auto;
@@ -12,7 +16,7 @@
 }
 
 .demo-intro {
-  padding: 116px 0 18px;
+  padding: 96px 0 12px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: end;
@@ -21,6 +25,13 @@
 
 .demo-intro h1 {
   font-size: clamp(40px, 4.4vw, 64px);
+}
+
+.demo-intro .sub {
+  margin-top: 8px;
+  max-width: 34rem;
+  font-size: 17px;
+  color: var(--kb-ink-2);
 }
 
 .next-step {
@@ -87,6 +98,13 @@
   position: relative;
   width: min(100%, 560px);
   aspect-ratio: 4 / 5;
+}
+
+/* laptops: the console and its Switch on button both fit in the first screen */
+@media (min-width: 981px) {
+  .device-stage {
+    width: min(100%, 560px, max(320px, (100svh - 410px) * 0.8));
+  }
 }
 
 .device-canvas,
@@ -188,6 +206,112 @@
   background: repeating-linear-gradient(90deg, rgba(31, 35, 48, 0.35) 0 6px, transparent 6px 12px);
 }
 
+/* the drawn link replaces the plain dashes once the console has reported where its cartridge is */
+.rig:has(.bt-link) .wire {
+  visibility: hidden;
+}
+
+.bt-link {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bt-link > svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.bt-line {
+  fill: none;
+  stroke: rgba(31, 35, 48, 0.28);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
+}
+
+.bt-halo {
+  fill: none;
+  stroke: url(#bt-grad);
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 0.6s var(--kb-ease);
+}
+
+.bt-end {
+  fill: #fff;
+  stroke: rgba(31, 35, 48, 0.35);
+  stroke-width: 1.5;
+}
+
+.bt-packet {
+  fill: #fff;
+  stroke: var(--kb-ink);
+  stroke-width: 2;
+  opacity: 0;
+}
+
+.bt-link.is-on .bt-line {
+  stroke: url(#bt-grad);
+  stroke-width: 2;
+  animation: bt-flow 1.4s linear infinite;
+}
+
+.bt-link.is-on .bt-halo {
+  opacity: 0.18;
+}
+
+.bt-link.is-on .bt-end {
+  stroke: var(--kb-ink);
+}
+
+.bt-link.is-on .bt-packet.is-flying {
+  opacity: 1;
+}
+
+.bt-tag .px {
+  font-size: 11px;
+}
+
+@keyframes bt-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+.bt-tag {
+  position: absolute;
+  translate: -50% -50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 6px 18px -10px rgba(60, 70, 120, 0.5), inset 0 0 0 1px rgba(31, 35, 48, 0.08);
+  color: var(--kb-ink-3);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.bt-link.is-on .bt-tag {
+  color: var(--kb-ink);
+}
+
+.bt-link.is-on .bt-tag svg {
+  color: #5f7fe0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-link.is-on .bt-line {
+    animation: none;
+  }
+}
+
 .wire span {
   position: absolute;
   left: 50%;
@@ -287,7 +411,7 @@
   padding: 90px 14px;
 }
 
-.empty h3 {
+.empty h2 {
   font-size: 20px;
   margin-bottom: 10px;
 }
@@ -659,6 +783,14 @@
     width: 2px;
     height: 56px;
     background: repeating-linear-gradient(180deg, rgba(31, 35, 48, 0.35) 0 6px, transparent 6px 12px);
+  }
+
+  .bt-link {
+    display: none;
+  }
+
+  .rig:has(.bt-link) .wire {
+    visibility: visible;
   }
 
   .wire span {

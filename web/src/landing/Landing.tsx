@@ -53,7 +53,7 @@ const BOM = [
 ] as const;
 
 const ROADMAP = [
-  ["NOW", "Game Boy software, chip logic and phone app, on testnets."],
+  ["NOW", "Game Boy software, chip logic and phone app, running today."],
   ["Q4 2026", "Dev board: Pico 2 W, SE050 kit, accelerometer, on a flash cart."],
   ["Q1 2027", "Custom PCB, power tests on a real DMG, signed firmware, link-cable backup."],
   ["THEN", "Small batch, and an outside security review before real funds."],
@@ -135,6 +135,10 @@ export function Landing() {
       stage.dataset.feed = p > 0.93 ? "1" : "0";
     };
 
+    // measured once per layout; offsetWidth every frame would force a reflow mid-scroll
+    const cardWidths = new Map<HTMLElement, number>();
+    const forgetWidths = () => cardWidths.clear();
+    window.addEventListener("resize", forgetWidths);
     const placeCallouts = (scene: { project(n: string): { x: number; y: number } | null }, p: number) => {
       const vis = Math.min(1, Math.max(0, (p - 0.5) / 0.03), Math.max(0, (0.62 - p) / 0.03));
       for (const c of CALLOUTS) {
@@ -145,6 +149,18 @@ export function Landing() {
         el.style.visibility = vis > 0.01 ? "visible" : "hidden";
         el.style.transform = `translate3d(${at.x}px, ${at.y}px, 0)`;
         el.style.setProperty("--dy", `${c.dy}px`);
+        // keep the card inside the 16px gutter on narrow screens; the dot stays on its chip
+        if (vis > 0.01) {
+          const card = el.querySelector<HTMLElement>(".callout-card");
+          if (card) {
+            let w = cardWidths.get(card);
+            if (w === undefined) cardWidths.set(card, (w = card.offsetWidth));
+            const left = c.flip ? at.x - 22 - w : at.x + 22;
+            const right = window.innerWidth - 16;
+            const nx = left < 16 ? 16 - left : left + w > right ? right - w - left : 0;
+            card.style.translate = `${Math.round(nx)}px 0`;
+          }
+        }
       }
     };
 
@@ -165,6 +181,10 @@ export function Landing() {
       fit();
       const ro = new ResizeObserver(fit);
       ro.observe(canvas);
+      cleanupScene = () => {
+        ro.disconnect();
+        scene.dispose();
+      };
 
       await scene.load("/3d/kagiboy.glb");
       if (disposed) return;
@@ -185,7 +205,9 @@ export function Landing() {
       if (!reduced) {
         import("./attract").then(async ({ startAttract }) => {
           if (disposed) return;
-          attract = await startAttract();
+          const a = await startAttract();
+          if (disposed) return;
+          attract = a;
           scene.setScreen(attract.canvas);
           attract.frameListener = () => scene.screenChanged();
         });
@@ -234,6 +256,7 @@ export function Landing() {
       io.disconnect();
       gsap.ticker.remove(tick);
       lenis?.destroy();
+      window.removeEventListener("resize", forgetWidths);
     };
   }, []);
 
@@ -300,8 +323,9 @@ export function Landing() {
           <div className="ch ch-hero" ref={(el) => void (chapterRefs.current.hero = el)}>
             <h1>Your keys, in a Game Boy cartridge.</h1>
             <p className="lede">
-              kagiboy turns the original Game Boy into a hardware wallet for Solana and EVM chains: Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. Your keys live in a chip inside the cartridge, and nothing gets signed until you hold A.
+              kagiboy turns the original Game Boy into a hardware wallet. Your keys live in a chip inside the cartridge, and nothing gets signed until you hold A.
             </p>
+            <p className="lede-short">A hardware wallet for Solana and EVM chains. Nothing signs until you hold A.</p>
             <div className="hero-aside">
               <div className="actions">
                 <Link to="/demo" className="btn btn-ink">
@@ -469,7 +493,7 @@ export function Landing() {
             <p>
               The cartridge's main chip has published glitch attacks, which is why the keys live in a separate secure
               element. A modified Game Boy could fake button presses, so possession plus your PIN is the bar. A Solana
-              transaction doesn't say which network it's for, so keep testnet and mainnet seeds apart. Nothing goes on
+              transaction doesn't say which network it's for, so keep test and real seeds apart. Nothing goes on
               sale before an outside security review.
             </p>
           </aside>
@@ -513,7 +537,7 @@ export function Landing() {
       <section className="status">
         <header className="sec-head">
           <h2>Where we're at</h2>
-          <p>The software runs today, on testnets. The cartridge is in the works, and here's the plan.</p>
+          <p>The software runs today. The cartridge is in the works, and here's the plan.</p>
         </header>
         <ol className="road">
           {ROADMAP.map(([when, what], i) => (
@@ -531,7 +555,7 @@ export function Landing() {
           <h2>Go on, press Start</h2>
           <p>
             The real Game Boy software runs right in your browser, with the cartridge's chip simulated next to it. It
-            signs real transactions on test networks.
+            signs real transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain.
           </p>
           <Link to="/demo" className="btn btn-ink">
             Open the live demo

@@ -338,6 +338,9 @@ export class CartChip {
       case CMD.UNLOCK: {
         const p = this.persisted;
         if (!p) return { status: 3 }; // no wallet
+        // spend the try before checking, like a secure element: pulling power mid-check can't save a guess
+        p.triesLeft -= 1;
+        this.storage.save(p);
         if (pinHash(p.pinSalt, data) === p.pinHash) {
           p.triesLeft = MAX_TRIES;
           this.storage.save(p);
@@ -345,12 +348,10 @@ export class CartChip {
           this.unlocked = true;
           return { status: 0 };
         }
-        p.triesLeft -= 1;
         if (p.triesLeft <= 0) {
           this.wipe();
           return { status: 2 };
         }
-        this.storage.save(p);
         return { status: 1, data: new Uint8Array([p.triesLeft]) };
       }
 

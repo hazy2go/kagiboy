@@ -885,9 +885,27 @@ static uint8_t word_entry(uint8_t n) {
     }
 }
 
+/* Shown before word entry: this cartridge is for trying kagiboy out, so real
+ * backup words must never be typed into it. Returns 1 on A, 0 on B (menu). */
+static uint8_t restore_warning(void) {
+    uint8_t p;
+    message(T_ICON_SHIELD_0, "Test words only", "NEVER TYPE YOUR REAL", "12 WORDS INTO");
+    capc(11, "THIS DEMO");
+    hint(1, 17, BTN_A, "OK");
+    hint(12, 17, BTN_B, "BACK");
+    screen_end();
+    flush_input(); /* the A that picked Restore must not also accept this */
+    for (;;) {
+        p = wait_press();
+        if (p & J_A) return 1;
+        if (p & J_B) return 0;
+    }
+}
+
 /* Returns 1 when the chip accepted the words, 0 to go back to the menu. */
 static uint8_t restore(void) {
     uint8_t n = 0, st;
+    if (!restore_warning()) return 0;
     while (n < 12) {
         if (word_entry(n)) n++;
         else if (n) n--;
@@ -966,20 +984,24 @@ static uint8_t unlock(void) {
 
 /* ---------- home ---------- */
 
-/* One account card (frame top at y, 6 rows): icon, name, network, big balance, address. */
+/* One account card (frame top at y, 6 rows): chain icon, network name, big balance and unit. */
 /* last balance line drawn per chain; the 2 s refresh only repaints a box when it changed,
  * since clearing and redrawing an unchanged box shows as a blink */
 static char shown_bal[2][24];
 static char shown_name[2][14];
 
 static void draw_account(uint8_t chain, uint8_t y) {
-    char *bal, *unit, *name;
+    char *bal, *unit;
+    const char *name;
     uint8_t w, k = chain == CHAIN_SOL ? 0 : 1;
     if (chip_call(CMD_ACCOUNT, chain, 0, 0) != 0) return;
     bal = next_field(resp);
     /* third field: the network's name (the phone picks which EVM network to show) */
     name = next_field(bal);
-    if (name >= RESP_END || !*name) name = chain == CHAIN_SOL ? "Solana" : "Ethereum";
+    if (name >= RESP_END || !*name) {
+        if (chain == CHAIN_SOL) name = "Solana";
+        else name = "Ethereum";
+    }
     if (!strncmp(shown_bal[k], bal, sizeof shown_bal[0] - 1) && !strncmp(shown_name[k], name, sizeof shown_name[0] - 1)) return;
     strncpy(shown_bal[k], bal, sizeof shown_bal[0] - 1);
     shown_bal[k][sizeof shown_bal[0] - 1] = 0;

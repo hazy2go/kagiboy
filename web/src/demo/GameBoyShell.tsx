@@ -45,11 +45,24 @@ const ZONES: { key: Key; part: string; dx: number; dy: number; w: number; h: num
   { key: "START", part: "Start", dx: 0, dy: 0, w: 12, h: 7 },
 ];
 
+// the link's anchor relative to the projected cartridge centre, as a share of the canvas size
+const RADIO_DX = 0;
+const RADIO_DY = 0;
+
 const A_TO_B_MM = 16.5; // distance between the A and B button centres
 
 /** The real Game Boy model with the emulator on its screen; every button works. */
-export function GameBoyShell({ active = true }: { active?: boolean }) {
+export function GameBoyShell({
+  active = true,
+  onRadio,
+}: {
+  active?: boolean;
+  /** where the cartridge's radio sits on screen (viewport px), for drawing the Bluetooth link */
+  onRadio?: (at: { x: number; y: number } | null) => void;
+}) {
   const s = useSession();
+  const onRadioRef = useRef(onRadio);
+  onRadioRef.current = onRadio;
   const activeRef = useRef(active);
   activeRef.current = active;
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -98,16 +111,37 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
         plainFraming: true,
       });
       sceneRef.current = scene;
+      let loaded = false;
       const fit = () => {
-        const r = canvas.current!.getBoundingClientRect();
+        if (!canvas.current) return;
+        const r = canvas.current.getBoundingClientRect();
         scene.resize(r.width, r.height);
+        if (loaded) reportRadio();
+      };
+      // the radio lives in the cartridge: anchor the link on the label end that sticks out of the slot
+      const reportRadio = () => {
+        if (!canvas.current || !onRadioRef.current) return;
+        const at = scene.projectCorner("Cartridge", 1, 1);
+        if (!at) return;
+        const r = canvas.current.getBoundingClientRect();
+        onRadioRef.current({ x: r.left + at.x + RADIO_DX * r.width, y: r.top + at.y + RADIO_DY * r.height });
       };
       fit();
       // the stage's size settles after fonts and layout; keep the canvas buffer matched to it
       const ro = new ResizeObserver(fit);
       ro.observe(canvas.current);
+      cleanup = () => {
+        ro.disconnect();
+        s.onFrame = null;
+        sceneRef.current = null;
+        onRadioRef.current?.(null);
+        scene.dispose();
+      };
       await scene.load("/3d/kagiboy.glb");
       if (disposed) return;
+      loaded = true;
+      scene.frame();
+      reportRadio();
       scene.setScreen(screen);
       s.onFrame = () => scene.screenChanged();
       setReady(true);
@@ -120,11 +154,6 @@ export function GameBoyShell({ active = true }: { active?: boolean }) {
         placeZones(scene);
       };
       raf = requestAnimationFrame(loop);
-      cleanup = () => {
-        ro.disconnect();
-        s.onFrame = null;
-        scene.dispose();
-      };
     })();
 
     return () => {

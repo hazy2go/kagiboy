@@ -334,6 +334,14 @@ await frames(10);
 await press("DOWN");
 await step("A"); // RESTORE 12 WORDS
 await frames(10);
+snap("restore-warning"); // TEST WORDS ONLY
+await step("B"); // back to the start menu
+await frames(10);
+await press("DOWN");
+await step("A"); // RESTORE 12 WORDS again
+await frames(10);
+await step("A"); // OK through the warning
+await frames(10);
 for (const word of PHRASE.split(" ")) {
   for (const ch of word.slice(0, 4)) {
     const steps = ch.charCodeAt(0) - 97;

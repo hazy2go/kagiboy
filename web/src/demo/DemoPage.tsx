@@ -1,5 +1,5 @@
 import "../polyfill"; // must run before @solana/web3.js loads
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { BusMonitor } from "./BusMonitor";
 import { GameBoyShell } from "./GameBoyShell";
@@ -10,6 +10,8 @@ import "./demo.css";
 export function DemoPage() {
   const s = useSession();
   const gbRef = useRef<HTMLDivElement>(null);
+  const rigRef = useRef<HTMLDivElement>(null);
+  const [radio, setRadio] = useState<{ x: number; y: number } | null>(null);
   const pending = s.chip.hasPending;
 
   // On narrow screens the phone sits below the Game Boy; bring the console back into view to approve.
@@ -21,7 +23,11 @@ export function DemoPage() {
 
   useEffect(() => {
     document.documentElement.classList.add("kb-root");
-    return () => document.documentElement.classList.remove("kb-root");
+    document.title = "kagiboy demo";
+    return () => {
+      document.documentElement.classList.remove("kb-root");
+      document.title = "kagiboy";
+    };
   }, []);
 
   const mobile = useMedia("(max-width: 760px)");
@@ -37,21 +43,28 @@ export function DemoPage() {
       </nav>
 
       <header className="demo-intro">
-        <h1>Try kagiboy.</h1>
+        <div>
+          <h1>Try kagiboy.</h1>
+          <p className="sub">
+            The real Game Boy ROM, with the cartridge's chip simulated in your browser. The phone beside it is the
+            companion app.
+          </p>
+        </div>
         <p className="next-step" aria-live="polite">
           <span className="px">NEXT</span>
           <span>{nextStep(s)}</span>
         </p>
       </header>
 
-      <div className="rig">
+      <div className="rig" ref={rigRef}>
         <div ref={gbRef} className="rig-gb">
-          <GameBoyShell />
+          <GameBoyShell onRadio={setRadio} />
         </div>
         <div className="wire" aria-hidden>
           <span className="px">BLUETOOTH</span>
         </div>
         <PhoneApp />
+        <BtLink rig={rigRef} radio={radio} />
       </div>
 
       <BusMonitor />
@@ -63,6 +76,104 @@ export function DemoPage() {
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>
+    </div>
+  );
+}
+
+type Pt = { x: number; y: number };
+
+/**
+ * The Bluetooth link, drawn from the cartridge (where the radio is) to the phone. It runs while the cartridge
+ * is powered, and a packet travels along it whenever the phone and the cartridge actually talk.
+ */
+function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: Pt | null }) {
+  const s = useSession();
+  const [ends, setEnds] = useState<{ a: Pt; b: Pt; w: number; h: number } | null>(null);
+  const packet = useRef<SVGAnimateMotionElement>(null);
+  const [dir, setDir] = useState<"in" | "out">("in");
+  const [flying, setFlying] = useState(false);
+
+  // measure in the rig's own coordinates, so page scroll never moves the line
+  useEffect(() => {
+    const el = rig.current;
+    if (!el || !radio) return setEnds(null);
+    const measure = () => {
+      const phone = el.querySelector(".phone");
+      const head = el.querySelector(".phone .app-head");
+      if (!phone || !head) return;
+      const r = el.getBoundingClientRect();
+      const p = phone.getBoundingClientRect();
+      const h = head.getBoundingClientRect();
+      setEnds({
+        a: { x: radio.x - r.left, y: radio.y - r.top },
+        b: { x: p.left - r.left + 2, y: h.top + h.height / 2 - r.top },
+        w: r.width,
+        h: r.height,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [rig, radio]);
+
+  // what crosses the air: a sign request goes to the cartridge; balances and results come back to the phone
+  const pending = s.chip.hasPending;
+  const latest = s.phone.activity[0];
+  const traffic = `${pending}|${latest?.state ?? ""}|${s.phone.activity.length}|${s.chip.state}|${s.phone.balances.sol}|${s.phone.balances.evm}`;
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) return void (first.current = false);
+    if (!s.powered) return;
+    setDir(pending ? "in" : "out");
+    // restart on the next frame, once the keyPoints for the new direction are in the DOM
+    setFlying(true);
+    const raf = requestAnimationFrame(() => packet.current?.beginElement());
+    const done = setTimeout(() => setFlying(false), 820);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(done);
+    };
+  }, [traffic]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!ends) return null;
+  const { a, b } = ends;
+  const dx = (b.x - a.x) * 0.55;
+  const d = `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`;
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  const on = s.powered;
+
+  return (
+    <div className={`bt-link ${on ? "is-on" : ""}`} aria-hidden>
+      <svg width={ends.w} height={ends.h} viewBox={`0 0 ${ends.w} ${ends.h}`}>
+        <defs>
+          <linearGradient id="bt-grad" x1={a.x} y1={a.y} x2={b.x} y2={b.y} gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#7d9cf5" />
+            <stop offset="1" stopColor="#f08fb4" />
+          </linearGradient>
+        </defs>
+        <path className="bt-halo" d={d} />
+        <path className="bt-line" d={d} />
+        <circle className="bt-end" cx={a.x} cy={a.y} r={4.5} />
+        <circle className="bt-end" cx={b.x} cy={b.y} r={4.5} />
+        <circle className={`bt-packet ${flying ? "is-flying" : ""}`} r={5}>
+          <animateMotion
+            ref={packet}
+            begin="indefinite"
+            dur="0.8s"
+            path={d}
+            keyPoints={dir === "out" ? "0;1" : "1;0"}
+            keyTimes="0;1"
+            calcMode="linear"
+          />
+        </circle>
+      </svg>
+      <span className="bt-tag" style={{ left: mid.x, top: mid.y }}>
+        <svg viewBox="0 0 12 18" width="9" height="14">
+          <path d="M1 5l10 8-5 4V1l5 4L1 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+        <span className="px">{on ? "BLUETOOTH" : "NOT LINKED"}</span>
+      </span>
     </div>
   );
 }

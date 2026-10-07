@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# kagiboy web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The website and browser demo for kagiboy, deployed at
+https://kagiboy.vercel.app (Vercel root directory: `web`). See the
+[root README](../README.md) for what kagiboy is and how the pieces fit.
 
-Currently, two official plugins are available:
+## What's here
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Path | What it is |
+|---|---|
+| `/` (`src/landing/`) | Landing page with the 3D Game Boy (three.js + GSAP) and the waitlist form |
+| `/demo` (`src/demo/`) | The real ROM (`public/wallet.gb`) running in an emulator, next to a phone app and a bus monitor |
+| `/about` (`src/about/`) | The story behind the project |
+| `src/chip/` | The simulated cartridge chip: keys, PIN, network allowlist, transaction decoding and signing |
+| `src/phone/` | The phone side: balances, building and broadcasting transactions (Solana devnet + 5 EVM testnets) |
+| `src/emu/` | Thin wrapper over the GameBoy-Online core from `serverboy` (GPL-2.0, see [NOTICE](../NOTICE)) |
+| `api/waitlist.ts` | Vercel Function for the waitlist (Upstash Redis, rate limited) |
+| `scripts/smoke.ts` | Headless end-to-end test: the real ROM against the chip |
 
-## React Compiler
+## Run
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+pnpm i
+pnpm dev               # http://localhost:5173, open /demo
+pnpm build             # tsc -b && vite build, output in dist/
+pnpm smoke smoke-out   # headless ROM + chip test, saves a PNG of every screen to smoke-out/
+pnpm lint              # oxlint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`public/wallet.gb` is the ROM built from `../rom` (`make` copies it here).
+The waitlist API needs `KV_REST_API_URL` and `KV_REST_API_TOKEN` (Upstash, via `vercel env pull`);
+everything else runs without any keys.

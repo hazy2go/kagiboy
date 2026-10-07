@@ -687,10 +687,10 @@ def main():
     log("Bezel ...")
     f = bezel_field()
     to_gb(sdf_object("Bezel", f, gb_to_bl, gb_n_to_bl, C_RENDER, origin=center_bl(((BEZEL[0] + BEZEL[2]) / 2, (BEZEL[1] + BEZEL[3]) / 2, 0.0)),
-                     mats=[M["Bezel"]], adapt=0.05, glb_coll=C_GLB, glb_adapt=0.2, glb_target=5000))
+                     mats=[M["Bezel"]], adapt=0.05, glb_coll=C_GLB, glb_adapt=0.0, glb_target=30000))
     f = led_field()
     to_gb(sdf_object("LED", f, gb_to_bl, gb_n_to_bl, C_RENDER, origin=center_bl((*LED_C, 0.0)), mats=[M["LED"]],
-                     glb_coll=C_GLB, glb_adapt=0.2, glb_target=600))
+                     glb_coll=C_GLB, glb_adapt=0.05, glb_target=2500))
     log("Buttons ...")
     f = dpad_field()
     to_gb(sdf_object("DPad", f, gb_to_bl, gb_n_to_bl, C_RENDER, origin=center_bl((*DPAD_C, 0.0)), mats=[M["DPad"]],

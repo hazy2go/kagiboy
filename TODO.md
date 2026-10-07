@@ -6,9 +6,9 @@ Live: https://kagiboy.vercel.app · repo hazy2go/kagiboy (private) · deploy = p
 
 ## Submission checklist (in order)
 - [x] Full audit of website + software (2026-10-08): docs/audit-2-website.md, docs/audit-2-software.md
-- [ ] **Fix audit P0s:** MIT LICENSE + NOTICE (demo bundles serverboy, GPL-2.0); GitHub link in footer/menu once public; /demo "Switch on" above the fold on laptops
-- [ ] **Fix audit P1s (website):** iPad portrait (≤1100px / tall) uses the phone camera path; /demo sideways scroll (`.rig::before` inset → overflow-x clip); 404 route; phone hero one line saying what it is; chip callouts clipped ≤375px; "testnet" down to the footer only; MOCKUP stamp on gallery + move *.webp.json out of public/; demo subtitle "real ROM, simulated chip"
-- [ ] **Fix audit P1s (software):** HyperEVM explorer/faucet links (hide or verify); WebGL context leak across routes (dispose context, cleanup when unmounted mid-load, attract disposed check); restore warning "test words only" on the ROM + PIN try spent before check in chip.ts; stale docs (README, hardware.md, protocol.md ACCOUNT name field, web/README.md)
+- [x] **Fix audit P0s:** MIT LICENSE + NOTICE (serverboy GPL-2.0), /demo "Switch on" above the fold (GitHub link waits on public repo)
+- [x] **Fix audit P1s (website):** iPad portrait (≤1100px / tall) uses the phone camera path; /demo sideways scroll (`.rig::before` inset → overflow-x clip); 404 route; phone hero one line saying what it is; chip callouts clipped ≤375px; "testnet" down to the footer only; MOCKUP stamp on gallery + move *.webp.json out of public/; demo subtitle "real ROM, simulated chip"
+- [x] **Fix audit P1s (software):** HyperEVM explorer/faucet links (hide or verify); WebGL context leak across routes (dispose context, cleanup when unmounted mid-load, attract disposed check); restore warning "test words only" on the ROM + PIN try spent before check in chip.ts; stale docs (README, hardware.md, protocol.md ACCOUNT name field, web/README.md)
 - [ ] Audit P2 polish: chip naming consistency, bus monitor idle text, airdrop 429 retries, OG white bands, /demo title + heading order, cache headers for GLB/renders, contrast, EVM card icon per network, waitlist body-size limit + atomic rate limit, zero-fee refusal, lint warnings, untrack .impeccable/
 - [ ] README (what it is, run it, architecture, security model, honest limits) + MIT LICENSE + secrets scan of git history
 - [ ] **hazy:** approve making the repo public (open-source criterion)
@@ -19,6 +19,14 @@ Live: https://kagiboy.vercel.app · repo hazy2go/kagiboy (private) · deploy = p
 - [ ] **hazy:** register team on colosseum.com, check whether one project can enter several tracks
 - [ ] **hazy:** decide "5 TRIES, THEN WIPE" vs "then locked" (SE050 may only lock)
 - [ ] **hazy:** profile.jpg on the PLAYER 1 card? (optional)
+
+## Done 2026-10-08
+- [x] Bluetooth link on /demo drawn from the cartridge to the phone, packets fly when they talk
+- [x] Green screen after navigating back (screen PNGs recoloured to the soft LCD palette)
+- [x] Streak next to the battery LED (bezel + LED meshes less decimated in the GLB)
+- [x] Hero lede no longer lists every chain (moved to the demo CTA); phone hero one-liner
+- [x] 404 page, robots.txt, MOCKUP stamps on the gallery, PIN try spent before the check
+- [ ] Idea from hazy: let the Game Boy pick which network fills the 2nd home card (and maybe pages later)
 
 ## Done since the redesign (2026-10-07)
 - [x] Thermal Print site, real 3D model (Blender) with KAGIBOY face print + new label, phone re-staged (TALL_KEYS), About story page

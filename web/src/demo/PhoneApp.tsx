@@ -46,7 +46,7 @@ export function PhoneApp({ bare = false }: { bare?: boolean }) {
 function Empty({ title, body, note }: { title: string; body: string; note?: string }) {
   return (
     <div className="empty">
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       <p>{body}</p>
       {note && <p className="empty-note">{note}</p>}
     </div>
@@ -113,13 +113,16 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
               </option>
             ))}
           </select>
-          <a href={explorer.evmAddr(addr.evm, s.phone.evmNet.id)} target="_blank" rel="noreferrer">
-            Explorer <Out />
-          </a>
+          {s.phone.evmNet.explorer && (
+            <a href={explorer.evmAddr(addr.evm, s.phone.evmNet.id)} target="_blank" rel="noreferrer">
+              Explorer <Out />
+            </a>
+          )}
         </div>
         <div className="amount">{show(evm, 18)} <small>{s.phone.evmNet.symbol}</small></div>
         <Copy text={addr.evm} />
-        <div className="card-actions">
+        {s.phone.evmNet.fundHint && <p className="hint">{s.phone.evmNet.fundHint}</p>}
+        {s.phone.evmNet.faucet && <div className="card-actions">
           <a
             href={s.phone.evmNet.faucet}
             target="_blank"
@@ -129,7 +132,7 @@ function Balances({ sol, evm, addr }: { sol: bigint | null; evm: bigint | null; 
           >
             Get test {s.phone.evmNet.symbol} <Out />
           </a>
-        </div>
+        </div>}
       </article>
     </section>
   );
@@ -201,7 +204,7 @@ function SendForm({ pending, latest }: { pending: boolean; latest?: Activity }) 
       {latest && !pending && (
         <p className={`last-tx ${latest.state}`}>
           Last: {latest.amount} · {label(latest)}
-          {latest.hash && (
+          {latest.hash && explorer[latest.chain](latest.hash, latest.net) && (
             <>
               {" · "}
               <a href={explorer[latest.chain](latest.hash, latest.net)} target="_blank" rel="noreferrer">
@@ -271,7 +274,7 @@ function ActivityList({ items }: { items: Activity[] }) {
             </div>
             <div className="right">
               <span className="state">{label(a)}</span>
-              {a.hash && (
+              {a.hash && explorer[a.chain](a.hash, a.net) && (
                 <a href={explorer[a.chain](a.hash, a.net)} target="_blank" rel="noreferrer">
                   View <Out />
                 </a>

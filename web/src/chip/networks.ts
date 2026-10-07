@@ -11,8 +11,11 @@ export interface EvmNetwork {
   label: string;
   symbol: string;
   rpc: string;
+  /** "" when there's no working testnet explorer for the network: the app then hides its links */
   explorer: string;
+  /** "" when no faucet hands out this coin directly; `fundHint` says how to get it instead */
   faucet: string;
+  fundHint?: string;
 }
 
 export const EVM_NETWORKS: EvmNetwork[] = [
@@ -49,8 +52,10 @@ export const EVM_NETWORKS: EvmNetwork[] = [
     label: "HYPEREVM",
     symbol: "HYPE",
     rpc: "https://rpc.hyperliquid-testnet.xyz/evm",
-    explorer: "https://app.hyperliquid-testnet.xyz/explorer",
-    faucet: "https://app.hyperliquid-testnet.xyz/drip",
+    // Hyperliquid's testnet explorer only indexes HyperCore, and its faucet pays out on HyperCore too
+    explorer: "",
+    faucet: "",
+    fundHint: "Testnet HYPE comes from Hyperliquid's testnet app: claim it there, then move it to HyperEVM.",
   },
   {
     id: 46630,

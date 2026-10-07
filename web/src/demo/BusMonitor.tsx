@@ -12,7 +12,9 @@ export function BusMonitor() {
       </header>
       <div className="tape paper-white">
         <ol>
-          {rows.length === 0 && <li className="px idle">SWITCH ON THE GAME BOY TO SEE TRAFFIC</li>}
+          {rows.length === 0 && (
+            <li className="px idle">{s.powered ? "PRESS START ON THE GAME BOY" : "SWITCH ON THE GAME BOY TO SEE TRAFFIC"}</li>
+          )}
           {rows.map((r, i) => (
             <li key={`${r.t}-${i}`} className={`px ${r.dir === "gb>chip" ? "req" : "resp"}`}>
               <span className="dir">{r.dir === "gb>chip" ? "GB > CHIP" : "CHIP > GB"}</span>

@@ -1,5 +1,10 @@
 /* kagiboy landing: white page as the printer bed, pastel thermal paper, one live window. */
 
+/* phone-only line under the hero headline */
+.lede-short {
+  display: none;
+}
+
 /* ---------- stage (sticky 3D chapters) ---------- */
 
 .stage {
@@ -318,7 +323,7 @@
   }
 }
 
-@media (min-width: 861px) {
+@media (min-width: 861px) and (min-aspect-ratio: 800/1000) {
   .scroll-hint {
     display: none;
   }
@@ -736,7 +741,7 @@
 
 /* ---------- small screens ---------- */
 
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .kb {
     font-size: 17px;
   }
@@ -911,7 +916,7 @@
   display: none;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .stage {
     height: 470vh;
   }
@@ -991,7 +996,7 @@
    The console owns the top two thirds of the screen (scene.ts TALL_KEYS);
    each chapter's words sit in the band below it, never over it.
    ================================================================ */
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .ch,
   .ch-hero {
     left: calc(22px + env(safe-area-inset-left));
@@ -1030,6 +1035,15 @@
 
   .ch-hero .lede {
     display: none;
+  }
+
+  .ch-hero .lede-short {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--kb-ink-2);
+    max-width: 22rem;
   }
 
   .hero-aside {
@@ -1136,7 +1150,7 @@
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .setup,
   .security,
   .inside,
@@ -1249,7 +1263,7 @@
  * cover the large viewport so no white strip appears; the words stay above the toolbar
  * by keeping clear of the difference between the large and small viewports. */
 @supports (height: 100lvh) {
-  @media (max-width: 860px) {
+  @media (max-width: 860px), (max-aspect-ratio: 799/1000) {
     .stage-sticky {
       height: 100lvh;
     }
@@ -1262,7 +1276,7 @@
 }
 
 /* phones: the scroll cue as a single line of print under the hero's actions */
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .scroll-hint {
     display: block;
     bottom: calc(14px + env(safe-area-inset-bottom));
@@ -1283,7 +1297,7 @@
 }
 
 @supports (height: 100lvh) {
-  @media (max-width: 860px) {
+  @media (max-width: 860px), (max-aspect-ratio: 799/1000) {
     .scroll-hint {
       bottom: calc(100lvh - 100svh + 14px + env(safe-area-inset-bottom));
     }
@@ -1336,7 +1350,7 @@
   text-underline-offset: 4px;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .origin {
     padding: 96px calc(var(--kb-gutter) + env(safe-area-inset-right)) 0 calc(var(--kb-gutter) + env(safe-area-inset-left));
   }
@@ -1347,5 +1361,24 @@
 
   .origin p:not(.eyebrow) {
     font-size: 17px;
+  }
+}
+
+/* short phones (iPhone SE and smaller): keep the headline clear of the console and the buttons on one line */
+@media (max-width: 860px) and (max-height: 720px) {
+  .ch-hero .lede-short {
+    display: none;
+  }
+
+  .ch-hero h1 {
+    font-size: clamp(28px, 8.4vw, 34px);
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-aside .actions .btn {
+    white-space: nowrap;
+    font-size: 15px;
+    padding-inline: 12px;
   }
 }

@@ -1,0 +1,63 @@
+kagiboy
+Copyright (c) 2026 hazy
+
+The kagiboy source code in this repository (the Game Boy ROM in rom/, the web
+app in web/, the scripts and the docs) is released under the MIT License. See
+LICENSE.
+
+Game Boy is a trademark of Nintendo. kagiboy is not affiliated with, endorsed
+by or sponsored by Nintendo.
+
+
+GPL-2.0 code in the /demo bundle
+--------------------------------
+
+The browser demo at /demo runs the ROM in serverboy 0.0.7 by Daniel Shumway
+(https://gitlab.com/piglet-plays/serverboy.js), which is built on the
+GameBoy-Online emulator core by Grant Galitz. Both are licensed under the GNU
+General Public License, version 2 (see web/node_modules/serverboy/LICENSE after
+`pnpm install`).
+
+Vite bundles serverboy into its own chunk (dist/assets/gameboy-*.js). That
+chunk is distributed under the terms of GPL-2.0, not MIT. Its complete
+corresponding source is the serverboy package on npm (version pinned in
+web/pnpm-lock.yaml) and upstream at the GitLab link above, together with the
+glue code in web/src/emu/ in this repository. The rest of kagiboy only talks
+to the emulator; it is not derived from it and stays MIT.
+
+
+Other third-party components
+----------------------------
+
+Bundled into the web app (web/package.json dependencies):
+
+  react, react-dom, react-router-dom   MIT
+  three                                MIT
+  viem                                 MIT
+  @solana/web3.js                      MIT
+  @noble/hashes, @scure/bip39          MIT
+  bs58, buffer                         MIT
+  qrcode-generator                     MIT
+  lenis                                MIT
+  gsap                                 GreenSock Standard "No Charge" License,
+                                       https://gsap.com/standard-license
+
+Fonts:
+
+  Pixel Operator (web/public/fonts, rom/assets/fonts)
+      CC0 1.0, by Jayvee Enaguas. License text in
+      web/public/fonts/PixelOperator-LICENSE.txt and rom/assets/fonts/LICENSE.txt.
+      The ROM's tile font is generated from it.
+  Funnel Display, Funnel Sans
+      SIL Open Font License 1.1, loaded from Google Fonts (not stored here).
+  Nunito, Varela Round (assets/3d/fonts)
+      SIL Open Font License 1.1, license texts next to the font files.
+      Used only to render the cartridge label texture.
+
+Build tools (not shipped in the web bundle):
+
+  GBDK-2020 builds the ROM in rom/. Its libraries are GPLv2 with a linking
+  exception, so the compiled ROM is not covered by the GPL. The SDCC runtime
+  it links is GPLv2+ with the same kind of exception.
+  Vite, TypeScript, oxlint, tsx, jsqr and pngjs are dev-only tools used for
+  building and testing; see web/package.json.

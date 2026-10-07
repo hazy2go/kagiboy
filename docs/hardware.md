@@ -1,7 +1,9 @@
 # The cartridge
 
-Status: design. Nothing here has been built yet. The software in this repo (ROM,
-chip firmware logic, phone app) is what the hardware will run.
+Status: design. The cartridge has not been built yet. The ROM already runs on a
+real DMG from a flash cart (the `make demo` build, with an in-ROM mock chip). The
+software in this repo (ROM, chip firmware logic, phone app) is what the hardware
+will run.
 
 ## What's inside
 
@@ -45,8 +47,11 @@ RAM chip. The demo uses the same protocol at `0xD800` (see
 **What we protect against:** someone who steals the cartridge, someone who
 compromises the phone, and someone who sniffs Bluetooth.
 
-- **Keys never leave the secure element.** The SE050 generates the seed and signs
-  inside itself. There's nothing to copy by plugging the cartridge into a reader.
+- **Keys live in the secure element.** The SE050 has no BIP-32/SLIP-10
+  derivation, so at setup the MCU derives the account keys once, writes them into
+  the SE050 as sign-only, non-readable keys and erases the seed from RAM (see
+  [ROADMAP.md](ROADMAP.md)). After that every signature happens inside the SE050,
+  and there's nothing to copy by plugging the cartridge into a reader.
 - **PIN with a hardware retry counter.** Five wrong PINs and the SE050 erases the
   seed. The counter lives in the secure element, so it can't be reset by
   reflashing the MCU.
@@ -56,10 +61,16 @@ compromises the phone, and someone who sniffs Bluetooth.
   screen: it only sends numbers and fixed status codes, and the cartridge writes
   every word. Only the A button approves, and the cartridge signs exactly the
   bytes it showed. Anything the firmware can't decode is refused (no blind
-  signing): today that means plain SOL and ETH transfers only.
-- **Spending limits on EVM.** The cartridge only signs on the network it was built
-  for (Sepolia in the demo), only 21000-gas plain transfers, and refuses fees
-  above a cap (0.01 ETH).
+  signing): today that means plain SOL transfers and plain native-coin transfers
+  on the allowed EVM networks only.
+- **Network allowlist and spending limits on EVM.** The cartridge signs only for
+  chain ids on its allowlist and names the network on the Game Boy screen from the
+  transaction itself. The demo allows five testnets: Ethereum Sepolia (11155111),
+  Base Sepolia (84532), Arbitrum Sepolia (421614), HyperEVM testnet (998, HYPE)
+  and Robinhood Chain testnet (46630). It signs only plain transfers with a gas
+  limit between 21000 and 600000 (rollups count their L1 cost in gas), and
+  refuses any request where gas × max fee per gas is above 0.01 of the network's
+  coin. Mainnets are not on the list.
 - **Randomness.** The seed comes from the SE050's hardware RNG. Button-mash timing
   and accelerometer samples are hashed in on top. They can only add randomness,
   never take it away.
@@ -78,6 +89,10 @@ compromises the phone, and someone who sniffs Bluetooth.
   decides). The cartridge firmware is built for one cluster and labels it, but
   can't prove a phone didn't use another cluster's blockhash. Keep testnet and
   mainnet seeds separate.
+- On OP-stack chains (Base) the L1 data fee is charged outside
+  gas × max fee per gas, so the "MAX" fee on the screen is not a strict cap
+  there. Today the difference is negligible (around 2×10⁻¹⁶ ETH on Base
+  Sepolia), but the firmware should add the L1 fee oracle's bound before mainnet.
 - Power: the radio draws more than a normal cartridge. DMG power budget testing is
   the first prototype task.
 

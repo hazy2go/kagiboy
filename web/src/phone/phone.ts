@@ -17,10 +17,16 @@ export const DECIMALS: Record<Chain, number> = { sol: 9, evm: 18 };
 
 export const explorer = {
   sol: (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`,
-  evm: (hash: string, net = DEFAULT_EVM.id) => `${(evmNetwork(net) ?? DEFAULT_EVM).explorer}/tx/${hash}`,
+  evm: (hash: string, net = DEFAULT_EVM.id) => evmUrl(net, `/tx/${hash}`),
   solAddr: (a: string) => `https://explorer.solana.com/address/${a}?cluster=devnet`,
-  evmAddr: (a: string, net = DEFAULT_EVM.id) => `${(evmNetwork(net) ?? DEFAULT_EVM).explorer}/address/${a}`,
+  evmAddr: (a: string, net = DEFAULT_EVM.id) => evmUrl(net, `/address/${a}`),
 };
+
+/** "" for networks without a working explorer */
+function evmUrl(net: number, path: string) {
+  const base = (evmNetwork(net) ?? DEFAULT_EVM).explorer;
+  return base ? base + path : "";
+}
 
 export interface Activity {
   id: string;

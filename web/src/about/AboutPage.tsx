@@ -4,7 +4,7 @@ import "./about.css";
 
 // Photos of kagiboy on a Game Boy. Drop files in public/gallery/ and list them here; the section
 // hides itself when the list is empty. PLACEHOLDERS for now (AI scene, real ROM screen composited in,
-// see each file's .webp.json); swap in real photos and set PLACEHOLDER_PHOTOS to false.
+// see assets/gallery/*.webp.json); swap in real photos and set PLACEHOLDER_PHOTOS to false.
 const PLACEHOLDER_PHOTOS = true;
 const GALLERY: { src: string; caption: string; alt: string }[] = [
   { src: "/gallery/desk.webp", caption: "HOME, 2.48 SOL", alt: "A Game Boy on a wooden desk beside a coffee mug and earphones, showing the kagiboy home screen" },
@@ -105,6 +105,7 @@ export function AboutPage() {
         <p>
           One day I looked at my Game Boy and thought: you can't connect this to anything. No Wi-Fi, no Bluetooth, no
           extras. Just a screen and some buttons. What if the cartridge held my keys, my phone could only ask, and this little screen was the only place I could say yes?
+          The cartridge would need a tiny radio to hear the phone, but it would only ever carry public data.
         </p>
       </section>
 
@@ -138,7 +139,7 @@ export function AboutPage() {
         <div className="me-copy">
           <h2 id="me-title">Hey, I'm hazy.</h2>
           <p>
-            I'm not doing this to get rich. I want to bring one of my favourite things in the world back to life, and
+            I'm doing this because I want to bring one of my favourite things in the world back to life, and
             maybe give you a little of the magic I felt the first time I held one.
           </p>
           <p>
@@ -155,10 +156,10 @@ export function AboutPage() {
       {GALLERY.length > 0 && (
         <section className="gallery" aria-labelledby="gallery-title">
           <header>
-            <h2 id="gallery-title">{PLACEHOLDER_PHOTOS ? "On the desk." : "On a real Game Boy."}</h2>
+            <h2 id="gallery-title">{PLACEHOLDER_PHOTOS ? "How it'll look." : "On a real Game Boy."}</h2>
             <p>
               {PLACEHOLDER_PHOTOS
-                ? "The screens are the real ROM. Photos of my own Game Boy running it are on the way."
+                ? "Mockups for now: the scenes are generated, the screens are the real ROM. Photos of my own Game Boy running it are on the way."
                 : "The same ROM as the live demo, running on my own Game Boy from a flash cart."}
             </p>
           </header>
@@ -166,7 +167,10 @@ export function AboutPage() {
             {GALLERY.map((g) => (
               <figure key={g.src}>
                 <img src={g.src} alt={g.alt} loading="lazy" />
-                <figcaption className="px">{g.caption}</figcaption>
+                <figcaption className="px">
+                  {PLACEHOLDER_PHOTOS && <span className="mock">MOCKUP</span>}
+                  {g.caption}
+                </figcaption>
               </figure>
             ))}
           </div>
