@@ -7,7 +7,7 @@ import "./about.css";
 // see each file's .webp.json); swap in real photos and set PLACEHOLDER_PHOTOS to false.
 const PLACEHOLDER_PHOTOS = true;
 const GALLERY: { src: string; caption: string; alt: string }[] = [
-  { src: "/gallery/desk.webp", caption: "HOME, 2.48 SOL", alt: "A Game Boy on a wooden desk beside a coffee mug, showing the kagiboy home screen" },
+  { src: "/gallery/desk.webp", caption: "HOME, 2.48 SOL", alt: "A Game Boy on a wooden desk beside a coffee mug and earphones, showing the kagiboy home screen" },
   { src: "/gallery/hands.webp", caption: "APPROVE? 0.25 SOL", alt: "Hands holding a Game Boy that asks to approve sending 0.25 SOL" },
   { src: "/gallery/shelf.webp", caption: "RECEIVE, SCAN ME", alt: "A Game Boy on a shelf of cartridges, showing a Solana address as a QR code" },
   { src: "/gallery/couch.webp", caption: "SIGNED, CONFIRMED", alt: "A Game Boy on a couch showing a signed and confirmed transaction" },
