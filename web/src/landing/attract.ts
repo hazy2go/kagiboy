@@ -27,6 +27,7 @@ export class Attract {
   private signing = false;
   private rejectAt = -1;
   private onFrame: (() => void) | null = null;
+  private prev = new Uint8ClampedArray(160 * 144 * 4);
 
   constructor(rom: Uint8Array) {
     this.canvas = document.createElement("canvas");
@@ -71,6 +72,9 @@ export class Attract {
     if (this.ready) this.direct();
 
     this.gb.draw(this.image.data, SOFT_LCD);
+    // most frames repeat the last one; skip the canvas write and texture upload when nothing changed
+    if (sameAs(this.image.data, this.prev)) return;
+    this.prev.set(this.image.data);
     this.ctx.putImageData(this.image, 0, 0);
     this.onFrame?.();
   }
@@ -105,4 +109,12 @@ export class Attract {
 export async function startAttract(): Promise<Attract> {
   const rom = new Uint8Array(await (await fetch("/wallet.gb")).arrayBuffer());
   return new Attract(rom);
+}
+
+function sameAs(a: Uint8ClampedArray, b: Uint8ClampedArray) {
+  // compare as 32-bit words: one pixel per step
+  const x = new Uint32Array(a.buffer, a.byteOffset, a.length >> 2);
+  const y = new Uint32Array(b.buffer, b.byteOffset, b.length >> 2);
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
 }

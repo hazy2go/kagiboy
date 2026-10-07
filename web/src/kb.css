@@ -193,9 +193,8 @@ html.kb-root {
   justify-content: space-between;
   padding: calc(14px + env(safe-area-inset-top)) calc(var(--kb-gutter) + env(safe-area-inset-right)) 14px
     calc(var(--kb-gutter) + env(safe-area-inset-left));
-  background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  /* solid enough to read over anything; a live blur here repaints every frame over the 3D canvas in Safari */
+  background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid rgba(31, 35, 48, 0.06);
 }
 

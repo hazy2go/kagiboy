@@ -33,7 +33,10 @@ BLEND = os.path.join(HERE, "kagiboy.blend")
 GLB = os.path.expanduser("~/gb-wallet/web/public/3d/kagiboy.glb")
 TEX = os.path.join(HERE, "tex")
 os.makedirs(TEX, exist_ok=True)
-SCREEN_IMG = os.path.expanduser("~/gb-wallet/web/public/screens/home.png")
+# the LCD texture baked into the model: the home screen in the site's soft palette (SOFT_LCD in
+# web/src/emu/gameboy.ts), so the moment before the live ROM takes over looks the same
+SCREEN_SRC = os.path.expanduser("~/gb-wallet/web/public/screens/home.png")
+SCREEN_IMG = os.path.join(HERE, "tex", "screen-soft.png")
 T0 = time.time()
 
 
@@ -269,7 +272,18 @@ def make_noise_normal(path, n=256, strength=6.0, seed=11):
     bpy.data.images.remove(img)
 
 
+def soft_screen():
+    py = "/opt/homebrew/bin/python3" if os.path.exists("/opt/homebrew/bin/python3") else "python3"
+    code = (
+        "from PIL import Image;im=Image.open(%r).convert('RGB');"
+        "m={(155,188,15):(228,235,216),(139,172,15):(164,182,150),(48,98,48):(82,102,88),(15,56,15):(30,40,38)};"
+        "im.putdata([m.get(p,p) for p in im.get_flattened_data()]);im.save(%r)" % (SCREEN_SRC, SCREEN_IMG)
+    )
+    subprocess.run([py, "-c", code], check=True)
+
+
 def ensure_textures():
+    soft_screen()
     py = "/opt/homebrew/bin/python3" if os.path.exists("/opt/homebrew/bin/python3") else "python3"
     for script, out in (("make_label.py", "label.jpg"), ("make_pcb.py", "pcb.png"), ("make_face.py", "face.png")):
         if not os.path.exists(os.path.join(HERE, out)) or os.environ.get("KB_RETEX") == "1":
@@ -329,7 +343,7 @@ def build_materials(noise):
     M = {}
     M["Body"] = principled("Body", "#C9C6BF", 0.55, normal_img=noise, normal_strength=0.35, spec=0.45)
     M["Bezel"] = principled("Bezel", "#5E5F72", 0.22, coat=0.4, coat_rough=0.08, spec=0.5)
-    M["Screen"] = principled("Screen", "#9BA040", 0.25, base_img=SCREEN_IMG, closest=True, emis_img=True,
+    M["Screen"] = principled("Screen", "#E4EBD8", 0.25, base_img=SCREEN_IMG, closest=True, emis_img=True,
                              emis_strength=0.55, coat=1.0, coat_rough=0.04)
     M["LED"] = principled("LED", "#FF2A1F", 0.2, emis_color="#FF2A1F", emis_strength=6.0, coat=1.0)
     M["DPad"] = principled("DPad", "#1E1E22", 0.42, spec=0.45)

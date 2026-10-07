@@ -99,6 +99,14 @@ export class HeroScene {
 
   private plainFraming = false;
 
+  // adaptive resolution: full sharpness while the GPU keeps up, a step down when frames start dropping
+  private maxRatio = 2;
+  private ratio = 2;
+  private slow = 0;
+  private fast = 0;
+  private lastRender = 0;
+  private lastPose = "";
+
   constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean } = {}) {
     this.canvas = canvas;
     this.still = !!opts.still;
@@ -106,7 +114,9 @@ export class HeroScene {
     if (opts.fixed) this.fixed = { ...KEYS[0][1], ...opts.fixed };
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
     // phones have 3x screens and less GPU: 1.75x keeps it sharp and the scroll smooth
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches ? 1.75 : 2));
+    this.maxRatio = Math.min(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches ? 1.75 : 2);
+    this.ratio = this.maxRatio;
+    this.renderer.setPixelRatio(this.ratio);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.0;
@@ -294,9 +304,36 @@ export class HeroScene {
       }
     }
 
+    // nothing moved and the screen didn't change: keep the last frame on the canvas
+    const key = `${c.position.x.toFixed(6)},${c.position.y.toFixed(6)},${c.position.z.toFixed(6)},${this.gb.position.y.toFixed(6)},${this.gb.rotation.y.toFixed(6)},${pose.apart.toFixed(4)},${pose.lift.toFixed(5)}`;
+    if (!this.needs && key === this.lastPose) return this.current;
+    this.lastPose = key;
+    this.adapt();
     this.renderer.render(this.scene, c);
     this.needs = false;
     return this.current;
+  }
+
+  /** Watch the time between rendered frames; trade a little resolution for smoothness only when needed. */
+  private adapt() {
+    const now = performance.now();
+    const dt = now - this.lastRender;
+    this.lastRender = now;
+    if (dt > 100) return; // first frame after an idle stretch says nothing about the GPU
+    if (dt > 22) this.slow++;
+    else this.slow = Math.max(0, this.slow - 1);
+    if (dt < 14) this.fast++;
+    else this.fast = 0;
+    let next = this.ratio;
+    if (this.slow > 24 && this.ratio > 1) next = Math.max(1, this.ratio - 0.25);
+    else if (this.fast > 240 && this.ratio < this.maxRatio) next = Math.min(this.maxRatio, this.ratio + 0.25);
+    if (next !== this.ratio) {
+      this.ratio = next;
+      this.slow = 0;
+      this.fast = 0;
+      this.renderer.setPixelRatio(next);
+      this.renderer.setSize(this.w, this.h, false);
+    }
   }
 
   get dirty() {
