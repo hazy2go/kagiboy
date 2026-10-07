@@ -47,6 +47,11 @@
   color: var(--kb-ink);
 }
 
+.next-step .btn {
+  align-self: center;
+  margin-left: 4px;
+}
+
 .next-step .px {
   flex: none;
   font-size: 16px;
@@ -80,18 +85,15 @@
   gap: 16px;
 }
 
-/* side by side: console and phone as one centred pair, the Bluetooth link between them;
-   the console is sized so it and its Switch on button fit in the first screen */
+/* side by side: the console hugs the link to the phone instead of floating mid-column */
 @media (min-width: 981px) {
-  .rig {
-    --gb-w: min(560px, max(340px, (100svh - 410px) * 0.8));
-    grid-template-columns: var(--gb-w) 150px auto;
-    justify-content: center;
+  .rig > .rig-gb .device {
+    justify-items: end;
   }
 
   .rig > .rig-gb .device-controls,
   .rig > .rig-gb .keys {
-    width: var(--gb-w);
+    width: min(100%, 560px);
     justify-content: center;
     text-align: center;
   }
@@ -103,11 +105,7 @@
   aspect-ratio: 4 / 5;
 }
 
-@media (min-width: 981px) {
-  .rig .device-stage {
-    width: 100%;
-  }
-}
+
 
 .device-canvas,
 .device-still {

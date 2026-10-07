@@ -53,6 +53,11 @@ export function DemoPage() {
         <p className="next-step" aria-live="polite">
           <span className="px">NEXT</span>
           <span>{nextStep(s)}</span>
+          {!s.powered && (
+            <button className="btn btn-ink btn-sm" onClick={() => s.powerOn()}>
+              Switch on
+            </button>
+          )}
         </p>
       </header>
 
@@ -83,7 +88,7 @@ export function DemoPage() {
 type Pt = { x: number; y: number };
 
 /**
- * The Bluetooth link, drawn from the cartridge (where the radio is) to the phone. It runs while the cartridge
+ * The Bluetooth link, drawn across the gap between the console and the phone. It runs while the cartridge
  * is powered, and a packet travels along it whenever the phone and the cartridge actually talk.
  */
 function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: Pt | null }) {
@@ -99,14 +104,13 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
     if (!el || !radio) return setEnds(null);
     const measure = () => {
       const phone = el.querySelector(".phone");
-      const head = el.querySelector(".phone .app-head");
-      if (!phone || !head) return;
+      if (!phone) return;
       const r = el.getBoundingClientRect();
       const p = phone.getBoundingClientRect();
-      const h = head.getBoundingClientRect();
+      const y = radio.y - r.top;
       setEnds({
-        a: { x: radio.x - r.left, y: radio.y - r.top },
-        b: { x: p.left - r.left + 2, y: h.top + h.height / 2 - r.top },
+        a: { x: radio.x - r.left, y },
+        b: { x: p.left - r.left - 14, y },
         w: r.width,
         h: r.height,
       });
@@ -138,8 +142,7 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
 
   if (!ends) return null;
   const { a, b } = ends;
-  const dx = (b.x - a.x) * 0.55;
-  const d = `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`;
+  const d = `M${a.x},${a.y} L${b.x},${b.y}`;
   const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   const on = s.powered;
 
@@ -243,6 +246,11 @@ function MobileDemo() {
         <p className="next-step" aria-live="polite">
           <span className="px">NEXT</span>
           <span>{nextStep(s)}</span>
+          {!s.powered && (
+            <button className="btn btn-ink btn-sm" onClick={() => s.powerOn()}>
+              Switch on
+            </button>
+          )}
         </p>
       </header>
 

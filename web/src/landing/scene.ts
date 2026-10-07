@@ -256,13 +256,14 @@ export class HeroScene {
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
-  /** A corner of a part's world bounding box on screen: sx/sy pick the side (-1 min, 1 max). */
+  /** A point on a part's world bounding box on screen: sx/sy pick the side (-1 min, 0 centre, 1 max). */
   projectCorner(name: string, sx: number, sy: number): { x: number; y: number } | null {
     const obj = this.gb.getObjectByName(name);
     if (!obj) return null;
     const b = new THREE.Box3().setFromObject(obj);
     const c = b.getCenter(new THREE.Vector3());
-    const v = new THREE.Vector3(sx > 0 ? b.max.x : b.min.x, sy > 0 ? b.max.y : b.min.y, c.z).project(this.camera);
+    const pick = (s: number, lo: number, mid: number, hi: number) => (s > 0 ? hi : s < 0 ? lo : mid);
+    const v = new THREE.Vector3(pick(sx, b.min.x, c.x, b.max.x), pick(sy, b.min.y, c.y, b.max.y), c.z).project(this.camera);
     const r = this.canvas.getBoundingClientRect();
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }

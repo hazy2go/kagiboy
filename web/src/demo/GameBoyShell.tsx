@@ -46,7 +46,7 @@ const ZONES: { key: Key; part: string; dx: number; dy: number; w: number; h: num
 ];
 
 // the link's anchor relative to the projected cartridge centre, as a share of the canvas size
-const RADIO_DX = 0;
+const RADIO_DX = 0.02;
 const RADIO_DY = 0;
 
 const A_TO_B_MM = 16.5; // distance between the A and B button centres
@@ -57,7 +57,7 @@ export function GameBoyShell({
   onRadio,
 }: {
   active?: boolean;
-  /** where the cartridge's radio sits on screen (viewport px), for drawing the Bluetooth link */
+  /** the console's right edge on screen (viewport px), where the Bluetooth link starts */
   onRadio?: (at: { x: number; y: number } | null) => void;
 }) {
   const s = useSession();
@@ -118,10 +118,10 @@ export function GameBoyShell({
         scene.resize(r.width, r.height);
         if (loaded) reportRadio();
       };
-      // the radio lives in the cartridge: anchor the link on the label end that sticks out of the slot
+      // the link to the phone leaves from the console's right edge, halfway up
       const reportRadio = () => {
         if (!canvas.current || !onRadioRef.current) return;
-        const at = scene.projectCorner("Cartridge", 1, 1);
+        const at = scene.projectCorner("GameBoy", 1, 0);
         if (!at) return;
         const r = canvas.current.getBoundingClientRect();
         onRadioRef.current({ x: r.left + at.x + RADIO_DX * r.width, y: r.top + at.y + RADIO_DY * r.height });
