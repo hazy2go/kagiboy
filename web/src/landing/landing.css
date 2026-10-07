@@ -1337,13 +1337,13 @@
   display: block;
 }
 
-/* the LCD's place in front-ortho.webp (x 221..674, y 350..760 of 900x1600) */
+/* the LCD's place in front-ortho.webp (x 215..675, y 346..760 of 900x1600) */
 .origin-lcd {
   position: absolute;
-  left: 24.56%;
-  top: 21.88%;
-  width: 50.44%;
-  height: 25.69%;
+  left: 23.89%;
+  top: 21.63%;
+  width: 51.11%;
+  height: 25.88%;
   image-rendering: pixelated;
 }
 

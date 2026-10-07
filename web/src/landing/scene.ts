@@ -24,8 +24,8 @@ interface Pose {
 
 // keyframes along the stage's scroll, in metres and radians
 const KEYS: [number, Pose][] = [
-  [0.0, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.045, tilt: 0, apart: 0, shift: 0 }],
-  [0.12, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.045, tilt: 0, apart: 0, shift: 0 }],
+  [0.0, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.012, tilt: 0, apart: 0, shift: 0 }],
+  [0.12, { az: -0.5, el: 0.12, dist: 0.52, tx: 0.004, ty: 0.03, lift: 0.012, tilt: 0, apart: 0, shift: 0 }],
   [0.3, { az: -2.45, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
   [0.36, { az: -2.55, el: 0.2, dist: 0.4, tx: 0, ty: 0.04, lift: 0, tilt: 0, apart: 0, shift: 0.2 }],
   // the cartridge comes straight up out of the slot first, and only tips and opens once it's clear
@@ -44,8 +44,8 @@ const KEYS: [number, Pose][] = [
 // phones (portrait): the console fills the top two thirds and the copy sits below it, never on top.
 // `shift` is reused as the console's vertical centre, as a share of the height from the top.
 const TALL_KEYS: [number, Pose][] = [
-  [0.0, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.045, tilt: 0, apart: 0, shift: 0.34 }],
-  [0.12, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.045, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.0, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.012, tilt: 0, apart: 0, shift: 0.34 }],
+  [0.12, { az: -0.5, el: 0.1, dist: 0.64, tx: 0.002, ty: 0.045, lift: 0.012, tilt: 0, apart: 0, shift: 0.34 }],
   [0.3, { az: -2.45, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
   [0.36, { az: -2.55, el: 0.2, dist: 0.5, tx: 0, ty: 0.05, lift: 0, tilt: 0, apart: 0, shift: 0.34 }],
   [0.44, { az: -2.8, el: 0.3, dist: 0.46, tx: -0.002, ty: 0.09, lift: 0.085, tilt: 0, apart: 0, shift: 0.33 }],

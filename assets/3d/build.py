@@ -69,7 +69,7 @@ FACET_C = float(FACET_N @ _FA)
 FACET_K = 0.32
 # rear
 PANEL = (14.3, 30.7, 75.7, 144.0)
-SLOT_BOX = (16.0, 74.0, 50.5, 23.2, 32.9)           # x0 x1 ybottom d0 d1
+SLOT_BOX = (16.0, 74.0, 59.5, 23.2, 32.9)           # x0 x1 ybottom d0 d1
 
 # cartridge
 C_W, C_H, C_D = 57.0, 65.0, 7.7
@@ -87,8 +87,9 @@ CHIPS = {  # name: (u, v, size_u, size_v, height)
     "BLE": (38.5, 42.5, 5.0, 4.0, 1.2),
     "Accel": (11.5, 45.0, 2.0, 2.0, 0.9),
 }
-# inserted pose: cart w=0 (label) at d=31.6, top edge 15 mm above the console
-CART_POSE_LOC = (0.0, (31.6 - C_SPLIT - 16.0) / 1000.0, (74.0 + 15.0 - C_H / 2) / 1000.0)
+# inserted pose: cart w=0 (label) at d=31.6, top edge 6 mm above the console (a seated DMG cart
+# shows only its grip above the shell; the slot is cut deep enough to take the rest)
+CART_POSE_LOC = (0.0, (31.6 - C_SPLIT - 16.0) / 1000.0, (74.0 + 6.0 - C_H / 2) / 1000.0)
 
 
 # =============================================================== helpers
