@@ -70,21 +70,6 @@ kbd {
   cursor: not-allowed;
 }
 
-/* ---------------- landing placeholder ---------------- */
-
-.landing {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 18vh 16px 64px;
-}
-
-.landing h1 {
-  font-family: var(--font-pixel);
-  font-size: clamp(40px, 9vw, 84px);
-  margin: 8px 0 20px;
-  color: var(--dmg-1);
-}
-
 .eyebrow {
   color: var(--ink-dim);
   letter-spacing: 0.08em;
