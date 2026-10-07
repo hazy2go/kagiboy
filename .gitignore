@@ -1,0 +1,7 @@
+node_modules
+dist
+rom/build
+smoke-out
+.DS_Store
+.vercel
+.env*
