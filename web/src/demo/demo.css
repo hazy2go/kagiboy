@@ -411,6 +411,25 @@
   padding: 90px 14px;
 }
 
+.pairing .btn {
+  margin-top: 6px;
+}
+
+.pair-code {
+  margin: 4px 0;
+  font-size: 34px;
+  letter-spacing: 0.12em;
+  color: var(--kb-ink);
+}
+
+.unpair {
+  justify-self: center;
+  margin: 8px auto 4px;
+  display: block;
+  font-size: 13px;
+  color: var(--kb-ink-3);
+}
+
 .empty h2 {
   font-size: 20px;
   margin-bottom: 10px;

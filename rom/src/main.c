@@ -43,6 +43,7 @@
 #define CMD_WORDS 0x0D
 #define CMD_RESTORE 0x0E
 #define CMD_NETWORK 0x0F
+#define CMD_PAIR 0x10
 
 #define ST_TIMEOUT 0xFE
 
@@ -320,6 +321,7 @@ static int8_t demo_accel(uint8_t keys) {
 #define ACCEL_X() demo_accel(held_keys)
 #define ACCEL_Y() demo_accel(held_keys)
 #define TX_PENDING() (demo_state == STATE_UNLOCKED && demo_pending)
+#define REQ_KIND() (TX_PENDING() ? 1 : 0) /* the demo phone is always paired */
 
 #else
 
@@ -359,6 +361,7 @@ static void clear_req(uint8_t len) {
 #define ACCEL_X() ((int8_t)MB[MB_ACCEL_X])
 #define ACCEL_Y() ((int8_t)MB[MB_ACCEL_Y])
 #define TX_PENDING() (MB[MB_PENDING])
+#define REQ_KIND() (MB[MB_PENDING]) /* 1 sign request, 2 a phone asks to pair */
 #endif
 
 /* ---------- reading chip replies ---------- */
@@ -1183,10 +1186,48 @@ static void tx_result(void) {
     wait_a();
 }
 
+/* A phone asks to pair. Both screens show the same code (Bluetooth numeric comparison); only the
+ * owner, holding the Game Boy, can let a new phone in. */
+static void pair_request(void) {
+    uint8_t p, st;
+    if (chip_call(CMD_PAIR, 0, 0, 0) != 0) return;
+    beep(0xF0);
+    screen_begin();
+    header(T_ICON_PHONE_0, "Pair phone?", "NEW PHONE");
+    capc(5, "CHECK YOUR PHONE");
+    box(5, 7, 10, 4);
+    big(7, 8, resp); /* 6 digits */
+    capc(13, "SAME CODE THERE?");
+    capc(14, "THEN PRESS A");
+    hint(1, 17, BTN_A, "PAIR");
+    hint(13, 17, BTN_B, "NO");
+    screen_end();
+    while (held_keys) vsync();
+    flush_input();
+    do {
+        p = wait_press();
+    } while (!(p & (J_A | J_B)));
+    if (p & J_A) {
+        st = chip_call(CMD_PAIR, 1, 0, 0);
+        if (st == 0) message(T_ICON_CHECK_0, "Paired", "THIS PHONE CAN NOW", "ASK YOU TO SIGN");
+        else message(T_ICON_PHONE_0, "Expired", "ASK AGAIN FROM", "THE PHONE");
+    } else {
+        chip_call(CMD_PAIR, 2, 0, 0);
+        message(T_ICON_SHIELD_0, "Not paired", "THE PHONE WAS", "TURNED AWAY");
+    }
+    screen_end();
+    wait_frames(90);
+}
+
 static void sign_request(void) {
     uint8_t held = 0, shown = 0, k, st, w;
     uint16_t hold_start = 0, elapsed;
     char *to, *amount, *fee, *network, *unit;
+    /* every interrupted screen lands here; a pairing is the other kind of request */
+    if (REQ_KIND() == 2) {
+        pair_request();
+        return;
+    }
     if (chip_call(CMD_PENDING, 0, 0, 0) != 0) return;
     /* every field below was decoded and written by the chip, not the phone;
      * the cursor stops at the end of the reply, so a malformed one shows blanks */

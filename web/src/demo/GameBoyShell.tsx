@@ -46,7 +46,7 @@ const ZONES: { key: Key; part: string; dx: number; dy: number; w: number; h: num
 ];
 
 // the link's anchor relative to the projected cartridge centre, as a share of the canvas size
-const RADIO_DX = 0.02;
+const RADIO_DX = 0;
 const RADIO_DY = 0;
 
 const A_TO_B_MM = 16.5; // distance between the A and B button centres

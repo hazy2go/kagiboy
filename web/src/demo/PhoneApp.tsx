@@ -20,8 +20,8 @@ export function PhoneApp({ bare = false }: { bare?: boolean }) {
       <div className="phone-screen">
         <header className="app-head">
           <strong>kagiboy</strong>
-          <span className={`link-pill ${s.powered ? "up" : ""}`}>
-            <i /> {s.powered ? "Cartridge linked" : "No cartridge"}
+          <span className={`link-pill ${s.powered && s.chip.paired ? "up" : ""}`}>
+            <i /> {!s.powered ? "No cartridge" : s.chip.paired ? "Paired" : "Not paired"}
           </span>
         </header>
         <div className="app-body">
@@ -30,15 +30,48 @@ export function PhoneApp({ bare = false }: { bare?: boolean }) {
         {state === "none" && <Empty title="Set up on the Game Boy" body="Mash buttons, shake it, write down your 12 words, choose a PIN. Keys are made inside the cartridge and never come to this phone." note="Testnet demo: never restore a real recovery phrase here." />}
         {state === "locked" && <Empty title="Locked" body="Enter your PIN on the Game Boy to unlock." />}
 
-        {state === "unlocked" && addr && (
+        {state === "unlocked" && !s.chip.paired && <Pairing />}
+
+        {state === "unlocked" && addr && s.chip.paired && (
           <>
             <Balances sol={s.phone.balances.sol} evm={s.phone.balances.evm} addr={addr} />
             <SendForm pending={s.chip.hasPending} latest={s.phone.activity[0]} />
             <ActivityList items={s.phone.activity} />
+            <button className="link-btn unpair" onClick={() => s.phone.unpair()}>
+              Unpair this phone
+            </button>
           </>
         )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** First contact: both screens show one code, the owner accepts on the Game Boy. */
+function Pairing() {
+  const s = useSession();
+  const code = s.chip.pairingCode;
+  if (s.phone.pairState === "waiting" && code) {
+    return (
+      <div className="empty pairing">
+        <h2>Check the code</h2>
+        <p className="pair-code px">{code}</p>
+        <p>Your Game Boy shows a code too. If they match, press A on the Game Boy to pair.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="empty pairing">
+      <h2>Pair with your cartridge</h2>
+      <p>
+        Your phone and Game Boy will show the same 6-digit code. Accept it on the Game Boy, and this phone can ask the
+        cartridge to sign. It never gets your keys.
+      </p>
+      {s.phone.pairState === "refused" && <p className="empty-note">Pairing was turned down on the Game Boy.</p>}
+      <button className="btn btn-ink" onClick={() => s.phone.pair()}>
+        Pair cartridge
+      </button>
     </div>
   );
 }

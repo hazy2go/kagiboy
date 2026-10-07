@@ -108,9 +108,11 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
       const r = el.getBoundingClientRect();
       const p = phone.getBoundingClientRect();
       const y = radio.y - r.top;
+      // same breathing room on both sides: the dots touch neither device
+      const GAP = 20;
       setEnds({
-        a: { x: radio.x - r.left, y },
-        b: { x: p.left - r.left - 14, y },
+        a: { x: radio.x - r.left + GAP, y },
+        b: { x: p.left - r.left - GAP, y },
         w: r.width,
         h: r.height,
       });
@@ -124,12 +126,12 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
   // what crosses the air: a sign request goes to the cartridge; balances and results come back to the phone
   const pending = s.chip.hasPending;
   const latest = s.phone.activity[0];
-  const traffic = `${pending}|${latest?.state ?? ""}|${s.phone.activity.length}|${s.chip.state}|${s.phone.balances.sol}|${s.phone.balances.evm}`;
+  const traffic = `${pending}|${s.chip.pairingCode}|${s.chip.paired}|${latest?.state ?? ""}|${s.phone.activity.length}|${s.chip.state}|${s.phone.balances.sol}|${s.phone.balances.evm}`;
   const first = useRef(true);
   useEffect(() => {
     if (first.current) return void (first.current = false);
     if (!s.powered) return;
-    setDir(pending ? "in" : "out");
+    setDir(pending || s.chip.pairingCode ? "in" : "out");
     // restart on the next frame, once the keyPoints for the new direction are in the DOM
     setFlying(true);
     const raf = requestAnimationFrame(() => packet.current?.beginElement());
@@ -144,7 +146,7 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
   const { a, b } = ends;
   const d = `M${a.x},${a.y} L${b.x},${b.y}`;
   const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  const on = s.powered;
+  const on = s.powered && s.chip.paired;
 
   return (
     <div className={`bt-link ${on ? "is-on" : ""}`} aria-hidden>
@@ -175,7 +177,7 @@ function BtLink({ rig, radio }: { rig: RefObject<HTMLDivElement | null>; radio: 
         <svg viewBox="0 0 12 18" width="9" height="14">
           <path d="M1 5l10 8-5 4V1l5 4L1 13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         </svg>
-        <span className="px">{on ? "BLUETOOTH" : "NOT LINKED"}</span>
+        <span className="px">{on ? "BLUETOOTH" : s.chip.pairingCode ? "PAIRING" : s.powered ? "NOT PAIRED" : "NOT LINKED"}</span>
       </span>
     </div>
   );
@@ -190,6 +192,8 @@ function nextStep(s: ReturnType<typeof useSession>): string {
     case "locked":
       return "Enter your PIN on the Game Boy (arrows change digits, A confirms).";
     default:
+      if (s.chip.pairingCode) return "Check the Game Boy shows the same code as the phone, then press A on it to pair.";
+      if (!s.chip.paired) return "Pair the phone: tap “Pair cartridge”, then accept the code on the Game Boy.";
       if (!s.phone.balances.sol && !s.phone.balances.evm) return "Fund the wallet: tap “Get test SOL” on the phone (your address is copied for you), or press A on the Game Boy to show its QR code.";
       return "Send a test transfer from the phone and approve it on the Game Boy. Left and right on the Game Boy switch the EVM network.";
   }
@@ -210,10 +214,11 @@ function MobileDemo() {
   const seenActivity = useRef(0);
   const [walletDot, setWalletDot] = useState(false);
 
-  // a sign request always lands on the Game Boy, where it has to be approved
+  // sign and pairing requests land on the Game Boy, where they have to be approved
+  const asking = pending || !!s.chip.pairingCode;
   useEffect(() => {
-    if (pending) setTab("gb");
-  }, [pending]);
+    if (asking) setTab("gb");
+  }, [asking]);
 
   // a new line in the wallet's activity while you're elsewhere earns the tab a dot
   const count = s.phone.activity.length;

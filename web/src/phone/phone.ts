@@ -89,9 +89,34 @@ export class Phone {
     this.emit();
   }
 
+  /** Pairing as the app sees it: "refused" until the next try after the Game Boy turned it down. */
+  pairState: "idle" | "waiting" | "refused" = "idle";
+
+  /** Ask the cartridge to pair; the owner checks the code and accepts on the Game Boy. */
+  async pair() {
+    this.pairState = "waiting";
+    this.emit();
+    let ok = false;
+    try {
+      ok = await this.chip.requestPairing();
+    } catch {
+      ok = false;
+    }
+    this.pairState = ok ? "idle" : "refused";
+    this.emit();
+    if (ok) this.refreshBalances();
+  }
+
+  unpair() {
+    this.chip.unpair();
+    this.balances = { sol: null, evm: null };
+    this.pairState = "idle";
+    this.emit();
+  }
+
   async refreshBalances() {
     const a = this.chip.addresses;
-    if (!a) return;
+    if (!a || !this.chip.paired) return;
     const net = this.evmNet.id;
     const [sol, evm] = await Promise.allSettled([
       this.sol.getBalance(new PublicKey(a.sol)),

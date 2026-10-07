@@ -116,6 +116,33 @@ await press("UP");
 snap("set-pin"); // PIN 1200
 await step("A");
 await frames(20);
+
+// pairing: an unpaired phone can't ask for signatures or put balances on screen
+let unpairedBlocked = false;
+try {
+  chip.requestSignature({ chain: "evm", tx: { chainId: 11155111, to: "0x000000000000000000000000000000000000dEaD", value: 1n, nonce: 0, gas: 21000n, maxFeePerGas: 1n, maxPriorityFeePerGas: 1n, type: "eip1559" } });
+} catch {
+  unpairedBlocked = true;
+}
+chip.setBalance("sol", 1n);
+console.log("unpaired phone blocked:", unpairedBlocked && chip.accountReply("sol").includes("--") ? "OK" : "WRONG");
+// turned away first, then accepted; the code on the Game Boy is the one the phone shows
+let pairing = chip.requestPairing();
+await frames(40);
+snap("pair-request");
+const shownCode = chip.log.filter((e) => e.cmd === "PAIR" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+const codeHex = Array.from(chip.pairingCode!, (c) => c.charCodeAt(0).toString(16).padStart(2, "0")).join(" ");
+console.log("Game Boy shows the phone's code:", shownCode.includes(codeHex) ? "OK" : "WRONG");
+await step("B");
+console.log("B turns the phone away:", (await pairing) === false && !chip.paired ? "OK" : "WRONG");
+await frames(100);
+pairing = chip.requestPairing();
+await frames(40);
+await step("A");
+console.log("A pairs the phone:", (await pairing) === true && chip.paired ? "OK" : "WRONG");
+await frames(100);
+snap("paired");
+
 chip.setBalance("sol", 2_480_000_000n);
 chip.setBalance("evm", parseEther("0.42"));
 await frames(130);

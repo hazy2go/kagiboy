@@ -23,6 +23,8 @@ export interface Persisted {
   pinSalt: string;
   pinHash: string;
   triesLeft: number;
+  /** a phone was approved on the Game Boy; it goes with the wallet (a wipe or a new wallet forgets it) */
+  paired?: boolean;
 }
 
 export interface Storage {
@@ -134,6 +136,49 @@ export class CartChip {
     return this.pending !== null;
   }
 
+  /** The phone is allowed to send requests: it was approved on the Game Boy for this wallet. */
+  get paired() {
+    return !!this.persisted?.paired;
+  }
+
+  /** The 6-digit code both screens show while a pairing waits on the Game Boy. */
+  get pairingCode() {
+    return this.pairing?.code ?? null;
+  }
+
+  private pairing: { code: string; resolve: (ok: boolean) => void } | null = null;
+
+  /**
+   * The phone asks to pair. Both screens show the same random code and the owner accepts on the
+   * Game Boy (Bluetooth numeric comparison), so a stranger's phone in range can't join quietly.
+   */
+  requestPairing(): Promise<boolean> {
+    if (!this.persisted || !this.unlocked) return Promise.reject(new Error("unlock the cartridge first"));
+    if (this.pending) return Promise.reject(new Error("a request is already waiting on the Game Boy"));
+    this.pairing?.resolve(false);
+    const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000;
+    const code = String(n).padStart(6, "0");
+    return new Promise<boolean>((resolve) => {
+      this.pairing = { code, resolve };
+      this.emit();
+    });
+  }
+
+  /** Forget the phone (from the phone app); the Game Boy asks again next time. */
+  unpair() {
+    const p = this.persisted;
+    if (!p?.paired) return;
+    delete p.paired;
+    this.storage.save(p);
+    this.balances = { sol: null, evm: null };
+    this.emit();
+  }
+
+  private dropPairing() {
+    this.pairing?.resolve(false);
+    this.pairing = null;
+  }
+
   /** Balances arrive as base units (lamports / wei); the chip formats them itself. */
   /** What the Game Boy's home screen gets for one account: address, balance, network name. */
   accountReply(chain: Chain): string {
@@ -164,6 +209,8 @@ export class CartChip {
   }
 
   setBalance(chain: Chain, baseUnits: bigint | null) {
+    // only a paired phone gets to put numbers on the Game Boy
+    if (!this.paired) return;
     this.balances[chain] = baseUnits;
   }
 
@@ -191,7 +238,8 @@ export class CartChip {
    */
   requestSignature(req: SignRequest): { id: number; result: Promise<SignResult> } {
     if (!this.wallet || !this.unlocked) throw new Error("unlock the cartridge first");
-    if (this.pending) throw new Error("a request is already waiting on the Game Boy");
+    if (!this.paired) throw new Error("pair this phone on the Game Boy first");
+    if (this.pending || this.pairing) throw new Error("a request is already waiting on the Game Boy");
     const snap = snapshot(req, this.wallet);
     const id = this.nextId++;
     const result = new Promise<SignResult>((resolve) => {
@@ -218,6 +266,7 @@ export class CartChip {
     this.pool = new Uint8Array(32);
     this.balances = { sol: null, evm: null };
     this.dropPending("power");
+    this.dropPairing();
     this.emit();
   }
 
@@ -230,7 +279,8 @@ export class CartChip {
     w(MB.MAGIC, CHIP_MAGIC);
     w(MB.ACCEL_X, this.accel.x);
     w(MB.ACCEL_Y, this.accel.y);
-    w(MB.PENDING, this.pending && this.unlocked ? 1 : 0);
+    // 1: a sign request waits, 2: a phone asks to pair
+    w(MB.PENDING, !this.unlocked ? 0 : this.pending ? 1 : this.pairing ? 2 : 0);
 
     if (this.ready) {
       const { seq, reply } = this.ready;
@@ -358,6 +408,22 @@ export class CartChip {
         return { status: 1, data: new Uint8Array([p.triesLeft]) };
       }
 
+      case CMD.PAIR: {
+        // arg 0: the code to show, 1: the owner accepted, 2: turned away
+        const pr = this.pairing;
+        if (!this.unlocked || !pr || !this.persisted) return { status: 1 };
+        if (arg === 0) return { status: 0, data: `${pr.code}\0` };
+        if (arg !== 1 && arg !== 2) return { status: 1 };
+        this.pairing = null;
+        if (arg === 1) {
+          this.persisted.paired = true;
+          this.storage.save(this.persisted);
+        }
+        pr.resolve(arg === 1);
+        this.emit();
+        return { status: 0 };
+      }
+
       case CMD.NETWORK: {
         // LEFT/RIGHT on the home screen: the Game Boy picks which EVM network its second card shows
         if (!this.unlocked || (arg !== 1 && arg !== 2)) return { status: 1 };
@@ -412,6 +478,7 @@ export class CartChip {
         this.wallet = null;
         this.balances = { sol: null, evm: null };
         this.dropPending("locked");
+        this.dropPairing();
         return { status: 0 };
 
       case CMD.WIPE:
@@ -460,6 +527,7 @@ export class CartChip {
     this.unlocked = false;
     this.balances = { sol: null, evm: null };
     this.dropPending("locked");
+    this.dropPairing();
   }
 
   private record(dir: BusEvent["dir"], cmd: number, bytes: Uint8Array) {
@@ -591,7 +659,7 @@ function bytesEqual(a: Uint8Array, b: Uint8Array) {
 /** A stored wallet with a known PIN, for the landing page's attract mode (testnet only). */
 export function demoPersisted(mnemonic: string, pin: number[]): Persisted {
   const pinSalt = "demo";
-  return { mnemonic, pinSalt, pinHash: pinHash(pinSalt, Uint8Array.from(pin)), triesLeft: 5 };
+  return { mnemonic, pinSalt, pinHash: pinHash(pinSalt, Uint8Array.from(pin)), triesLeft: 5, paired: true };
 }
 
 function pinHash(salt: string, pin: Uint8Array) {

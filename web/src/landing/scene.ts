@@ -263,9 +263,15 @@ export class HeroScene {
     const b = new THREE.Box3().setFromObject(obj);
     const c = b.getCenter(new THREE.Vector3());
     const pick = (s: number, lo: number, mid: number, hi: number) => (s > 0 ? hi : s < 0 ? lo : mid);
-    const v = new THREE.Vector3(pick(sx, b.min.x, c.x, b.max.x), pick(sy, b.min.y, c.y, b.max.y), c.z).project(this.camera);
     const r = this.canvas.getBoundingClientRect();
-    return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
+    // with perspective the front or the back edge can stick out further: take the outermost on screen
+    let best: { x: number; y: number } | null = null;
+    for (const z of [b.min.z, b.max.z]) {
+      const v = new THREE.Vector3(pick(sx, b.min.x, c.x, b.max.x), pick(sy, b.min.y, c.y, b.max.y), z).project(this.camera);
+      const p = { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
+      if (!best || (sx > 0 ? p.x > best.x : sx < 0 ? p.x < best.x : false)) best = p;
+    }
+    return best;
   }
 
   get progress() {

@@ -88,7 +88,15 @@ transfer from its own key and labels it `SOLANA`; the phone uses devnet.
 | `0x0D` | WORDS | word prefix (lowercase) | `count`, then per suggestion a 2-byte word index and the word, 0-terminated (max 4, exact match first) |
 | `0x0E` | RESTORE | 12 × 2-byte word indices | status 0 ok, 2 checksum failed |
 | `0x0F` | NETWORK | arg 1 next, 2 previous | switches the EVM network on the home card (allowlist order, wraps); status 0 ok, 1 locked or bad arg. The cartridge tells the phone, which follows |
+| `0x10` | PAIR | arg 0 get code, 1 accept, 2 refuse | arg 0 replies the 6-digit code as text; 1 stores the phone as paired with this wallet; status 1 when no pairing waits. Until a phone is paired the chip refuses its sign requests and balances |
 
 Randomness: the chip's hardware RNG is the source. Button timings and
 accelerometer samples are hashed into the pool on top of it; they add to it,
 they do not replace it.
+
+## Pairing
+
+The mailbox PENDING byte says what waits for the owner: `1` a sign request, `2` a phone asking to pair.
+Pairing is Bluetooth numeric comparison done on the Game Boy: the phone and the Game Boy show the same
+random 6-digit code, and only an A press on the console lets the phone in. The pairing belongs to the
+wallet, so wiping or restoring forgets it.
