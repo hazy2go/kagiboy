@@ -16,6 +16,8 @@ export const MB = {
   ACCEL_X: 0xf1,
   ACCEL_Y: 0xf2,
   PENDING: 0xf3,
+  /** 1 once a phone is paired with this wallet: the home screen asks you to pair until then */
+  PAIRED: 0xf4,
 } as const;
 
 export const CHIP_MAGIC = 0xc7;

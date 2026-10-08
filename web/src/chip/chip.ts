@@ -311,6 +311,7 @@ export class CartChip {
     w(MB.ACCEL_Y, this.accel.y);
     // 1: a sign request waits, 2: a phone asks to pair
     w(MB.PENDING, !this.unlocked ? 0 : this.pending ? 1 : this.pairing ? 2 : 0);
+    w(MB.PAIRED, this.paired ? 1 : 0);
 
     if (this.ready) {
       const { seq, reply } = this.ready;

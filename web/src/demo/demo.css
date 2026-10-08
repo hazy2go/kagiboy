@@ -1065,12 +1065,69 @@ html.demo-app-root body {
   }
 }
 
+/* the wallet is ready but not paired: the Wallet tab glows and carries a little "Pair" tag */
+.tabbar button.beckon {
+  color: var(--kb-ink);
+}
+
+.tabbar button.beckon::before {
+  content: "";
+  position: absolute;
+  inset: 2px 14%;
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(207, 226, 255, 0.95), rgba(255, 220, 232, 0.95));
+  z-index: -1;
+  animation: tab-beckon 1.8s var(--kb-ease) infinite;
+}
+
+.tabbar button.beckon svg {
+  animation: tab-hop 1.8s var(--kb-ease) infinite;
+}
+
+.tabbar .pair-badge {
+  position: absolute;
+  top: 2px;
+  left: calc(50% + 8px);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e2557c;
+  box-shadow: 0 0 0 2px #fff;
+  color: #fff;
+  font: 600 10px/1.4 var(--kb-sans);
+  font-style: normal;
+}
+
+@keyframes tab-beckon {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tab-hop {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pane {
     transition: none;
   }
 
-  .tabbar .dot {
+  .tabbar .dot,
+  .tabbar button.beckon::before,
+  .tabbar button.beckon svg {
     animation: none;
   }
 }

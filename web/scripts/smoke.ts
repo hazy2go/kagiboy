@@ -118,6 +118,10 @@ snap("set-pin"); // PIN 1200
 await step("A");
 await frames(20);
 
+await frames(60);
+snap("pair-wait");
+await frames(40);
+snap("pair-wait-waves");
 // pairing: an unpaired phone can't ask for signatures or put balances on screen
 let unpairedBlocked = false;
 try {

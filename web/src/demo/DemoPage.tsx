@@ -193,7 +193,7 @@ function nextStep(s: ReturnType<typeof useSession>): string {
       return "Enter your PIN on the Game Boy (arrows change digits, A confirms).";
     default:
       if (s.chip.pairingCode) return "Check the Game Boy shows the same code as the phone, then press A on it to pair.";
-      if (!s.chip.paired) return "Pair the phone: tap “Pair cartridge”, then accept the code on the Game Boy.";
+      if (!s.chip.paired) return "Now pair your phone: open the Wallet, tap “Pair cartridge”, then accept the code on the Game Boy.";
       if (!s.phone.balances.sol && !s.phone.balances.evm) return "Fund the wallet: tap “Get test SOL” on the phone (your address is copied for you), or press A on the Game Boy to show its QR code.";
       return "Send a test transfer from the phone and approve it on the Game Boy. Left and right on the Game Boy switch the EVM network.";
   }
@@ -238,6 +238,8 @@ function MobileDemo() {
   }, []);
 
   const at = TABS.findIndex((t) => t.id === tab);
+  // the wallet is set up but the phone isn't paired yet: point people at the Wallet tab
+  const needsPair = s.powered && s.chip.state === "unlocked" && !s.chip.paired && !s.chip.pairingCode;
 
   return (
     <div className="kb demo-app">
@@ -254,6 +256,11 @@ function MobileDemo() {
           {!s.powered && (
             <button className="btn btn-ink btn-sm" onClick={() => s.powerOn()}>
               Switch on
+            </button>
+          )}
+          {needsPair && tab !== "phone" && (
+            <button className="btn btn-ink btn-sm" onClick={() => setTab("phone")}>
+              Go to Wallet
             </button>
           )}
         </p>
@@ -282,14 +289,16 @@ function MobileDemo() {
         {TABS.map((t) => (
           <button
             key={t.id}
-            className={t.id === tab ? "on" : ""}
+            className={`${t.id === tab ? "on" : ""} ${t.id === "phone" && needsPair && tab !== "phone" ? "beckon" : ""}`}
             aria-current={t.id === tab ? "page" : undefined}
             onClick={() => setTab(t.id)}
           >
             <TabIcon id={t.id} />
             <span>{t.label}</span>
-            {((t.id === "gb" && pending && tab !== "gb") || (t.id === "phone" && walletDot)) && (
-              <i className="dot" aria-label="needs attention" />
+            {t.id === "phone" && needsPair && tab !== "phone" ? (
+              <i className="pair-badge">Pair</i>
+            ) : (
+              ((t.id === "gb" && pending && tab !== "gb") || (t.id === "phone" && walletDot)) && <i className="dot" aria-label="needs attention" />
             )}
           </button>
         ))}

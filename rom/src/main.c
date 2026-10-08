@@ -23,6 +23,7 @@
 #define MB_ACCEL_X 0xF1
 #define MB_ACCEL_Y 0xF2
 #define MB_PENDING 0xF3
+#define MB_PAIRED 0xF4
 
 #define CHIP_MAGIC 0xC7
 #define RESP_MAX 171
@@ -322,6 +323,7 @@ static int8_t demo_accel(uint8_t keys) {
 #define ACCEL_Y() demo_accel(held_keys)
 #define TX_PENDING() (demo_state == STATE_UNLOCKED && demo_pending)
 #define REQ_KIND() (TX_PENDING() ? 1 : 0) /* the demo phone is always paired */
+#define PHONE_PAIRED() 1
 
 #else
 
@@ -362,6 +364,7 @@ static void clear_req(uint8_t len) {
 #define ACCEL_Y() ((int8_t)MB[MB_ACCEL_Y])
 #define TX_PENDING() (MB[MB_PENDING])
 #define REQ_KIND() (MB[MB_PENDING]) /* 1 sign request, 2 a phone asks to pair */
+#define PHONE_PAIRED() (MB[MB_PAIRED] == 1)
 #endif
 
 /* ---------- reading chip replies ---------- */
@@ -1382,28 +1385,83 @@ static uint8_t menu(void) {
     }
 }
 
+/* ---------- waiting for a phone ---------- */
+
+/* Signal waves on both sides of the phone, growing one ring at a time. */
+static void pair_waves(uint8_t k) {
+    uint8_t i;
+    k &= 3;
+    for (i = 0; i < 3; i++) {
+        if (i < k) {
+            txt(8 - i, 7, "(");
+            txt(8 - i, 8, "(");
+            txt(11 + i, 7, ")");
+            txt(11 + i, 8, ")");
+        } else {
+            txt(8 - i, 7, " ");
+            txt(8 - i, 8, " ");
+            txt(11 + i, 7, " ");
+            txt(11 + i, 8, " ");
+        }
+    }
+}
+
+/* A fresh wallet has no phone yet: instead of a home screen full of dashes, say what to do. */
+static void pair_wait_draw(void) {
+    screen_begin();
+    header(T_ICON_KEY_0, "kagiboy", "ALMOST THERE");
+    icon(9, 7, T_ICON_PHONE_0);
+    txtc(11, "Pair your phone");
+    capc(13, "IN THE KAGIBOY APP,");
+    capc(14, "TAP PAIR CARTRIDGE");
+    hint(11, 17, BTN_SEL, "MENU");
+    screen_end();
+}
+
+static void home_redraw(uint8_t paired) {
+    if (paired) home_draw();
+    else pair_wait_draw();
+}
+
 static void home(void) {
-    uint8_t p, r;
+    uint8_t p, r, paired, wave = 0;
     uint16_t refresh = 0;
-    home_draw();
+    paired = PHONE_PAIRED();
+    home_redraw(paired);
     for (;;) {
         vsync();
         anim_tick(++frame);
         if (request_waiting()) {
-            sign_request();
-            home_draw();
+            sign_request(); /* a pairing request lands here too */
+            paired = PHONE_PAIRED();
+            home_redraw(paired);
             refresh = 0;
             continue;
         }
+        /* paired or unpaired from the phone while we sit here */
+        if (PHONE_PAIRED() != paired) {
+            paired = PHONE_PAIRED();
+            home_redraw(paired);
+            refresh = 0;
+        }
         p = pressed();
-        if (p & J_A) {
-            beep(0xC0);
-            receive();
-            home_draw();
-        } else if (p & J_SELECT) {
+        if (p & J_SELECT) {
             beep(0xC0);
             r = menu();
             if (r) return;
+            home_redraw(paired);
+            continue;
+        }
+        if (!paired) {
+            if (++refresh >= 20) {
+                refresh = 0;
+                pair_waves(++wave);
+            }
+            continue;
+        }
+        if (p & J_A) {
+            beep(0xC0);
+            receive();
             home_draw();
         } else if (p & (J_LEFT | J_RIGHT)) {
             /* the Game Boy decides which EVM network its second card shows; the phone follows */
