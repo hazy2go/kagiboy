@@ -36,9 +36,36 @@ export function Memory({ dur }: P) {
           <Photo src={staticFile("gen/g3.png")} dur={dur - c2} zoom={1.3} origin="30% 10%" pos="0% 0%" push={0.08} />
         </Vhs>
       </Sequence>
-      {/* tape snow as the picture comes up, and the snap to the present */}
+      {/* the deck's blue screen while the tape loads, then tracking noise rolls into the picture */}
+      {f >= 10 && f < open && <BlueScreen f={f - 10} len={open - 10} />}
       <AbsoluteFill style={{ background: "#d8d8d8", opacity: snow * 0.5, mixBlendMode: "screen" }} />
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
+    </AbsoluteFill>
+  );
+}
+
+/** A VCR's blue screen with its PLAY readout; the last frames break up into tracking noise. */
+function BlueScreen({ f, len }: { f: number; len: number }) {
+  const noise = interpolate(f, [len - 14, len], [0, 1], clamp);
+  return (
+    <AbsoluteFill style={{ background: "#050505" }}>
+      <div style={{ position: "absolute", left: 240, top: 0, width: 1440, height: 1080, overflow: "hidden", background: "#1f2fd0" }}>
+        <div style={{ position: "absolute", left: 90, top: 70, fontFamily: PX, fontSize: 56, color: "#fff", letterSpacing: 6, textShadow: "3px 3px 0 rgba(0,0,0,0.35)" }}>PLAY ▶</div>
+        <div style={{ position: "absolute", right: 90, top: 70, fontFamily: PX, fontSize: 44, color: "#fff", letterSpacing: 4 }}>SP</div>
+        {/* tracking: bright bands rolling and the picture tearing */}
+        {[0, 1, 2, 3, 4, 5].map((k) => {
+          const y = ((f * 37 + k * 211) % 1180) - 100;
+          return <div key={k} style={{ position: "absolute", left: 0, right: 0, top: y, height: 10 + (k % 3) * 14, background: "rgba(255,255,255,0.85)", opacity: noise, transform: `translateX(${((f * 13 + k * 97) % 60) - 30}px)` }} />;
+        })}
+        <svg width="1440" height="1080" style={{ position: "absolute", inset: 0, opacity: 0.85 * noise }}>
+          <filter id={`bs${f}`}>
+            <feTurbulence type="fractalNoise" baseFrequency="0.9 0.02" numOctaves="2" seed={f % 89} />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter={`url(#bs${f})`} />
+        </svg>
+        <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 4px)" }} />
+      </div>
     </AbsoluteFill>
   );
 }

@@ -12,13 +12,16 @@ const END = 5;
 const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
 const MIN: Record<string, number> = { s3: 6.5 };
+// the opening waits for the VHS blue screen and its tracking noise before the voice comes in
+const LEADS: Record<string, number> = { s1: 2.1 };
 
 /** Scene lengths follow the voiceover (src/vo.json, re-measured when the real recording lands). */
 export const timeline = () => {
   let at = 0;
   const parts = vo.map((v, i) => {
-    const dur = Math.round(Math.max(LEAD + v.seconds + TAIL, MIN[v.id] ?? 0) * FPS);
-    const p = { ...v, Scene: SCENES[i], from: at, dur };
+    const lead = LEADS[v.id] ?? LEAD;
+    const dur = Math.round(Math.max(lead + v.seconds + TAIL, MIN[v.id] ?? 0) * FPS);
+    const p = { ...v, Scene: SCENES[i], from: at, dur, lead };
     at += dur;
     return p;
   });
@@ -42,13 +45,13 @@ export function Pitch() {
   const { parts, end, total } = timeline();
   return (
     <AbsoluteFill style={{ background: "#fff" }}>
-      {parts.map(({ id, Scene, from, dur, seconds, text }) => (
+      {parts.map(({ id, Scene, from, dur, seconds, text, lead }) => (
         <Sequence key={id} from={from} durationInFrames={dur} name={id}>
           <Scene dur={dur} />
-          <Sequence from={Math.round(LEAD * FPS)}>
+          <Sequence from={Math.round(lead * FPS)}>
             <Audio src={staticFile(`vo/${id}.wav`)} />
           </Sequence>
-          <Captions text={text} from={Math.round(LEAD * FPS)} seconds={seconds} />
+          <Captions text={text} from={Math.round(lead * FPS)} seconds={seconds} />
         </Sequence>
       ))}
       {/* "Sweet September" (Mixkit, free license): in under the memories, low under the voice, up on the end card */}
