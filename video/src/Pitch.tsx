@@ -28,7 +28,7 @@ export const timeline = () => {
   return { parts, end: { from: at, dur: END * FPS }, total: at + END * FPS };
 };
 
-function useFonts() {
+export function useFonts() {
   const [handle] = useState(() => delayRender("fonts"));
   useEffect(() => {
     const faces = [

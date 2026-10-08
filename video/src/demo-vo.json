@@ -1,0 +1,242 @@
+[
+ {
+  "id": "d1",
+  "title": "1 · The system",
+  "seconds": 15.83,
+  "text": "This is the technical walkthrough of kagiboy, running live. On the left, the actual Game Boy ROM, written in C with GBDK, in an emulator. In the middle, the cartridge chip. On the right, the phone app. Three parts, and only one of them ever holds a key.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "This is the technical walkthrough of kagiboy, running live."
+   },
+   {
+    "t": 3.59,
+    "text": "On the left, the actual Game Boy ROM, written in C with GBDK, in an emulator."
+   },
+   {
+    "t": 9.37,
+    "text": "In the middle, the cartridge chip."
+   },
+   {
+    "t": 11.19,
+    "text": "On the right, the phone app."
+   },
+   {
+    "t": 12.93,
+    "text": "Three parts, and only one of them ever holds a key."
+   }
+  ],
+  "end": 15.64
+ },
+ {
+  "id": "d2",
+  "title": "2 · Architecture",
+  "seconds": 19.32,
+  "text": "A Game Boy has no network and no operating system. Just the cartridge slot. So that's the wire. The ROM writes a command into a small mailbox in cartridge memory, and the chip writes back a reply. The phone only talks to the chip, and only with public data. Requests in, signatures out. The phone is never trusted.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "A Game Boy has no network and no operating system."
+   },
+   {
+    "t": 3.33,
+    "text": "Just the cartridge slot."
+   },
+   {
+    "t": 4.73,
+    "text": "So that's the wire."
+   },
+   {
+    "t": 5.89,
+    "text": "The ROM writes a command into a small mailbox in cartridge memory, and the chip writes back a reply."
+   },
+   {
+    "t": 11.87,
+    "text": "The phone only talks to the chip, and only with public data."
+   },
+   {
+    "t": 15.53,
+    "text": "Requests in, signatures out."
+   },
+   {
+    "t": 17.71,
+    "text": "The phone is never trusted."
+   }
+  ],
+  "end": 19.1
+ },
+ {
+  "id": "d3",
+  "title": "3 · Keys",
+  "seconds": 29.35,
+  "text": "Every button press and every shake goes to the chip as entropy, folded into a SHA-256 pool. On create, it's mixed with the chip's own random generator and becomes a standard BIP-39 phrase. Solana uses SLIP-10 ed25519 on Phantom's path, and EVM uses MetaMask's. So the words restore in any normal wallet. The PIN is entered twice, stored salted and hashed, and five wrong tries wipe the chip.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "Every button press and every shake goes to the chip as entropy, folded into a SHA-256 pool."
+   },
+   {
+    "t": 5.73,
+    "text": "On create, it's mixed with the chip's own random generator and becomes a standard BIP-39 phrase."
+   },
+   {
+    "t": 12.01,
+    "text": "Solana uses SLIP-10 ed25519 on Phantom's path, and EVM uses MetaMask's."
+   },
+   {
+    "t": 20.25,
+    "text": "So the words restore in any normal wallet."
+   },
+   {
+    "t": 23.11,
+    "text": "The PIN is entered twice, stored salted and hashed, and five wrong tries wipe the chip."
+   }
+  ],
+  "end": 29.08
+ },
+ {
+  "id": "d4",
+  "title": "4 · Pairing",
+  "seconds": 10.62,
+  "text": "Pairing only works while the Game Boy is listening. Both screens show the same six-digit code, and you confirm with A. A phone that shows up outside that window is refused.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "Pairing only works while the Game Boy is listening."
+   },
+   {
+    "t": 2.89,
+    "text": "Both screens show the same six-digit code, and you confirm with A."
+   },
+   {
+    "t": 7.25,
+    "text": "A phone that shows up outside that window is refused."
+   }
+  ],
+  "end": 10.26
+ },
+ {
+  "id": "d5",
+  "title": "5 · Signing on Solana",
+  "seconds": 32.58,
+  "text": "This is the part I care about most. The phone builds a normal transfer and sends the raw message bytes. The chip copies those bytes and decodes them itself. The fee payer has to be this wallet, with exactly one instruction, and it has to be a System Program transfer. The exact amount and the full address go on the screen. You hold A for one second, the chip signs those same bytes, and the phone only broadcasts. The phone can't fake the result either. The Game Boy only shows confirmed for the signature the chip itself made. Here it is on devnet.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "This is the part I care about most."
+   },
+   {
+    "t": 1.99,
+    "text": "The phone builds a normal transfer and sends the raw message bytes."
+   },
+   {
+    "t": 5.83,
+    "text": "The chip copies those bytes and decodes them itself."
+   },
+   {
+    "t": 9.09,
+    "text": "The fee payer has to be this wallet, with exactly one instruction, and it has to be a System Program transfer."
+   },
+   {
+    "t": 15.61,
+    "text": "The exact amount and the full address go on the screen."
+   },
+   {
+    "t": 19.01,
+    "text": "You hold A for one second, the chip signs those same bytes, and the phone only broadcasts."
+   },
+   {
+    "t": 24.59,
+    "text": "The phone can't fake the result either."
+   },
+   {
+    "t": 26.53,
+    "text": "The Game Boy only shows confirmed for the signature the chip itself made."
+   },
+   {
+    "t": 31.17,
+    "text": "Here it is on devnet."
+   }
+  ],
+  "end": 32.36
+ },
+ {
+  "id": "d6",
+  "title": "6 · Refusals",
+  "seconds": 13.06,
+  "text": "Anything the chip can't show in full, it refuses. No blind signing. A token instruction, a second transfer, someone else paying the fee, a contract call, a fee above the cap: all rejected, before you're ever asked.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "Anything the chip can't show in full, it refuses."
+   },
+   {
+    "t": 3.07,
+    "text": "No blind signing."
+   },
+   {
+    "t": 4.21,
+    "text": "A token instruction, a second transfer, someone else paying the fee, a contract call, a fee above the cap:"
+   },
+   {
+    "t": 10.79,
+    "text": "all rejected, before you're ever asked."
+   }
+  ],
+  "end": 12.86
+ },
+ {
+  "id": "d7",
+  "title": "7 · EVM and swaps",
+  "seconds": 21.74,
+  "text": "The same key covers five EVM testnets, with the chain checked against the chip's own list and a cap on the fee. Swap quotes come live from the SODAX SDK. The phone names tokens only by address. Symbols, decimals and fees come from the cartridge itself, and it shows the least you'll get. In this demo, swaps are signed but never sent.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "The same key covers five EVM testnets, with the chain checked against the chip's own list and a cap on the fee."
+   },
+   {
+    "t": 7.51,
+    "text": "Swap quotes come live from the SODAX SDK."
+   },
+   {
+    "t": 10.71,
+    "text": "The phone names tokens only by address."
+   },
+   {
+    "t": 13.53,
+    "text": "Symbols, decimals and fees come from the cartridge itself, and it shows the least you'll get."
+   },
+   {
+    "t": 18.69,
+    "text": "In this demo, swaps are signed but never sent."
+   }
+  ],
+  "end": 21.58
+ },
+ {
+  "id": "d8",
+  "title": "8 · Hardware and source",
+  "seconds": 16.06,
+  "text": "In hardware, the keys move into an NXP secure element, behind an RP2350 that speaks this same mailbox protocol. The ROM doesn't change. It's all open source. Try every step yourself at kagiboy.xyz/demo.",
+  "cues": [
+   {
+    "t": 0,
+    "text": "In hardware, the keys move into an NXP secure element, behind an RP2350 that speaks this same mailbox protocol."
+   },
+   {
+    "t": 8.61,
+    "text": "The ROM doesn't change."
+   },
+   {
+    "t": 10.13,
+    "text": "It's all open source."
+   },
+   {
+    "t": 11.83,
+    "text": "Try every step yourself at kagiboy.xyz/demo."
+   }
+  ],
+  "end": 16.04
+ }
+]
