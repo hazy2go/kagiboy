@@ -45,6 +45,7 @@
 #define CMD_RESTORE 0x0E
 #define CMD_NETWORK 0x0F
 #define CMD_PAIR 0x10
+#define CMD_PHONE 0x11
 
 #define ST_TIMEOUT 0xFE
 
@@ -87,6 +88,13 @@ static uint8_t demo_next;     /* which chain the next request is for */
 static uint8_t demo_tx_chain; /* chain of the last signed request, 0 none */
 static uint8_t demo_tx_polls;
 static uint8_t demo_net;      /* EVM network on the home card, index into demo_account_evm */
+/* the demo's paired phone: forget it from the Phone screen, and a pretend phone asks to pair again */
+static uint8_t demo_phone_gone;
+static uint8_t demo_window;   /* the Game Boy is listening for a new phone */
+static uint8_t demo_pairing;  /* the pretend phone is asking */
+static uint16_t demo_window_t;
+static const uint8_t demo_phone_info[] = "IPHONE\0K4G1\0DEMO";
+static const uint8_t demo_pair_code[] = "246810";
 
 static void demo_reply(const uint8_t *src, uint8_t len) {
     memcpy(resp, src, len);
@@ -249,6 +257,34 @@ static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
         if (arg == CHAIN_SOL) demo_reply(demo_account_sol, sizeof(demo_account_sol));
         else demo_reply(demo_account_evm[demo_net], demo_account_evm_len[demo_net]);
         return 0;
+    case CMD_PHONE:
+        if (demo_state != STATE_UNLOCKED) return 1;
+        if (arg == 0) {
+            if (demo_phone_gone) return 1;
+            demo_reply(demo_phone_info, sizeof(demo_phone_info));
+        } else if (arg == 1) {
+            demo_phone_gone = 1;
+            demo_window_t = 0;
+        } else if (arg == 2) {
+            demo_window = 1;
+            demo_window_t = 0;
+        } else {
+            demo_window = 0;
+            demo_pairing = 0;
+            demo_window_t = 0;
+        }
+        return 0;
+    case CMD_PAIR:
+        if (demo_state != STATE_UNLOCKED || !demo_pairing) return 1;
+        if (arg == 0) {
+            demo_reply(demo_pair_code, sizeof(demo_pair_code));
+            return 0;
+        }
+        if (arg == 1) demo_phone_gone = 0;
+        demo_pairing = 0;
+        demo_window = 0;
+        demo_window_t = 0;
+        return 0;
     case CMD_NETWORK:
         if (demo_state != STATE_UNLOCKED || (arg != 1 && arg != 2)) return 1;
         if (arg == 1) demo_net = demo_net + 1 == DEMO_NETS ? 0 : demo_net + 1;
@@ -322,8 +358,8 @@ static int8_t demo_accel(uint8_t keys) {
 #define ACCEL_X() demo_accel(held_keys)
 #define ACCEL_Y() demo_accel(held_keys)
 #define TX_PENDING() (demo_state == STATE_UNLOCKED && demo_pending)
-#define REQ_KIND() (TX_PENDING() ? 1 : 0) /* the demo phone is always paired */
-#define PHONE_PAIRED() 1
+#define REQ_KIND() (demo_pairing ? 2 : TX_PENDING() ? 1 : 0)
+#define PHONE_PAIRED() (!demo_phone_gone)
 
 #else
 
@@ -506,8 +542,10 @@ static uint8_t request_waiting(void) {
     } else {
         start_held = 0;
     }
+    /* no real phone on a flash cart: one "arrives" a few seconds after the Game Boy starts listening */
+    if (demo_state == STATE_UNLOCKED && (demo_window || demo_phone_gone) && !demo_pairing && ++demo_window_t == 240) demo_pairing = 1;
 #endif
-    return TX_PENDING() ? 1 : 0;
+    return REQ_KIND() ? 1 : 0;
 }
 
 /* Like wait_press, but gives up with 0 as soon as a sign request arrives. */
@@ -1319,17 +1357,125 @@ static void sign_request(void) {
     tx_result();
 }
 
+/* ---------- the paired phone ---------- */
+
+static void pair_waves(uint8_t k);
+
+/* Listen for a new phone for a minute. Returns 1 when a request cut in (it has been handled). */
+static uint8_t pair_window(void) {
+    uint8_t wave = 0, left, shown = 0xFF, w;
+    uint16_t start, gone;
+    chip_call(CMD_PHONE, 2, 0, 0);
+    screen_begin();
+    header(T_ICON_PHONE_0, "Pair new phone", "LISTENING");
+    icon(9, 7, T_ICON_PHONE_0);
+    txtc(11, "Ready to pair");
+    capc(13, "IN THE KAGIBOY APP,");
+    capc(14, "TAP PAIR CARTRIDGE");
+    hint(13, 17, BTN_B, "STOP");
+    screen_end();
+    flush_input();
+    start = sys_time;
+    for (;;) {
+        vsync();
+        anim_tick(++frame);
+        if (request_waiting()) {
+            sign_request(); /* the pairing screen: same code on both, A to accept */
+            return 1;
+        }
+        if (pressed() & J_B) {
+            beep(0xC0);
+            break;
+        }
+        gone = sys_time - start;
+        if (gone >= 3600) break;
+        if ((gone & 15) == 0) pair_waves(++wave);
+        left = 60 - (uint8_t)(gone / 60);
+        if (left != shown) {
+            shown = left;
+            clear_rows(15, 1);
+            w = num(6, 15, left);
+            cap(7 + w, 15, "S LEFT");
+        }
+    }
+    chip_call(CMD_PHONE, 3, 0, 0);
+    return 0;
+}
+
+/* Who this cartridge listens to, and the two things you can do about it. Returns 1 when a request
+ * cut in (it has been handled; go home). */
+static uint8_t phone_screen(void) {
+    uint8_t p, has;
+    char *id, *since;
+    for (;;) {
+        has = chip_call(CMD_PHONE, 0, 0, 0) == 0;
+        screen_begin();
+        if (has) {
+            id = next_field(resp);
+            since = next_field(id);
+            header(T_ICON_PHONE_0, "Phone", "PAIRED");
+            box(1, 4, 18, 6);
+            capc(5, "PAIRED WITH");
+            txtc(6, resp);
+            cap(3, 8, "ID");
+            txt(6, 8, id);
+            if (since < RESP_END && *since) txt(12, 8, since);
+            capc(12, "ONLY THIS PHONE CAN");
+            capc(13, "ASK YOU TO SIGN");
+            hint(0, 17, BTN_A, "NEW");
+            hint(5, 17, BTN_SEL, "FORGET");
+            hint(14, 17, BTN_B, "BACK");
+        } else {
+            header(T_ICON_PHONE_0, "Phone", "NONE PAIRED");
+            icon(9, 6, T_ICON_PHONE_0);
+            txtc(9, "No phone yet");
+            capc(12, "PAIR ONE TO SEND");
+            capc(13, "AND SWAP FROM IT");
+            hint(1, 17, BTN_A, "PAIR");
+            hint(14, 17, BTN_B, "BACK");
+        }
+        screen_end();
+        p = wait_press_or_request();
+        if (!p) {
+            sign_request();
+            return 1;
+        }
+        if (p & J_B) return 0;
+        if (p & J_A) {
+            if (pair_window()) return 1;
+            continue;
+        }
+        if (has && (p & J_SELECT)) {
+            message(T_ICON_PHONE_0, "Forget phone?", "IT CAN'T ASK FOR", "ANYTHING AFTER THIS");
+            hint(1, 17, BTN_A, "FORGET");
+            hint(14, 17, BTN_B, "KEEP");
+            screen_end();
+            flush_input();
+            do {
+                p = wait_press();
+            } while (!(p & (J_A | J_B)));
+            if (p & J_A) {
+                chip_call(CMD_PHONE, 1, 0, 0);
+                beep(0x40);
+                message(T_ICON_PHONE_0, "Phone forgotten", "PAIR A PHONE AGAIN", "FROM THIS SCREEN");
+                screen_end();
+                wait_frames(90);
+            }
+        }
+    }
+}
+
 /* ---------- menu ---------- */
 
 /* Returns 1 to re-lock, 2 after a wipe, 0 to go home (also after a sign
  * request cut in). */
 static uint8_t menu(void) {
     uint8_t sel = 0, p, i;
-    static const char *const items[] = {"Receive", "Lock", "Wipe cartridge", "Back"};
+    static const char *const items[] = {"Receive", "Phone", "Lock", "Wipe cartridge", "Back"};
     for (;;) {
         screen_begin();
         header(T_ICON_KEY_0, "Menu", 0);
-        for (i = 0; i < 4; i++) txt(4, 5 + i * 2, items[i]);
+        for (i = 0; i < 5; i++) txt(4, 5 + i * 2, items[i]);
         hint(1, 17, BTN_A, "SELECT");
         hint(12, 17, BTN_B, "BACK");
         cursor(2, 5 + sel * 2);
@@ -1341,17 +1487,18 @@ static uint8_t menu(void) {
                 return 0;
             }
             if ((p & J_UP) && sel) sel--;
-            if ((p & J_DOWN) && sel < 3) sel++;
+            if ((p & J_DOWN) && sel < 4) sel++;
             cursor(2, 5 + sel * 2);
             if (p & (J_A | J_B)) break;
         }
         if (p & J_B) return 0;
         if (sel == 0 && receive()) return 0;
-        if (sel == 1) {
+        if (sel == 1 && phone_screen()) return 0;
+        if (sel == 2) {
             chip_call(CMD_LOCK, 0, 0, 0);
             return 1;
         }
-        if (sel == 2) {
+        if (sel == 3) {
             message(T_ICON_SHIELD_0, "Wipe cartridge?", "ERASES THE KEYS", "ONLY 12 WORDS REMAIN");
             hint(1, 16, BTN_SEL, "+ A  WIPE");
             hint(1, 17, BTN_B, "CANCEL");
@@ -1381,7 +1528,7 @@ static uint8_t menu(void) {
             beep(0xC0);
             flush_input();
         }
-        if (sel == 3) return 0;
+        if (sel == 4) return 0;
     }
 }
 

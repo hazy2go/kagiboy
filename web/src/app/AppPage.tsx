@@ -9,6 +9,7 @@ import { GameBoyShell } from "../demo/GameBoyShell";
 import { useSession } from "../demo/session";
 import { explorer } from "../phone/phone";
 import { chainOf, intentFor, loadTokens, PARTNER_FEE_BPS, quote, SLIPPAGE_BPS, SWAP_CHAINS, type Quote, type Token } from "./swap";
+import { CHAIN_ICONS, SYMBOL_ICONS, TOKEN_ICONS } from "./tokenIcons";
 import "../demo/demo.css";
 import "./app.css";
 
@@ -23,13 +24,14 @@ interface SwapRecord {
   at: number;
 }
 
-/** The kagiboy app: what you'd install on your phone to pair with the cartridge. */
+/**
+ * The kagiboy app on its own, the way you'd have it on your phone. The Game Boy isn't on screen:
+ * it slides up (phones) or opens as a panel (desktop) whenever the cartridge needs you.
+ */
 export function AppPage() {
   const s = useSession();
   const desktop = useMedia("(min-width: 960px)");
-  const [tab, setTab] = useState<Tab>("wallet");
-  const [sheet, setSheet] = useState(false); // phones: the Game Boy slides up when it's needed
-  const [swaps, setSwaps] = useState<SwapRecord[]>([]);
+  const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -41,7 +43,7 @@ export function AppPage() {
     };
   }, []);
 
-  // the cartridge asks for you: bring the Game Boy up on phones
+  // the cartridge asks for you: bring the Game Boy up, and put it away once it's answered
   const asking = s.chip.hasPending || !!s.chip.pairingCode;
   useEffect(() => {
     if (asking) setSheet(true);
@@ -55,9 +57,6 @@ export function AppPage() {
     wasAsking.current = asking;
   }, [asking]);
 
-  const stage = !s.powered ? "connect" : s.chip.state === "none" ? "setup" : s.chip.state === "locked" ? "unlock" : !s.chip.paired ? "pair" : "main";
-  const openGameBoy = () => setSheet(true);
-
   return (
     <div className={`kb app ${desktop ? "is-desk" : "is-phone"}`}>
       {desktop && (
@@ -65,49 +64,66 @@ export function AppPage() {
           <Link to="/" className="kb-word" aria-label="kagiboy home">
             kagiboy
           </Link>
-          <span className="app-head-note">The kagiboy app · test networks, live SODAX quotes</span>
+          <span className="app-head-note" />
           <Link to="/demo" className="app-head-link">
-            Classic demo
+            Live demo with the Game Boy
           </Link>
         </header>
       )}
 
       <div className="app-stage">
         {desktop && (
-          <section className="app-cart" aria-label="Your Game Boy">
-            <GameBoyShell />
-            <p className="app-cart-cap px">YOUR CARTRIDGE</p>
+          <section className="app-pitch">
+            <p className="px eyebrow">THE KAGIBOY APP</p>
+            <h1>Your phone asks. Your Game Boy decides.</h1>
+            <p>
+              Balances, sends and swaps across Solana and five EVM networks, with SODAX swaps built in. Nothing is signed
+              until you see it on the Game Boy and hold A.
+            </p>
+            <button className="pill-btn ghost" onClick={() => setSheet(true)}>
+              Show the Game Boy
+            </button>
           </section>
         )}
-
         <div className="app-device">
-          <div className="app-screen">
-            <StatusBar />
-            <div className="app-view" key={stage}>
-              {stage === "connect" && <Connect onOpen={openGameBoy} />}
-              {stage === "setup" && <Setup onOpen={openGameBoy} />}
-              {stage === "unlock" && <Unlock onOpen={openGameBoy} />}
-              {stage === "pair" && <Pair />}
-              {stage === "main" && (
-                <Main tab={tab} setTab={setTab} swaps={swaps} setSwaps={setSwaps} onOpen={openGameBoy} />
-              )}
-            </div>
-          </div>
+          <KagiApp onOpen={() => setSheet(true)} full={!desktop} />
         </div>
       </div>
 
-      {!desktop && (
-        <div className={`gb-sheet ${sheet ? "is-open" : ""}`} aria-hidden={!sheet}>
-          <button className="gb-sheet-scrim" aria-label="Close the Game Boy" onClick={() => !asking && setSheet(false)} tabIndex={sheet ? 0 : -1} />
-          <div className="gb-sheet-body" role="dialog" aria-label="Your Game Boy">
-            <button className="gb-sheet-grab" onClick={() => !asking && setSheet(false)} aria-label="Hide the Game Boy" tabIndex={sheet ? 0 : -1}>
-              <i />
-            </button>
-            <p className="gb-sheet-title">{asking ? "Your Game Boy needs you" : "Your Game Boy"}</p>
-            <GameBoyShell active={sheet} />
-          </div>
+      <div className={`gb-sheet ${sheet ? "is-open" : ""}`} aria-hidden={!sheet}>
+        <button className="gb-sheet-scrim" aria-label="Close the Game Boy" onClick={() => !asking && setSheet(false)} tabIndex={sheet ? 0 : -1} />
+        <div className="gb-sheet-body" role="dialog" aria-label="Your Game Boy">
+          <button className="gb-sheet-grab" onClick={() => !asking && setSheet(false)} aria-label="Hide the Game Boy" tabIndex={sheet ? 0 : -1}>
+            <i />
+          </button>
+          <p className="gb-sheet-title">{asking ? "Your Game Boy needs you" : "Your Game Boy"}</p>
+          <GameBoyShell active={sheet} />
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The app's screen, everything you'd see on the phone. Used on its own at /app and inside the phone
+ * beside the Game Boy at /demo. `onOpen` brings the Game Boy into view where it isn't already; `full`
+ * makes it the whole page (a phone), with its tab bar and sheets fixed to the viewport.
+ */
+export function KagiApp({ onOpen, full = false }: { onOpen?: () => void; full?: boolean }) {
+  const s = useSession();
+  const [tab, setTab] = useState<Tab>("wallet");
+  const [swaps, setSwaps] = useState<SwapRecord[]>([]);
+  const stage = !s.powered ? "connect" : s.chip.state === "none" ? "setup" : s.chip.state === "locked" ? "unlock" : !s.chip.paired ? "pair" : "main";
+  return (
+    <div className={`kapp app-screen ${full ? "is-full" : ""}`}>
+      <StatusBar />
+      <div className="app-view" key={stage}>
+        {stage === "connect" && <Connect onOpen={onOpen} />}
+        {stage === "setup" && <Setup onOpen={onOpen} />}
+        {stage === "unlock" && <Unlock onOpen={onOpen} />}
+        {stage === "pair" && <Pair />}
+        {stage === "main" && <Main tab={tab} setTab={setTab} swaps={swaps} setSwaps={setSwaps} onOpen={onOpen} />}
+      </div>
     </div>
   );
 }
@@ -122,7 +138,7 @@ function StatusBar() {
       <strong className="app-brand">kagiboy</strong>
       <span className={`app-link ${linked ? "is-on" : ""}`}>
         <span className="app-link-dot" aria-hidden />
-        {!s.powered ? "No cartridge" : linked ? "Cartridge linked" : "Not paired"}
+        {!s.powered ? "No cartridge" : s.chip.state === "locked" ? "Locked" : s.chip.state === "none" ? "Setting up" : linked ? "Cartridge linked" : "Not paired"}
       </span>
     </div>
   );
@@ -151,7 +167,7 @@ function Radar({ live = false }: { live?: boolean }) {
   );
 }
 
-function Connect({ onOpen }: { onOpen: () => void }) {
+function Connect({ onOpen }: { onOpen?: () => void }) {
   const s = useSession();
   return (
     <Hero art={<Radar />} title="Connect your kagiboy">
@@ -160,7 +176,7 @@ function Connect({ onOpen }: { onOpen: () => void }) {
         className="pill-btn"
         onClick={() => {
           s.powerOn();
-          onOpen();
+          onOpen?.();
         }}
       >
         Switch on
@@ -169,7 +185,7 @@ function Connect({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-function Setup({ onOpen }: { onOpen: () => void }) {
+function Setup({ onOpen }: { onOpen?: () => void }) {
   return (
     <Hero art={<Radar live />} title="Set up on your Game Boy">
       <ol className="steps">
@@ -189,18 +205,19 @@ function Setup({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-function Unlock({ onOpen }: { onOpen: () => void }) {
+function Unlock({ onOpen }: { onOpen?: () => void }) {
   return (
     <Hero art={<Radar live />} title="Unlock with your PIN">
-      <p className="hero-lede">Enter your PIN on the Game Boy. Arrows change digits, A confirms.</p>
+      <p className="hero-lede">Press START on the Game Boy, then enter your PIN. Arrows change digits, A confirms.</p>
       <OpenGameBoy onOpen={onOpen} />
     </Hero>
   );
 }
 
-function OpenGameBoy({ onOpen }: { onOpen: () => void }) {
+function OpenGameBoy({ onOpen }: { onOpen?: () => void }) {
+  if (!onOpen) return null;
   return (
-    <button className="pill-btn ghost only-phone" onClick={onOpen}>
+    <button className="pill-btn ghost" onClick={onOpen}>
       Open the Game Boy
     </button>
   );
@@ -226,7 +243,7 @@ function Pair() {
   return (
     <Hero art={<Radar live />} title="Pair this phone">
       <p className="hero-lede">Both screens will show the same 6-digit code. Accept it on the Game Boy, and this phone can ask the cartridge to sign.</p>
-      {s.phone.pairState === "refused" && <p className="hero-note">Pairing was turned down on the Game Boy.</p>}
+      {s.phone.pairState === "refused" && <p className="hero-note">{s.phone.pairError || "Pairing was turned down on the Game Boy."}</p>}
       <button className="pill-btn" onClick={() => s.phone.pair()}>
         Pair cartridge
       </button>
@@ -254,7 +271,7 @@ function Main({
   setTab: (t: Tab) => void;
   swaps: SwapRecord[];
   setSwaps: React.Dispatch<React.SetStateAction<SwapRecord[]>>;
-  onOpen: () => void;
+  onOpen?: () => void;
 }) {
   const [sheet, setSheet] = useState<null | "send" | "receive">(null);
   return (
@@ -316,6 +333,12 @@ function Wallet({ onSend, onReceive, onSwap, swaps }: { onSend: () => void; onRe
           </header>
           <Amount value={evm} decimals={18} symbol={net.symbol} />
           <p className="acct-addr">{addr ? short(addr.evm) : "…"}</p>
+          {evm === 0n && net.faucet && (
+            <a className="acct-fund" href={net.faucet} target="_blank" rel="noreferrer" onClick={() => addr && navigator.clipboard?.writeText(addr.evm).catch(() => {})}>
+              Get test {net.symbol} ↗
+            </a>
+          )}
+          {evm === 0n && !net.faucet && net.fundHint && <p className="acct-hint">{net.fundHint}</p>}
         </article>
       </section>
 
@@ -377,7 +400,7 @@ function Amount({ value, decimals, symbol }: { value: bigint | null; decimals: n
 
 /* ---------- swap ---------- */
 
-function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen: () => void }) {
+function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?: () => void }) {
   const s = useSession();
   const [tokens, setTokens] = useState<Token[] | null>(null);
   const [loadErr, setLoadErr] = useState("");
@@ -467,7 +490,7 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen:
     try {
       const req = s.chip.requestSignature({ chain: "swap", swap: intentFor(q) });
       onRecord(rec);
-      onOpen();
+      onOpen?.();
       const r = await req.result;
       if (r.approved) {
         onRecord({ ...rec, state: "signed" });
@@ -611,12 +634,14 @@ function TokenButton({ token, onClick }: { token: Token | null; onClick: () => v
   );
 }
 
+/** The token's real logo with its chain's logo in the corner (local files, see scripts/fetch_token_icons.py). */
 function TokenIcon({ token }: { token: Token }) {
-  const c = chainOf(token.chain);
+  const src = TOKEN_ICONS[`${token.chain}:${token.address.toLowerCase()}`] ?? SYMBOL_ICONS[token.symbol.toUpperCase()];
+  const chain = CHAIN_ICONS[token.chain];
   return (
-    <span className="tok-icon" style={{ ["--c" as string]: c.color }} aria-hidden>
-      {token.symbol.slice(0, 1)}
-      <i />
+    <span className="tok-icon" aria-hidden>
+      {src ? <img src={src} alt="" loading="lazy" /> : <b>{token.symbol.slice(0, 1)}</b>}
+      {chain && <img className="tok-chain" src={chain} alt="" loading="lazy" />}
     </span>
   );
 }
@@ -723,7 +748,7 @@ function Activity({ swaps }: { swaps: SwapRecord[] }) {
   );
 }
 
-function Cartridge({ onOpen }: { onOpen: () => void }) {
+function Cartridge({ onOpen }: { onOpen?: () => void }) {
   const s = useSession();
   return (
     <div className="cartridge">
@@ -736,12 +761,14 @@ function Cartridge({ onOpen }: { onOpen: () => void }) {
         </div>
       </div>
       <ul className="settings">
-        <li>
-          <span>Game Boy</span>
-          <button className="link-like only-phone" onClick={onOpen}>
-            Open
-          </button>
-        </li>
+        {onOpen && (
+          <li>
+            <span>Game Boy</span>
+            <button className="link-like" onClick={onOpen}>
+              Open
+            </button>
+          </li>
+        )}
         <li>
           <span>Sound</span>
           <button className="link-like" onClick={() => s.toggleMute()}>

@@ -40,6 +40,7 @@ export const CMD = {
   RESTORE: 0x0e,
   NETWORK: 0x0f,
   PAIR: 0x10,
+  PHONE: 0x11,
 } as const;
 
 export const CMD_NAME: Record<number, string> = Object.fromEntries(

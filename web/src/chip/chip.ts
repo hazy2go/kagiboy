@@ -26,6 +26,8 @@ export interface Persisted {
   triesLeft: number;
   /** a phone was approved on the Game Boy; it goes with the wallet (a wipe or a new wallet forgets it) */
   paired?: boolean;
+  /** the paired phone, as the Game Boy's Phone screen shows it */
+  phone?: { name: string; id: string; since: number };
 }
 
 export interface Storage {
@@ -177,14 +179,31 @@ export class CartChip {
   }
 
   private pairing: { code: string; resolve: (ok: boolean) => void } | null = null;
+  private pairingName = "PHONE";
+  /** until when (ms) the Game Boy accepts a new phone; opened from its Phone screen */
+  private pairWindowUntil = 0;
+
+  get pairWindowOpen() {
+    return Date.now() < this.pairWindowUntil;
+  }
+
+  /** The paired phone, if any. */
+  get phone() {
+    return this.paired ? (this.persisted?.phone ?? { name: "PHONE", id: "----", since: 0 }) : null;
+  }
 
   /**
    * The phone asks to pair. Both screens show the same random code and the owner accepts on the
    * Game Boy (Bluetooth numeric comparison), so a stranger's phone in range can't join quietly.
    */
-  requestPairing(): Promise<boolean> {
+  requestPairing(name = "PHONE"): Promise<boolean> {
     if (!this.persisted || !this.unlocked) return Promise.reject(new Error("unlock the cartridge first"));
     if (this.pending) return Promise.reject(new Error("a request is already waiting on the Game Boy"));
+    // once a phone is paired, a new one may only ask while the owner has opened the window on the Game Boy
+    if (this.paired && !this.pairWindowOpen) {
+      return Promise.reject(new Error("On the Game Boy, open SELECT, then Phone, then Pair new phone."));
+    }
+    this.pairingName = cleanName(name);
     this.pairing?.resolve(false);
     const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000;
     const code = String(n).padStart(6, "0");
@@ -199,6 +218,7 @@ export class CartChip {
     const p = this.persisted;
     if (!p?.paired) return;
     delete p.paired;
+    delete p.phone;
     this.storage.save(p);
     this.balances = { sol: null, evm: null };
     this.emit();
@@ -447,12 +467,42 @@ export class CartChip {
         if (arg !== 1 && arg !== 2) return { status: 1 };
         this.pairing = null;
         if (arg === 1) {
+          // a new phone replaces the old one: one cartridge, one phone
           this.persisted.paired = true;
+          this.persisted.phone = { name: this.pairingName, id: hex(crypto.getRandomValues(new Uint8Array(2))).replace(" ", "").toUpperCase(), since: Date.now() };
           this.storage.save(this.persisted);
+          this.pairWindowUntil = 0;
         }
         pr.resolve(arg === 1);
         this.emit();
         return { status: 0 };
+      }
+
+      case CMD.PHONE: {
+        // the Game Boy's Phone screen: 0 who is paired, 1 forget it, 2 open the pairing window, 3 close it
+        const per = this.persisted;
+        if (!this.unlocked || !per) return { status: 1 };
+        if (arg === 0) {
+          const ph = this.phone;
+          if (!ph) return { status: 1 };
+          return { status: 0, data: `${ph.name}\0${ph.id}\0${shortDate(ph.since)}\0` };
+        }
+        if (arg === 1) {
+          delete per.paired;
+          delete per.phone;
+          this.storage.save(per);
+          this.balances = { sol: null, evm: null };
+          this.dropPairing();
+          this.emit();
+          return { status: 0 };
+        }
+        if (arg === 2 || arg === 3) {
+          this.pairWindowUntil = arg === 2 ? Date.now() + 60_000 : 0;
+          if (arg === 3) this.dropPairing();
+          this.emit();
+          return { status: 0 };
+        }
+        return { status: 1 };
       }
 
       case CMD.NETWORK: {
@@ -683,6 +733,18 @@ export function exact(units: bigint, decimals: number) {
 }
 
 const SWAP_SYMBOL = /^[A-Za-z0-9.]{1,8}$/;
+
+/** A phone's name as the Game Boy can show it: capitals, digits and a few marks, 14 characters. */
+function cleanName(name: string) {
+  const t = name.toUpperCase().replace(/[^A-Z0-9' .-]/g, "").trim().slice(0, 14);
+  return t || "PHONE";
+}
+
+function shortDate(ms: number) {
+  if (!ms) return "";
+  const d = new Date(ms);
+  return `${["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][d.getMonth()]} ${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function sideName(side: SwapSide): string {
   if (side.chain === "sol") return "SOLANA";

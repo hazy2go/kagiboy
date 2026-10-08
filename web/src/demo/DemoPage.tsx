@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, 
 import { Link } from "react-router-dom";
 import { BusMonitor } from "./BusMonitor";
 import { GameBoyShell } from "./GameBoyShell";
-import { PhoneApp } from "./PhoneApp";
+import { KagiApp } from "../app/AppPage";
 import { useSession } from "./session";
 import "./demo.css";
 
@@ -68,7 +68,10 @@ export function DemoPage() {
         <div className="wire" aria-hidden>
           <span className="px">BLUETOOTH</span>
         </div>
-        <PhoneApp />
+        <div className="phone kapp-phone">
+          <div className="phone-notch" />
+          <KagiApp />
+        </div>
         <BtLink rig={rigRef} radio={radio} />
       </div>
 
@@ -190,7 +193,7 @@ function nextStep(s: ReturnType<typeof useSession>): string {
     case "none":
       return "Press START, mash the buttons, hold “shake”, write down your 12 words and pick a PIN.";
     case "locked":
-      return "Enter your PIN on the Game Boy (arrows change digits, A confirms).";
+      return "Press START on the Game Boy, then enter your PIN (arrows change digits, A confirms).";
     default:
       if (s.chip.pairingCode) return "Check the Game Boy shows the same code as the phone, then press A on it to pair.";
       if (!s.chip.paired) return "Now pair your phone: open the Wallet, tap “Pair cartridge”, then accept the code on the Game Boy.";
@@ -271,7 +274,7 @@ function MobileDemo() {
           <GameBoyShell active={tab === "gb"} />
         </section>
         <section className="pane pane-phone" aria-label="Wallet app" inert={tab !== "phone"}>
-          <PhoneApp bare />
+          <KagiApp />
         </section>
         <section className="pane pane-bus" aria-label="Cartridge bus" inert={tab !== "bus"}>
           <BusMonitor />

@@ -385,6 +385,35 @@ await frames(10);
 console.log("back on Ethereum:", followed === 11155111 ? "OK" : "WRONG", followed);
 chip.onNetwork = null;
 
+// the Phone screen: who is paired, and forgetting it from the Game Boy
+let second = "";
+await chip.requestPairing("STRANGER").catch((e) => (second = (e as Error).message));
+console.log("second phone refused while the window is closed:", second.includes("Pair new phone") ? "OK" : "WRONG", second);
+await step("SELECT"); // menu
+await step("DOWN"); // Phone
+await step("A");
+await frames(20);
+snap("phone-screen");
+const info = chip.log.filter((e) => e.cmd === "PHONE" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+console.log("Phone screen names the paired phone:", info.length > 10 ? "OK" : "WRONG");
+await step("SELECT"); // forget?
+await frames(10);
+snap("phone-forget");
+await step("A");
+await frames(120);
+console.log("forgotten from the Game Boy:", !chip.paired ? "OK" : "WRONG");
+snap("phone-none");
+await step("B"); // back to the menu
+await step("B"); // home: asks to pair again
+await frames(30);
+const again = chip.requestPairing("IPHONE");
+await frames(40);
+await step("A");
+console.log("a phone pairs again after forgetting:", (await again) && chip.paired && chip.phone?.name === "IPHONE" ? "OK" : "WRONG");
+await frames(100);
+chip.setBalance("sol", 2_480_000_000n);
+chip.setBalance("evm", parseEther("0.42"));
+
 // power cycle: keys survive, RAM does not
 gb = new GameBoy(rom);
 chip.reset();

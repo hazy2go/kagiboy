@@ -93,14 +93,19 @@ export class Phone {
   pairState: "idle" | "waiting" | "refused" = "idle";
 
   /** Ask the cartridge to pair; the owner checks the code and accepts on the Game Boy. */
+  /** why the last pairing attempt didn't go through, for the app to show */
+  pairError = "";
+
   async pair() {
     this.pairState = "waiting";
+    this.pairError = "";
     this.emit();
     let ok = false;
     try {
-      ok = await this.chip.requestPairing();
-    } catch {
+      ok = await this.chip.requestPairing(deviceName());
+    } catch (e) {
       ok = false;
+      this.pairError = (e as Error).message;
     }
     this.pairState = ok ? "idle" : "refused";
     this.emit();
@@ -361,4 +366,15 @@ export function explainError(e: unknown): { short: FailReason; long: string } {
     return { short: "NETWORK", long: "Couldn't reach the network. Check your connection and try again." };
   }
   return { short: "REJECTED", long: raw.split("\n")[0] };
+}
+
+/** A name for this phone on the Game Boy's Phone screen. */
+function deviceName() {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  if (/iPhone/.test(ua)) return "IPHONE";
+  if (/iPad/.test(ua)) return "IPAD";
+  if (/Android/.test(ua)) return "ANDROID PHONE";
+  if (/Macintosh/.test(ua)) return "MAC";
+  if (/Windows/.test(ua)) return "WINDOWS PC";
+  return "PHONE";
 }
