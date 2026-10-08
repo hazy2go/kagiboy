@@ -78,7 +78,7 @@ const COMPARE = {
     { label: "You approve on a screen the phone can't draw on", cells: [true, true, false] },
     { label: "The screen device has no Wi-Fi and runs no apps", cells: [true, "Varies", false] },
     { label: "12 or 24 words restore it in any standard wallet", cells: [true, true, true] },
-    { label: "Swaps from the companion app", cells: ["0.1% fee", "Through partners", true] },
+    { label: "Swaps from the companion app", cells: [true, "Through partners", true] },
     { label: "Outside security audit", cells: ["Before sale", true, "Varies"] },
     { label: "Something you'd keep on a shelf", cells: [true, false, false] },
   ],
