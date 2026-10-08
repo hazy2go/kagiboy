@@ -253,20 +253,6 @@ function MobileDemo() {
           </Link>
           <span className="net">testnets</span>
         </div>
-        <p className="next-step" aria-live="polite">
-          <span className="px">NEXT</span>
-          <span>{nextStep(s)}</span>
-          {!s.powered && (
-            <button className="btn btn-ink btn-sm" onClick={() => s.powerOn()}>
-              Switch on
-            </button>
-          )}
-          {needsPair && tab !== "phone" && (
-            <button className="btn btn-ink btn-sm" onClick={() => setTab("phone")}>
-              Go to Wallet
-            </button>
-          )}
-        </p>
       </header>
 
       <main className="panes" style={{ "--at": at } as CSSProperties}>
