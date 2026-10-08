@@ -2,18 +2,19 @@ import { useEffect, useRef } from "react";
 import "./flea.css";
 
 /** The origin story on a Game Boy screen: an original pixel loop, played only while it's in view. */
-export function FleaMarketGameBoy({ className = "" }: { className?: string }) {
+export function FleaMarketGameBoy({ className = "", scene = "flea" }: { className?: string; scene?: "flea" | "chain" }) {
   const lcd = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = lcd.current;
     if (!canvas) return;
-    let loop: import("../landing/fleaLoop").FleaLoop | null = null;
+    let loop: { still(): void; start(): void; stop(): void } | null = null;
     let visible = false;
     let gone = false;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    import("../landing/fleaLoop").then(({ FleaLoop }) => {
+    const load = scene === "chain" ? import("./chainLoop").then((m) => m.ChainLoop) : import("../landing/fleaLoop").then((m) => m.FleaLoop);
+    load.then((Loop) => {
       if (gone) return;
-      loop = new FleaLoop(canvas);
+      loop = new Loop(canvas);
       loop.still();
       if (visible && !reduced) loop.start();
     });
@@ -29,14 +30,18 @@ export function FleaMarketGameBoy({ className = "" }: { className?: string }) {
       io.disconnect();
       loop?.stop();
     };
-  }, []);
+  }, [scene]);
   return (
     <figure className={`flea-gb ${className}`}>
       <img src="/renders/front-ortho.webp" alt="" loading="lazy" />
       <canvas
         ref={lcd}
                 role="img"
-        aria-label="Pixel animation: a kid walks through a flea market, finds a Game Boy on a table and holds it up as music plays"
+        aria-label={
+          scene === "chain"
+            ? "Pixel animation: a little character hops along a chain of blocks collecting coins, then puts its key in a safe"
+            : "Pixel animation: a kid walks through a flea market, finds a Game Boy on a table and holds it up as music plays"
+        }
       />
     </figure>
   );

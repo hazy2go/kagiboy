@@ -81,113 +81,14 @@
 
 /* each part of the story has a small object beside it */
 .story-part {
-  display: grid;
-  grid-template-columns: minmax(0, 38rem) minmax(0, 1fr);
-  gap: clamp(32px, 6vw, 96px);
-  align-items: start;
+  max-width: 38rem;
 }
 
 .story-part + .story-part {
   margin-top: clamp(40px, 6vh, 64px);
 }
 
-.story-part > aside {
-  position: sticky;
-  top: 120px;
-  justify-self: center;
-}
 
-/* the first three games, as plain cartridges on a shelf */
-.shelf {
-  display: grid;
-  gap: 14px;
-  width: min(100%, 260px);
-}
-
-.shelf-cart {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  height: 64px;
-  padding: 8px 10px 8px 8px;
-  border-radius: 6px 18px 6px 6px;
-  background: linear-gradient(180deg, #f3f1ec, #e2dfd6);
-  box-shadow:
-    inset 0 1px 0 #fff,
-    0 1px 1px rgba(40, 44, 70, 0.08),
-    0 12px 22px -16px rgba(40, 44, 70, 0.45);
-  rotate: calc((var(--i) - 1) * 1.2deg); /* rotate, not transform: the print-in feed animates transform */
-}
-
-.shelf-ridges {
-  width: 22px;
-  margin-right: 10px;
-  border-radius: 3px;
-  background: repeating-linear-gradient(180deg, rgba(60, 58, 50, 0.16) 0 2px, transparent 2px 6px);
-}
-
-.shelf-label {
-  flex: 1;
-  display: grid;
-  align-content: center;
-  gap: 3px;
-  padding: 0 12px;
-  border-radius: 3px;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(40, 44, 70, 0.08);
-}
-
-.shelf-label b {
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--kb-ink);
-}
-
-.shelf-label span {
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--kb-ink-3);
-}
-
-/* less is the feature */
-.less {
-  width: min(100%, 260px);
-  padding: 22px 24px 24px;
-  border-radius: 22px;
-  background: #fff;
-  box-shadow:
-    0 0 0 1px rgba(31, 35, 48, 0.07),
-    0 18px 36px -26px rgba(40, 44, 70, 0.45);
-}
-
-.less .less-title {
-  margin-bottom: 10px !important;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  color: var(--kb-ink-3);
-}
-
-.less ul {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-  font-size: 15px;
-  color: var(--kb-ink-3);
-}
-
-.less s {
-  text-decoration-color: rgba(194, 64, 93, 0.6);
-  text-decoration-thickness: 1.5px;
-}
-
-.less ul.has {
-  margin-bottom: 0;
-  color: var(--kb-ink);
-  font-weight: 560;
-}
 
 .story p {
   font-size: clamp(18px, 1.5vw, 20px);
@@ -366,8 +267,7 @@
 }
 
 @media (max-width: 860px) {
-  .about-hero,
-  .story-part {
+  .about-hero {
     grid-template-columns: 1fr;
   }
 
@@ -377,10 +277,6 @@
     width: min(230px, 58vw);
   }
 
-  .story-part > aside {
-    position: static;
-    justify-self: start;
-  }
 
   .about-links a:not(.btn) {
     display: none;

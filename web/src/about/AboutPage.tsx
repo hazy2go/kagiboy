@@ -35,12 +35,6 @@ const WHY = [
   },
 ] as const;
 
-const SHELF = [
-  { name: "MARIO LAND", note: "NEVER BEAT IT" },
-  { name: "CASTLEVANIA", note: "THEN THIS" },
-  { name: "POKEMON YELLOW", note: "AND THIS" },
-] as const;
-
 const PLAYER = [
   ["NAME", "HAZY"],
   ["BASE", "JAPAN"],
@@ -96,7 +90,7 @@ export function AboutPage() {
             something magical.
           </p>
         </div>
-        <FleaMarketGameBoy className="about-flea" />
+        <FleaMarketGameBoy className="about-flea" scene="chain" />
       </header>
 
       <section className="story" aria-label="How kagiboy started">
@@ -113,17 +107,6 @@ export function AboutPage() {
               Game Boy is still my favourite.
             </p>
           </div>
-          <aside className="shelf" aria-label="The first three games">
-            {SHELF.map((g, i) => (
-              <div key={g.name} className="shelf-cart print-in" style={{ ["--i" as string]: i }}>
-                <span className="shelf-ridges" aria-hidden />
-                <span className="shelf-label">
-                  <b className="px">{g.name}</b>
-                  <span className="px">{g.note}</span>
-                </span>
-              </div>
-            ))}
-          </aside>
         </div>
         <div className="story-part">
           <div>
@@ -138,22 +121,6 @@ export function AboutPage() {
               The cartridge would need a tiny radio to hear the phone, but it would only ever carry public data.
             </p>
           </div>
-          <aside className="less print-in" aria-label="What a Game Boy doesn't have">
-            <p className="px less-title">WHAT IT DOESN'T HAVE</p>
-            <ul>
-              {["Wi-Fi", "Touchscreen", "App store", "Camera", "Updates over the air"].map((f) => (
-                <li key={f}>
-                  <s>{f}</s>
-                </li>
-              ))}
-            </ul>
-            <p className="px less-title">WHAT IT HAS</p>
-            <ul className="has">
-              <li>A screen</li>
-              <li>Eight buttons</li>
-              <li>A slot for the cartridge</li>
-            </ul>
-          </aside>
         </div>
       </section>
 
