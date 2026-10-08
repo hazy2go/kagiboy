@@ -392,6 +392,8 @@
 .security,
 .inside,
 .status,
+.compare,
+.faq,
 .demo-cta,
 .waitlist {
   position: relative;
@@ -1436,4 +1438,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* 21st.dev sections: roadmap timeline, comparison, questions */
+.road-21 {
+  max-width: 46rem;
+}
+
+.faq > div:last-child {
+  max-width: 46rem;
+}
+
+.compare .sec-head,
+.faq .sec-head {
+  margin-bottom: clamp(32px, 5vh, 56px);
 }

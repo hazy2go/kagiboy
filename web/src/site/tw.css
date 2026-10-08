@@ -1,0 +1,27 @@
+/* Tailwind for the site's 21st.dev sections only: no global reset, classes collected from src/site
+   alone, so every existing landing style stays exactly as it is. */
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "./";
+
+@theme inline {
+  --color-background: var(--s-bg);
+  --color-foreground: var(--s-fg);
+  --color-card: var(--s-card);
+  --color-muted: var(--s-muted);
+  --color-muted-foreground: var(--s-fg-2);
+  --color-border: var(--s-line);
+  --font-px: "Pixel Operator", ui-monospace, monospace;
+  --font-sans: "Funnel Sans", system-ui, sans-serif;
+  --font-display: "Funnel Display", "Funnel Sans", system-ui, sans-serif;
+}
+
+.kb {
+  --s-bg: #ffffff;
+  --s-fg: #1f2330;
+  --s-fg-2: #5b6274;
+  --s-card: #ffffff;
+  --s-muted: #f3f4f8;
+  --s-line: rgba(31, 35, 48, 0.1);
+}

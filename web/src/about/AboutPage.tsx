@@ -1,17 +1,19 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./about.css";
+import { MasonryLightbox } from "../site/ui/masonry-lightbox";
+import "../site/tw.css";
 
 // Photos of kagiboy on hazy's own Game Boy (the real ROM from a flash cart). The section hides
 // itself when the list is empty.
 const PLACEHOLDER_PHOTOS = false;
-const GALLERY: { src: string; caption: string; alt: string; wide?: boolean; focus?: string }[] = [
-  { src: "/gallery/boot.webp", caption: "PRESS START", alt: "A grey Game Boy on a wooden desk next to a tablet, showing the kagiboy title screen", wide: true },
-  { src: "/gallery/welcome.webp", caption: "NO WALLET YET", alt: "Hands holding the Game Boy on the kagiboy welcome screen: new wallet or restore" },
-  { src: "/gallery/mash.webp", caption: "STEP 1, MASH 17/40", alt: "Thumbs mashing the buttons while the Game Boy counts to forty" },
-  { src: "/gallery/shake.webp", caption: "STEP 2, SHAKE IT", alt: "The Game Boy asking to be shaken for a few seconds" },
-  { src: "/gallery/pin.webp", caption: "WELCOME BACK, PIN", alt: "The Game Boy on a desk asking for the four-digit PIN" },
-  { src: "/gallery/home.webp", caption: "UNLOCKED, 2.48 SOL", alt: "Hands holding the Game Boy on the wallet home screen with Solana and Ethereum balances", wide: true, focus: "50% 30%" },
+const GALLERY: { src: string; w: number; h: number; caption: string; alt: string; wide?: boolean; focus?: string }[] = [
+  { src: "/gallery/boot.webp", w: 1400, h: 1317, caption: "PRESS START", alt: "A grey Game Boy on a wooden desk next to a tablet, showing the kagiboy title screen", wide: true },
+  { src: "/gallery/welcome.webp", w: 1120, h: 1400, caption: "NO WALLET YET", alt: "Hands holding the Game Boy on the kagiboy welcome screen: new wallet or restore" },
+  { src: "/gallery/mash.webp", w: 1120, h: 1400, caption: "STEP 1, MASH 17/40", alt: "Thumbs mashing the buttons while the Game Boy counts to forty" },
+  { src: "/gallery/shake.webp", w: 1120, h: 1400, caption: "STEP 2, SHAKE IT", alt: "The Game Boy asking to be shaken for a few seconds" },
+  { src: "/gallery/pin.webp", w: 1120, h: 1400, caption: "WELCOME BACK, PIN", alt: "The Game Boy on a desk asking for the four-digit PIN" },
+  { src: "/gallery/home.webp", w: 1120, h: 1400, caption: "UNLOCKED, 2.48 SOL", alt: "Hands holding the Game Boy on the wallet home screen with Solana and Ethereum balances", wide: true, focus: "50% 30%" },
 ];
 
 const WHY = [
@@ -165,17 +167,9 @@ export function AboutPage() {
                 : "The same ROM as the live demo, on my own Game Boy, loaded from a flash cart. The keys in this test build live in the ROM's stand-in chip until the cartridge exists."}
             </p>
           </header>
-          <div className="gallery-grid">
-            {GALLERY.map((g) => (
-              <figure key={g.src} className={g.wide ? "wide" : undefined}>
-                <img src={g.src} alt={g.alt} loading="lazy" style={g.focus ? { objectPosition: g.focus } : undefined} />
-                <figcaption className="px">
-                  {PLACEHOLDER_PHOTOS && <span className="mock">MOCKUP</span>}
-                  {g.caption}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          <MasonryLightbox
+            images={GALLERY.map((g, i) => ({ id: i + 1, src: g.src, alt: g.alt, description: g.caption, width: g.w, height: g.h }))}
+          />
         </section>
       )}
 

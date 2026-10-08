@@ -4,6 +4,11 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Waitlist } from "./Waitlist";
+import { CircuitBoard, Cpu, Gamepad2, PackageCheck } from "lucide-react";
+import { Timeline, type TimelineStep } from "../site/ui/timeline";
+import { Comparison } from "../site/ui/comparison";
+import { Accordion } from "../site/ui/accordion";
+import "../site/tw.css";
 import "./landing.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -52,12 +57,40 @@ const BOM = [
   ["4MB FLASH", "FIRMWARE"],
 ] as const;
 
-const ROADMAP = [
-  ["NOW", "Game Boy software, chip logic and phone app, running today."],
-  ["Q4 2026", "Dev board: Pico 2 W, SE050 kit, accelerometer, on a flash cart."],
-  ["Q1 2027", "Custom PCB, power tests on a real DMG, signed firmware, link-cable backup."],
-  ["THEN", "Small batch, and an outside security review before real funds."],
-] as const;
+const ROADMAP: TimelineStep[] = [
+  { when: "NOW", title: "The software runs", body: "Game Boy software, the chip's logic and the phone app, working end to end on test networks.", icon: Gamepad2, now: true },
+  { when: "Q4 2026", title: "Dev board", body: "Pico 2 W, an SE050 kit and the accelerometer, wired to a flash cart in a real Game Boy.", icon: Cpu },
+  { when: "Q1 2027", title: "The real cartridge", body: "Custom PCB, power tests on a real DMG, signed firmware and link-cable backup.", icon: CircuitBoard },
+  { when: "THEN", title: "First batch", body: "A small numbered batch, and an outside security review before it holds real funds.", icon: PackageCheck },
+];
+
+const COMPARE = {
+  caption: "kagiboy compared with a typical hardware wallet and a phone wallet",
+  columns: [
+    { name: "kagiboy", summary: "A cartridge for the Game Boy you already own", featured: true },
+    { name: "Hardware wallet", summary: "A Ledger, a Trezor" },
+    { name: "Phone wallet", summary: "Phantom, MetaMask" },
+  ],
+  rows: [
+    { label: "Keys never touch your phone or computer", cells: [true, true, false] },
+    { label: "You approve on a screen the phone can't draw on", cells: [true, true, false] },
+    { label: "The screen device has no Wi-Fi and runs no apps", cells: [true, "Varies", false] },
+    { label: "12 or 24 words restore it in any standard wallet", cells: [true, true, true] },
+    { label: "Swaps from the companion app", cells: ["0.1% fee", "Through partners", true] },
+    { label: "Outside security audit", cells: ["Before sale", true, "Varies"] },
+    { label: "Something you'd keep on a shelf", cells: [true, false, false] },
+  ],
+};
+
+const FAQ = [
+  { id: "breaks", title: "What if my cartridge breaks?", content: "Your 12 words bring everything back, in a new kagiboy or in any regular wallet app like Phantom or MetaMask. If the Game Boy breaks, any Game Boy will do." },
+  { id: "gameboy", title: "Do I need a real Game Boy?", content: "Yes, kagiboy is a cartridge for the original Game Boy. Until it ships, the live demo runs the same Game Boy software in your browser." },
+  { id: "phone", title: "Can my phone move my money?", content: "No. The phone can only ask. The cartridge shows the real amount and address on the Game Boy's own screen and signs only when you hold A. Its Bluetooth carries requests and public addresses, never keys." },
+  { id: "chains", title: "Which chains does it support?", content: "Solana, plus Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. One key covers every EVM network, and the Game Boy names the network on every request." },
+  { id: "swaps", title: "How do swaps work?", content: "The app gets live quotes from SODAX, and the Game Boy shows what you pay, the least you'll get and the fees before you sign. kagiboy takes 0.1% and SODAX takes 0.1%. In this demo the swap is signed but never sent." },
+  { id: "buy", title: "When can I buy one?", content: "Not yet. The software works today and the hardware is in progress. Join the waitlist and you'll get one email when the first small batch is ready, after an outside security review." },
+  { id: "nintendo", title: "Is this made by Nintendo?", content: "No. kagiboy is an independent project. Game Boy is a trademark of Nintendo." },
+];
 
 export function Landing() {
   const stageRef = useRef<HTMLElement>(null);
@@ -505,6 +538,14 @@ export function Landing() {
         </div>
       </section>
 
+      <section className="compare" aria-labelledby="compare-title">
+        <header className="sec-head">
+          <h2 id="compare-title">How it compares</h2>
+          <p>Not a Ledger rival, just a different place to keep your keys, with the same rules underneath.</p>
+        </header>
+        <Comparison {...COMPARE} />
+      </section>
+
       <section className="inside" id="inside">
         <header className="sec-head">
           <h2>Made from parts you can buy today</h2>
@@ -544,14 +585,9 @@ export function Landing() {
           <h2>Where we're at</h2>
           <p>The software runs today. The cartridge is in the works, and here's the plan.</p>
         </header>
-        <ol className="road">
-          {ROADMAP.map(([when, what], i) => (
-            <li key={when} className={`road-step print-in ${i === 0 ? "is-now" : ""}`} style={{ ["--i" as string]: i }}>
-              <span className="px">{when}</span>
-              <p>{what}</p>
-            </li>
-          ))}
-        </ol>
+        <div className="road-21">
+          <Timeline steps={ROADMAP} />
+        </div>
       </section>
 
       <section className="demo-cta">
@@ -571,6 +607,13 @@ export function Landing() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="faq" aria-labelledby="faq-title">
+        <header className="sec-head">
+          <h2 id="faq-title">Questions</h2>
+        </header>
+        <Accordion items={FAQ} maxPanelHeight={320} />
       </section>
 
       <section className="waitlist" id="waitlist">
