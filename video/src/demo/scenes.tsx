@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, DISPLAY, EASE, Glow, PX, SANS, a } from "../ui";
 import { Console } from "../Three";
+import { Explode } from "./ExplodeView";
+import type { ExplodeAnchor } from "../../../web/src/landing/explode";
 import { poseAt as poseAtP } from "../../../web/src/landing/scene";
 import {
   AT,
@@ -44,59 +46,61 @@ const useT = () => {
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const lerp = (u: number, v: number, t: number) => u + (v - u) * t;
 
-/* 0 · how kagiboy works: the console and the cartridge come apart */
-const OPEN_LABELS: [string, string, number, number, "left" | "right"][] = [
-  // eyebrow, line, x, y (frame px, measured on the final pose), anchor
-  ["GAME BOY", "Screen and buttons only", 1085, 690, "right"],
-  ["CARTRIDGE", "Chip, keys, Bluetooth", 1515, 352, "left"],
+/* 0 · how kagiboy works: an isometric exploded view of the console and the cartridge */
+type Tag = { anchor: ExplodeAnchor; eyebrow: string; line: string; side: "left" | "right"; y: number; at: number };
+// labels sit in two tidy columns, each with a leader line to its part
+const OPEN_TAGS: Tag[] = [
+  { anchor: "gb:Bezel", eyebrow: "LENS", line: "Bezel and glass", side: "left", y: 330, at: 0 },
+  { anchor: "gb:Screen", eyebrow: "SCREEN", line: "Shows every request", side: "left", y: 450, at: 0.25 },
+  { anchor: "gb:DPad", eyebrow: "BUTTONS", line: "You approve here", side: "left", y: 570, at: 0.5 },
+  { anchor: "gb:Body", eyebrow: "GAME BOY", line: "Runs the kagiboy ROM", side: "left", y: 690, at: 0.75 },
+  { anchor: "cart:SecureElement", eyebrow: "NXP SE050", line: "Holds the keys", side: "right", y: 300, at: 0.6 },
+  { anchor: "cart:MCU", eyebrow: "RP2350", line: "Talks to the Game Boy", side: "right", y: 420, at: 0.85 },
+  { anchor: "cart:BLE", eyebrow: "CYW43439", line: "Bluetooth, public data", side: "right", y: 540, at: 1.1 },
+  { anchor: "cart:Accel", eyebrow: "LIS3DH", line: "Shake for randomness", side: "right", y: 660, at: 1.35 },
 ];
-export function D0({ dur, marks }: P) {
-  const M = markSec(marks);
+export function D0({ dur }: P) {
   const t = useT();
   const sec = dur / 30;
-  const go = 0.7; // the parts start moving
-  const apart = ease(interpolate(t, [go, go + 2.6], [0, 1], clamp));
-  const orbit = interpolate(t, [0, sec], [0, 1], clamp);
+  const go = 1.3; // the title first, then it comes apart
+  const apart = (u: number) => ease(interpolate(u, [go, go + 2.4], [0, 1], clamp));
+  const tagsAt = go + 2.2;
   return (
     <SceneFade>
       <Glow shift={20} />
-      <Console
-        screens={["01-boot"]}
-        shot={{
-          p: () => 0,
-          screen: () => "01-boot",
-          pose: () => ({
-            az: lerp(0.36, 0.56, orbit),
-            el: lerp(0.12, 0.17, apart),
-            dist: lerp(0.52, 0.9, apart),
-            tx: lerp(0.004, 0.0, apart),
-            ty: lerp(0.035, 0.115, apart),
-            lift: 0.012 + 0.11 * apart,
-            tilt: 0,
-            apart,
-            gbApart: apart,
-            shift: 0.2,
-          }),
-        }}
+      <Explode
+        p={apart}
+        view={(u) => ({ az: lerp(0.7, 0.86, u / sec), el: 0.58, zoom: lerp(0.26, 0.37, apart(u)), cx: 0.002, cy: lerp(0.015, 0.078, apart(u)), cz: 0 })}
+        anchors={OPEN_TAGS.map((g) => g.anchor)}
+        labels={(at) => (
+          <>
+            <svg style={{ position: "absolute", inset: 0 }} width={1920} height={1080}>
+              {OPEN_TAGS.map((g) => {
+                const o = interpolate(t, [tagsAt + g.at, tagsAt + g.at + 0.4], [0, 1], clamp);
+                const p0 = at[g.anchor];
+                const x1 = g.side === "left" ? 360 : 1560;
+                return o > 0 && p0 ? <path key={g.anchor} d={`M ${x1} ${g.y + 34} L ${(x1 + p0.x) / 2} ${g.y + 34} L ${p0.x} ${p0.y}`} fill="none" stroke={C.ink3} strokeWidth={1.5} strokeDasharray="4 5" opacity={o * 0.8} /> : null;
+              })}
+              {OPEN_TAGS.map((g) => {
+                const o = interpolate(t, [tagsAt + g.at, tagsAt + g.at + 0.4], [0, 1], clamp);
+                const p0 = at[g.anchor];
+                return o > 0 && p0 ? <circle key={g.anchor + "d"} cx={p0.x} cy={p0.y} r={5} fill={C.accent} opacity={o} /> : null;
+              })}
+            </svg>
+            {OPEN_TAGS.map((g) => (
+              <Show key={g.anchor} from={tagsAt + g.at} style={{ position: "absolute", inset: 0 }}>
+                <Callout x={g.side === "left" ? 360 : 1560} y={g.y} eyebrow={g.eyebrow} anchor={g.side === "left" ? "right" : "left"}>
+                  {g.line}
+                </Callout>
+              </Show>
+            ))}
+          </>
+        )}
       />
-      <div style={{ position: "absolute", left: 120, top: 330, width: 680 }}>
-        <Show from={0.3}>
-          <span style={{ fontFamily: PX, fontSize: 22, letterSpacing: 6, color: C.accent }}>TECHNICAL WALKTHROUGH</span>
-        </Show>
-        <Show from={0.55}>
-          <Big size={104} style={{ marginTop: 18 }}>How kagiboy works</Big>
-        </Show>
-        <Show from={M(1, 2.6) + 0.2}>
-          <div style={{ fontFamily: SANS, fontSize: 28, color: C.ink2, marginTop: 22, lineHeight: 1.4 }}>Recorded live at kagiboy.xyz/demo, on testnets.</div>
-        </Show>
-      </div>
-      {OPEN_LABELS.map(([e, line, x, y, anchor], i) => (
-        <Show key={e} from={go + 2.4 + i * 0.5}>
-          <Callout x={x} y={y} eyebrow={e} anchor={anchor}>
-            {line}
-          </Callout>
-        </Show>
-      ))}
+      <Show from={0.2} to={go + 0.8} style={{ position: "absolute", left: 0, right: 0, top: 70, textAlign: "center" }}>
+        <span style={{ fontFamily: PX, fontSize: 22, letterSpacing: 6, color: C.accent }}>TECHNICAL WALKTHROUGH</span>
+        <Big size={88} style={{ marginTop: 14 }}>How kagiboy works</Big>
+      </Show>
     </SceneFade>
   );
 }
