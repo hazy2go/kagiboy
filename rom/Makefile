@@ -21,7 +21,7 @@ $(OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h
 demo: $(DEMO_OUT)
 	cp $(DEMO_OUT) $(HOME)/Desktop/kagiboy-demo.gb
 
-$(DEMO_OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h src/demo_chip.h
+$(DEMO_OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h src/demo_chip.h src/music_data.h
 	mkdir -p build
 	$(LCC) -DDEMO_CHIP -Wa-l -Wl-m -Wl-yt0x03 -Wl-ya1 -Wm-yn"$(TITLE)" -o $(DEMO_OUT) src/main.c src/gfx.c src/assets.c
 

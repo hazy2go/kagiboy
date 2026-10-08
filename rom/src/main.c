@@ -431,8 +431,16 @@ static void sound_init(void) {
     NR50_REG = 0x77;
 }
 
+#ifdef DEMO_CHIP
+static volatile uint8_t sfx_duck; /* frames pulse 1 belongs to a click, not the music */
+#define SFX_TAKE() (sfx_duck = 12)
+#else
+#define SFX_TAKE()
+#endif
+
 /* short click; `pitch` is the low byte of a high-octave tone */
 static void beep(uint8_t pitch) {
+    SFX_TAKE();
     NR10_REG = 0x00;
     NR11_REG = 0x80;
     NR12_REG = 0xA2;
@@ -447,6 +455,7 @@ static void beep(uint8_t pitch) {
 #define NOTE_C7 1985
 
 static void tone(uint16_t x) {
+    SFX_TAKE();
     NR10_REG = 0x00;
     NR11_REG = 0x80;
     NR12_REG = 0xA3;
@@ -460,6 +469,148 @@ static void wait_frames(uint8_t n) {
         anim_tick(++frame);
     }
 }
+
+#ifdef DEMO_CHIP
+/* ---------- music (demo ROM only) ----------
+ * hazytune, arranged for the four voices by assets/gen_music.py: stab chords on pulse 1 and the
+ * high synth on pulse 2 (each chord played as a one-note-per-frame arpeggio), bass on the wave
+ * voice, drums on noise. Played from the VBlank interrupt; a beep borrows pulse 1 for 12 frames.
+ * Not for the shipping cartridge. */
+#include "music_data.h"
+
+typedef struct {
+    const uint8_t *p, *start;
+    uint8_t wait, gate, k, count;
+    uint8_t n[3];
+} voice_t;
+static voice_t mv[3]; /* 0 lead (pulse 1), 1 high (pulse 2), 2 bass (wave) */
+static const uint8_t *drum_p;
+static uint8_t drum_wait;
+static volatile uint8_t music_on;
+static uint8_t music_muted;
+
+/* a soft triangle for the bass */
+static const uint8_t wave_soft[16] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10};
+/* kick, side stick, woodblock, hi-hat, ride: envelope and noise shape */
+static const uint8_t drum_env[6] = {0, 0xC1, 0x91, 0x81, 0x51, 0x42};
+static const uint8_t drum_poly[6] = {0, 0x62, 0x23, 0x4D, 0x00, 0x12};
+
+static void voice_out(uint8_t v, uint8_t note, uint8_t trig) {
+    uint16_t x = music_freq[(v == 2 ? note + 12 : note) - MUSIC_NOTE_LO];
+    uint8_t hi = ((x >> 8) & 7) | (trig ? 0x80 : 0);
+    if (v == 0) {
+        if (trig) {
+            NR10_REG = 0;
+            NR11_REG = 0x80;
+            NR12_REG = 0x92;
+        }
+        NR13_REG = x & 0xFF;
+        NR14_REG = hi;
+    } else if (v == 1) {
+        if (trig) {
+            NR21_REG = 0x40;
+            NR22_REG = 0x73;
+        }
+        NR23_REG = x & 0xFF;
+        NR24_REG = hi;
+    } else {
+        if (trig) {
+            NR30_REG = 0x80;
+            NR32_REG = 0x40; /* half volume: the wave voice is loud */
+        }
+        NR33_REG = x & 0xFF;
+        NR34_REG = hi;
+    }
+}
+
+/* a DAC with nothing to play goes silent at once */
+static void voice_off(uint8_t v) {
+    if (v == 0) NR12_REG = 0;
+    else if (v == 1) NR22_REG = 0;
+    else NR30_REG = 0;
+}
+
+static void voice_tick(uint8_t v) {
+    voice_t *s = &mv[v];
+    uint8_t own = v != 0 || !sfx_duck;
+    const uint8_t *p;
+    if (s->gate) {
+        if (!--s->gate) {
+            if (own) voice_off(v);
+        } else if (s->count > 1 && own) {
+            s->k = s->k + 1 == s->count ? 0 : s->k + 1;
+            voice_out(v, s->n[s->k], 0);
+        }
+    }
+    if (--s->wait) return;
+    p = s->p;
+    if (p[2]) {
+        s->n[0] = p[2];
+        s->n[1] = p[3];
+        s->n[2] = p[4];
+        s->count = p[4] ? 3 : p[3] ? 2 : 1;
+        s->k = 0;
+        s->gate = p[1];
+        if (own) voice_out(v, p[2], 1);
+    }
+    p += 5;
+    if (!*p) p = s->start; /* the end: loop */
+    s->p = p;
+    s->wait = *p;
+}
+
+static void drum_tick(void) {
+    uint8_t h;
+    if (--drum_wait) return;
+    h = drum_p[1];
+    if (h) {
+        NR41_REG = 0;
+        NR42_REG = drum_env[h];
+        NR43_REG = drum_poly[h];
+        NR44_REG = 0x80;
+    }
+    drum_p += 2;
+    if (!*drum_p) drum_p = music_drums;
+    drum_wait = *drum_p;
+}
+
+static void music_tick(void) {
+    if (!music_on) return;
+    if (sfx_duck) sfx_duck--;
+    voice_tick(0);
+    voice_tick(1);
+    voice_tick(2);
+    drum_tick();
+}
+
+static void music_start(void) {
+    uint8_t i;
+    if (music_muted) return;
+    music_on = 0;
+    NR51_REG = 0xFF;
+    NR30_REG = 0; /* wave RAM can only be written while the voice is off */
+    for (i = 0; i < 16; i++) AUD3WAVE[i] = wave_soft[i];
+    mv[0].start = music_lead;
+    mv[1].start = music_high;
+    mv[2].start = music_bass;
+    for (i = 0; i < 3; i++) {
+        mv[i].p = mv[i].start;
+        mv[i].wait = *mv[i].start;
+        mv[i].gate = 0;
+    }
+    drum_p = music_drums;
+    drum_wait = *drum_p;
+    music_on = 1;
+}
+
+static void music_stop(void) {
+    music_on = 0;
+    NR22_REG = 0;
+    NR30_REG = 0;
+    NR42_REG = 0;
+    if (!sfx_duck) NR12_REG = 0;
+}
+#endif
 
 static void chime(void) {
     tone(NOTE_E6);
@@ -487,6 +638,9 @@ static volatile uint8_t q_head, q_tail;
 
 static void vbl_isr(void) {
     uint8_t k = joypad();
+#ifdef DEMO_CHIP
+    music_tick();
+#endif
     uint8_t fresh = k & ~held_keys;
     uint8_t next;
     held_keys = k;
@@ -615,6 +769,10 @@ static void boot(void) {
     }
     sound_init();
     chime();
+#ifdef DEMO_CHIP
+    wait_frames(12);
+    music_start();
+#endif
     for (;;) {
         txtc(15, (frame & 32) ? "press start" : "           ");
         vsync();
@@ -1532,11 +1690,21 @@ static uint8_t phone_screen(void) {
  * request cut in). */
 static uint8_t menu(void) {
     uint8_t sel = 0, p, i;
+#ifdef DEMO_CHIP
+#define MENU_N 6
+#define MENU_MUSIC 4
+    static const char *const items[] = {"Receive", "Phone", "Lock", "Wipe cartridge", "Music", "Back"};
+#else
+#define MENU_N 5
     static const char *const items[] = {"Receive", "Phone", "Lock", "Wipe cartridge", "Back"};
+#endif
     for (;;) {
         screen_begin();
         header(T_ICON_KEY_0, "Menu", 0);
-        for (i = 0; i < 5; i++) txt(4, 5 + i * 2, items[i]);
+        for (i = 0; i < MENU_N; i++) txt(4, 5 + i * 2, items[i]);
+#ifdef DEMO_CHIP
+        txt(11, 5 + MENU_MUSIC * 2, music_muted ? "OFF" : "ON");
+#endif
         hint(1, 17, BTN_A, "SELECT");
         hint(12, 17, BTN_B, "BACK");
         cursor(2, 5 + sel * 2);
@@ -1548,7 +1716,7 @@ static uint8_t menu(void) {
                 return 0;
             }
             if ((p & J_UP) && sel) sel--;
-            if ((p & J_DOWN) && sel < 4) sel++;
+            if ((p & J_DOWN) && sel < MENU_N - 1) sel++;
             cursor(2, 5 + sel * 2);
             if (p & (J_A | J_B)) break;
         }
@@ -1589,7 +1757,16 @@ static uint8_t menu(void) {
             beep(0xC0);
             flush_input();
         }
-        if (sel == 4) return 0;
+#ifdef DEMO_CHIP
+        if (sel == MENU_MUSIC) {
+            music_muted = !music_muted;
+            if (music_muted) music_stop();
+            else music_start();
+            beep(0xC0);
+            continue;
+        }
+#endif
+        if (sel == MENU_N - 1) return 0;
     }
 }
 
