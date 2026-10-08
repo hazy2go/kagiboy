@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Key } from "../emu/gameboy";
 import type { HeroScene } from "../landing/scene";
 import { useSession } from "./session";
+import { prefetchModel, takeModel } from "../landing/model";
 
 const KEYBOARD: Record<string, Key> = {
   ArrowUp: "UP",
@@ -103,6 +104,7 @@ export function GameBoyShell({
       });
     };
 
+    prefetchModel(); // downloads alongside the three.js chunk, not after it
     (async () => {
       const { HeroScene } = await import("../landing/scene");
       if (disposed || !canvas.current) return;
@@ -138,7 +140,7 @@ export function GameBoyShell({
         onRadioRef.current?.(null);
         scene.dispose();
       };
-      await scene.load("/3d/kagiboy.glb");
+      await scene.load(await takeModel().catch(() => "/3d/kagiboy.glb"));
       if (disposed) return;
       loaded = true;
       scene.frame();

@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import "./flea.css";
 
 /** The origin story on a Game Boy screen: an original pixel loop, played only while it's in view. */
-export function FleaMarketGameBoy({ className = "", scene = "flea" }: { className?: string; scene?: "flea" | "chain" }) {
+/** `eager`: the console is the first big thing on the page (About), so it loads first, not lazily. */
+export function FleaMarketGameBoy({ className = "", scene = "flea", eager = false }: { className?: string; scene?: "flea" | "chain"; eager?: boolean }) {
   const lcd = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = lcd.current;
@@ -33,7 +34,7 @@ export function FleaMarketGameBoy({ className = "", scene = "flea" }: { classNam
   }, [scene]);
   return (
     <figure className={`flea-gb ${className}`}>
-      <img src="/renders/front-ortho.webp" alt="" loading="lazy" />
+      <img src="/renders/front-ortho.webp" alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" />
       <canvas
         ref={lcd}
                 role="img"

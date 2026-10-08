@@ -11,6 +11,7 @@ import { Accordion } from "../site/ui/accordion";
 import "../site/tw.css";
 import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
 import "./landing.css";
+import { prefetchModel, takeModel } from "./model";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -173,8 +174,16 @@ export function Landing() {
     const cardWidths = new Map<HTMLElement, number>();
     const forgetWidths = () => cardWidths.clear();
     window.addEventListener("resize", forgetWidths);
+    let calloutsShown = true;
     const placeCallouts = (scene: { project(n: string): { x: number; y: number } | null }, p: number) => {
       const vis = Math.min(1, Math.max(0, (p - 0.5) / 0.03), Math.max(0, (0.62 - p) / 0.03));
+      // outside their stretch of the scroll the callouts are hidden: no projecting, no style writes
+      if (vis <= 0.01) {
+        if (calloutsShown) for (const c of CALLOUTS) calloutRefs.current[c.part]?.style.setProperty("visibility", "hidden");
+        calloutsShown = false;
+        return;
+      }
+      calloutsShown = true;
       for (const c of CALLOUTS) {
         const el = calloutRefs.current[c.part];
         const at = scene.project(c.part);
@@ -198,6 +207,7 @@ export function Landing() {
       }
     };
 
+    prefetchModel(); // downloads alongside the three.js chunk, not after it
     (async () => {
       const { HeroScene } = await import("./scene");
       if (disposed) return;
@@ -220,7 +230,7 @@ export function Landing() {
         scene.dispose();
       };
 
-      await scene.load("/3d/kagiboy.glb");
+      await scene.load(await takeModel().catch(() => "/3d/kagiboy.glb"));
       if (disposed) return;
       const still = new Image();
       still.src = "/screens/home.png";

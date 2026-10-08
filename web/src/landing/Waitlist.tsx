@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import confetti from "canvas-confetti";
 
 type State =
   | { kind: "idle" }
@@ -15,7 +14,8 @@ const BLUR_IN = { opacity: 1, filter: "blur(0px)", transition: { duration: 0.5 }
 const BLUR_OUT = { opacity: 0, filter: "blur(10px)", transition: { duration: 0.35 } };
 const COLORS = ["#cfe2ff", "#ffdce8", "#e6e0ff", "#8fb2ff", "#f29ab9"];
 
-function celebrate() {
+async function celebrate() {
+  const { default: confetti } = await import("canvas-confetti"); // only needed once, on success
   confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: COLORS, scalar: 0.9, ticks: 160 });
   setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { y: 0.65 }, colors: COLORS, scalar: 0.7, ticks: 140 }), 180);
 }
@@ -42,7 +42,7 @@ export function Waitlist() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Couldn't save that. Try again in a minute.");
       setState({ kind: "done", position: typeof body.position === "number" ? body.position : null, already: !!body.already });
-      if (!body.already && !reduced) celebrate();
+      if (!body.already && !reduced) void celebrate();
     } catch (err) {
       setState({ kind: "error", message: err instanceof Error ? err.message : "Couldn't save that." });
     }

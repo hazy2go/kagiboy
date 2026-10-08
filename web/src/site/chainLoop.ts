@@ -4,7 +4,7 @@
  * puts its key in a safe. Original pixel art in the site's four soft LCD tones, 160x144. Not
  * playable, just a loop.
  */
-import { SOFT_LCD } from "../emu/gameboy";
+import { SOFT_LCD } from "../emu/palette";
 
 const W = 160;
 const H = 144;

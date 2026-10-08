@@ -5,6 +5,7 @@ import GameBoyCore from "serverboy/src/gameboy_core/gameboy.js";
 // @ts-expect-error untyped CommonJS
 import settings from "serverboy/src/gameboy_core/settings.js";
 import type { Bus } from "../chip/protocol";
+import { DMG } from "./palette";
 
 settings[0] = false; // no audio backend
 settings[1] = false; // skip the boot ROM
@@ -16,21 +17,8 @@ export type Key = keyof typeof KEY;
 export const WIDTH = 160;
 export const HEIGHT = 144;
 
-// Original DMG pea-soup greens, lightest to darkest.
-export const DMG = [
-  [0x9b, 0xbc, 0x0f],
-  [0x8b, 0xac, 0x0f],
-  [0x30, 0x62, 0x30],
-  [0x0f, 0x38, 0x0f],
-];
-
-// Soft LCD tones for the pastel site, lightest to darkest.
-export const SOFT_LCD = [
-  [228, 235, 216],
-  [164, 182, 150],
-  [82, 102, 88],
-  [30, 40, 38],
-];
+// the palettes live in their own small module, so pages that only draw pixel art don't load the emulator
+export { DMG, SOFT_LCD } from "./palette";
 
 interface Core {
   memory: Uint8Array;

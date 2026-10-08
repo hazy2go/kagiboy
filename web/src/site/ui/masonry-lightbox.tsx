@@ -198,8 +198,11 @@ export const MasonryLightbox = ({
               }}
               whileHover={prefersReducedMotion ? undefined : { y: HOVER_LIFT }}
             >
-              <img                 src={image.src}
+              <img
+                src={image.src}
                 alt={image.alt}
+                loading="lazy"
+                decoding="async"
                 width={w}
                 height={h}
                 className={`block h-full w-full object-cover transition-transform duration-700 ease-out ${TILE_HOVER_SCALE}`}

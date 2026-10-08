@@ -91,7 +91,7 @@ export function AboutPage() {
             something magical.
           </p>
         </div>
-        <FleaMarketGameBoy className="about-flea" scene="chain" />
+        <FleaMarketGameBoy className="about-flea" scene="chain" eager />
       </header>
 
       <section className="story" aria-label="How kagiboy started">

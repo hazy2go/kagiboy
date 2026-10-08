@@ -3,7 +3,7 @@
  * Game Boy on a table, holds it up, and the music starts. Original pixel art in the site's four
  * soft LCD tones, drawn at the real 160x144 resolution. Not a game, just a loop.
  */
-import { SOFT_LCD } from "../emu/gameboy";
+import { SOFT_LCD } from "../emu/palette";
 
 const W = 160;
 const H = 144;

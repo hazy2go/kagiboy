@@ -125,7 +125,7 @@ export class Session {
     cancelAnimationFrame(this.raf);
     this.raf = requestAnimationFrame(this.loop);
     clearInterval(this.balanceTimer);
-    this.balanceTimer = window.setInterval(() => this.phone.refreshBalances(), 15000);
+    this.balanceTimer = window.setInterval(() => !document.hidden && this.phone.refreshBalances(), 15000);
     this.notify();
   }
 
@@ -159,7 +159,7 @@ export class Session {
     cancelAnimationFrame(this.raf);
     this.raf = requestAnimationFrame(this.loop);
     clearInterval(this.balanceTimer);
-    this.balanceTimer = window.setInterval(() => this.phone.refreshBalances(), 15000);
+    this.balanceTimer = window.setInterval(() => !document.hidden && this.phone.refreshBalances(), 15000);
   }
 
   /** Window lost focus: let go of everything, so a held A can't finish a sign by itself. */

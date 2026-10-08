@@ -1,17 +1,70 @@
 {
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' blob: data: https://api.devnet.solana.com wss://api.devnet.solana.com https://ethereum-sepolia-rpc.publicnode.com https://sepolia.base.org https://sepolia-rollup.arbitrum.io https://rpc.hyperliquid-testnet.xyz https://rpc.testnet.chain.robinhood.com https://api.sodax.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' blob: data: https://api.devnet.solana.com wss://api.devnet.solana.com https://ethereum-sepolia-rpc.publicnode.com https://sepolia.base.org https://sepolia-rollup.arbitrum.io https://rpc.hyperliquid-testnet.xyz https://rpc.testnet.chain.robinhood.com https://api.sodax.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self)" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self)"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/fonts/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/(3d|renders|gallery|prints|screens|tokens)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/wallet.gb",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=600, stale-while-revalidate=86400"
+        }
       ]
     }
   ]

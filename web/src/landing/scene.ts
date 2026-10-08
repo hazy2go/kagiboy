@@ -95,7 +95,6 @@ export class HeroScene {
   private clock = new THREE.Timer();
   private still: boolean;
   private needs = true;
-  private canvas: HTMLCanvasElement;
   private w = 1;
   private h = 1;
 
@@ -114,7 +113,6 @@ export class HeroScene {
   private lastPose = "";
 
   constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean } = {}) {
-    this.canvas = canvas;
     this.still = !!opts.still;
     this.plainFraming = !!opts.plainFraming;
     if (opts.fixed) this.fixed = { ...KEYS[0][1], ...opts.fixed };
@@ -141,9 +139,11 @@ export class HeroScene {
     this.scene.add(contactShadow());
   }
 
-  async load(url: string) {
+  /** A URL, or the model's bytes already downloaded (see model.ts). */
+  async load(source: string | ArrayBuffer) {
     // the model ships meshopt-compressed: npx @gltf-transform/cli meshopt in.glb kagiboy.glb (2.8 MB -> 1 MB)
-    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
+    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+    const gltf = typeof source === "string" ? await loader.loadAsync(source) : await loader.parseAsync(source, "/3d/");
     const root = gltf.scene;
     this.gb.add(root);
     // left the page while the model was downloading: free it straight away
@@ -176,6 +176,9 @@ export class HeroScene {
         if (obj) this.pieces[n] = { obj, home: obj.position.clone() };
       }
     }
+    // compile the shaders now, in parallel where the GPU driver allows, instead of stalling the first frame
+    await this.renderer.compileAsync(this.scene, this.camera).catch(() => {});
+    if (this.disposed) return;
     this.needs = true;
   }
 
@@ -224,7 +227,7 @@ export class HeroScene {
   /** Screen-space position (px) of a point on the console, in metres. */
   projectPoint(x: number, y: number, z: number): { x: number; y: number } {
     const v = this.gb.localToWorld(new THREE.Vector3(x, y, z)).project(this.camera);
-    const r = this.canvas.getBoundingClientRect();
+    const r = { width: this.w, height: this.h }; // kept current by resize(); no layout read per frame
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
@@ -252,7 +255,7 @@ export class HeroScene {
     const obj = this.pieces[name]?.obj ?? this.gb.getObjectByName(name);
     if (!obj) return null;
     const v = obj.getWorldPosition(new THREE.Vector3()).project(this.camera);
-    const r = this.canvas.getBoundingClientRect();
+    const r = { width: this.w, height: this.h }; // kept current by resize(); no layout read per frame
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
@@ -264,7 +267,7 @@ export class HeroScene {
     const obj = this.gb.getObjectByName(name);
     if (!obj) return null;
     this.gb.updateMatrixWorld(true);
-    const r = this.canvas.getBoundingClientRect();
+    const r = { width: this.w, height: this.h }; // kept current by resize(); no layout read per frame
     const v = new THREE.Vector3();
     let best = sx > 0 ? -Infinity : Infinity;
     let top = Infinity;
