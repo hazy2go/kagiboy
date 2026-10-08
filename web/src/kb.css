@@ -19,7 +19,7 @@
   --paper-blue: #dbe9ff;
   --paper-pink: #ffe3ec;
   --paper-lavender: #ece7ff;
-  --kb-focus: #8fb2ff;
+  --kb-focus: #3b6fe0;
   --kb-display: "Funnel Display", "Funnel Sans", system-ui, sans-serif;
   --kb-sans: "Funnel Sans", system-ui, sans-serif;
   --kb-px: "Pixel Operator", ui-monospace, monospace;
@@ -371,7 +371,8 @@ html.kb-root .print-in.is-in {
   font-size: 18px;
 }
 
-@media (max-width: 860px) {
+/* phones, and tablets held upright (an iPad at 1024 wide portrait has no room for the links) */
+@media (max-width: 860px), (max-aspect-ratio: 799/1000) {
   .kb-links {
     display: none;
   }
@@ -380,6 +381,11 @@ html.kb-root .print-in.is-in {
     display: grid;
   }
 
+}
+
+/* a landmark only: the sections keep laying out as children of the page */
+.kb-main {
+  display: contents;
 }
 
 /* ---------- 404 ---------- */

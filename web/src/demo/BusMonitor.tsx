@@ -8,7 +8,7 @@ export function BusMonitor() {
     <section className="bus" aria-label="Cartridge bus log">
       <header>
         <h2>The cartridge bus</h2>
-        <p>What the Game Boy and the key chip say to each other, through the mailbox at 0xD800. PINs and words are never shown.</p>
+        <p>What the Game Boy and the key chip say to each other, through the mailbox at 0xD800 (0xA000 on the real cartridge). PINs and words are never shown.</p>
       </header>
       <div className="tape paper-white">
         <ol>

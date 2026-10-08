@@ -42,7 +42,7 @@ export function DemoPage() {
         <span className="net">Live demo · test networks</span>
       </nav>
 
-      <header className="demo-intro">
+      <div className="demo-intro">
         <div>
           <h1>Try kagiboy.</h1>
           <p className="sub">
@@ -59,7 +59,7 @@ export function DemoPage() {
             </button>
           )}
         </p>
-      </header>
+      </div>
 
       <div className="rig" ref={rigRef}>
         <div ref={gbRef} className="rig-gb">

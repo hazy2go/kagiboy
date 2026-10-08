@@ -818,7 +818,7 @@ function Cartridge({ onOpen }: { onOpen?: () => void }) {
       <Cta variant="soft" className="mt-4 w-full !text-[#b2364e]" onClick={() => s.phone.unpair()}>
         Unpair this phone
       </Cta>
-      <p className="m-0 mt-3 text-center text-[12px] leading-snug text-muted-foreground">Keys are made and kept inside the cartridge. This phone only ever sees public addresses.</p>
+      <p className="m-0 mt-3 text-center text-[12px] leading-snug text-muted-foreground">On the real cartridge the keys stay inside it and this phone only sees public addresses. In this demo the cartridge is simulated in your browser.</p>
     </div>
   );
 }

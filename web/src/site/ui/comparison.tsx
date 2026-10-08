@@ -30,7 +30,7 @@ function CellValue({ value }: { value: Cell }) {
 
 export function Comparison({ columns, rows, caption }: ComparisonProps) {
   return (
-    <div className="overflow-x-auto rounded-[24px] [scrollbar-width:thin]">
+    <div className="relative overflow-x-auto rounded-[24px] [scrollbar-width:thin]">
       <table className="w-full min-w-[44rem] border-collapse text-left">
         <caption className="sr-only">{caption}</caption>
         <thead>

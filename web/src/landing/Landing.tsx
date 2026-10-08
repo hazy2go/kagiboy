@@ -24,7 +24,7 @@ const CHAPTERS = [
 
 // dy nudges each card off its neighbours (px); flip reads to the left of the chip
 const CALLOUTS = [
-  { part: "SecureElement", name: "SE050C", note: "Secure element. The keys live and sign in here.", dy: -34, flip: false },
+  { part: "SecureElement", name: "SE050E2", note: "Secure element. The keys live and sign in here.", dy: -34, flip: false },
   { part: "MCU", name: "RP2350", note: "Talks to the Game Boy over the cartridge bus.", dy: -46, flip: true },
   { part: "BLE", name: "CYW43439", note: "Bluetooth to your phone. Public data only.", dy: 30, flip: false },
   { part: "Accel", name: "LIS3DH", note: "Turns a shake into randomness.", dy: 34, flip: true },
@@ -40,7 +40,7 @@ const STEPS = [
 ] as const;
 
 const PROMISES = [
-  ["KEYS", "NEVER LEAVE THE CHIP"],
+  ["KEYS", "NEVER LEAVE THE CARTRIDGE"],
   ["SCREEN", "ONLY THE CARTRIDGE DRAWS"],
   ["SIGNS", "EXACTLY WHAT IT SHOWS"],
   ["REFUSES", "WHAT IT CAN'T SHOW"],
@@ -88,7 +88,7 @@ const FAQ = [
   { id: "gameboy", title: "Do I need a real Game Boy?", content: "Yes, kagiboy is a cartridge for the original Game Boy. Until it ships, the live demo runs the same Game Boy software in your browser." },
   { id: "phone", title: "Can my phone move my money?", content: "No. The phone can only ask. The cartridge shows the real amount and address on the Game Boy's own screen and signs only when you hold A. Its Bluetooth carries requests and public addresses, never keys." },
   { id: "chains", title: "Which chains does it support?", content: "Solana, plus Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. One key covers every EVM network, and the Game Boy names the network on every request." },
-  { id: "swaps", title: "How do swaps work?", content: "The app gets live quotes from SODAX, and the Game Boy shows what you pay, the least you'll get and the fees before you sign. kagiboy takes 0.1% and SODAX takes 0.1%. In this demo the swap is signed but never sent." },
+  { id: "swaps", title: "How do swaps work?", content: "The app gets live quotes from SODAX, and the Game Boy shows what you pay, the least you'll get and the fees before you sign. The cartridge keeps its own list of tokens and works out the fees itself, so the phone can't fudge the numbers. kagiboy takes 0.1% and SODAX takes 0.1%. For now swaps are a preview: the Game Boy signs, but nothing is sent." },
   { id: "buy", title: "When can I buy one?", content: "Not yet. The software works today and the hardware is in progress. Join the waitlist and you'll get one email when the first small batch is ready, after an outside security review." },
   { id: "nintendo", title: "Is this made by Nintendo?", content: "No. kagiboy is an independent project. Game Boy is a trademark of Nintendo." },
 ];
@@ -342,7 +342,7 @@ export function Landing() {
         </div>
       </div>
 
-
+      <main className="kb-main">
       <section className="stage" ref={stageRef} aria-label="The cartridge, up close">
         <div className="stage-sticky">
           <div className="haze" aria-hidden />
@@ -502,7 +502,7 @@ export function Landing() {
         <header className="sec-head">
           <h2>Why a console from 1989?</h2>
           <p>
-            Because it can't do much. The Game Boy itself has no Wi-Fi, no Bluetooth and no app store. It's a screen and a few buttons, and it only talks to the cartridge. The cartridge has a small Bluetooth radio for your phone, but it only carries requests and public addresses, never keys. What the Game Boy shows you is exactly what gets signed.
+            Because it can't do much. The Game Boy itself has no Wi-Fi, no Bluetooth and no app store. It's a screen and a few buttons, and it only talks to the cartridge. The cartridge has a small Bluetooth radio for your phone, but it only carries requests and public addresses, never keys. What the Game Boy shows you is what gets signed, and the cartridge works out the amounts itself instead of taking the phone's word for them.
           </p>
         </header>
         <div className="receipt-wrap">
@@ -595,7 +595,7 @@ export function Landing() {
           <h2>Go on, press Start</h2>
           <p>
             The real Game Boy software runs right in your browser, with the cartridge's chip simulated next to it. It
-            signs real transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain.
+            signs real testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain.
           </p>
           <div className="demo-cta-actions">
             <Link to="/demo" className="btn btn-ink">
@@ -617,6 +617,7 @@ export function Landing() {
         <p>I'll build a small first batch if enough of you want one. Leave your email and I'll write once, when it's ready.</p>
         <Waitlist />
       </section>
+      </main>
 
       <footer className="kb-foot">
         <p>

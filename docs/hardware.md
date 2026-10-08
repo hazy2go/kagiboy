@@ -10,7 +10,7 @@ will run.
 | Part | Job | Why this part | Est. unit cost* |
 |---|---|---|---|
 | **RP2350** MCU | Answers the Game Boy's cartridge bus (ROM reads, the mailbox at `0xA000`), runs the wallet firmware | Its PIO state machines can serve the 1 MHz bus in time. RP2040 flash carts already prove the approach. Also has signed boot, OTP, TrustZone and a hardware TRNG | ~$1.10 |
-| **NXP SE050C** secure element | Generates and stores the seed, signs, enforces the PIN retry counter | Common Criteria EAL 6+. Supports **Ed25519** (Solana) and **secp256k1** (EVM) | ~$3 (100+) |
+| **NXP SE050E2** secure element | Generates and stores the seed, signs, enforces the PIN retry counter | Common Criteria EAL 6+. Supports **Ed25519** (Solana) and **secp256k1** (EVM) | ~$3 (100+) |
 | **Infineon CYW43439** | Bluetooth LE link to the phone | Same radio as the Pico 2 W, so drivers exist | ~$4 |
 | **LIS3DH** accelerometer | "Shake your Game Boy" entropy, tilt-to-scroll | Cheap, low power, I²C | ~$0.80 |
 | 3× **TXB0108** | 5 V Game Boy bus ↔ 3.3 V logic | Used by existing RP2040 carts | ~$1.50 |
@@ -31,7 +31,7 @@ packaging are not included.
  │    │                                                  │
  │ RP2350 ── PIO: serves ROM + mailbox at 0xA000         │
  │    │  I²C                                             │
- │    ├── SE050C ── seed, keys, PIN counter (never leave)│
+ │    ├── SE050E2 ─ seed, keys, PIN counter (stay in)    │
  │    ├── LIS3DH ── accelerometer                        │
  │    └── CYW43439 ── Bluetooth LE ── phone app          │
  └───────────────────────────────────────────────────────┘

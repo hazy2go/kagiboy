@@ -15,9 +15,9 @@ Testnets only. Never put a real recovery phrase into the demo.
 
 ## Live
 
-- https://kagiboy.vercel.app: what it is and why
-- https://kagiboy.vercel.app/demo: the real ROM, the simulated chip and a phone app, side by side
-- https://kagiboy.vercel.app/about: the story behind it
+- https://kagiboy.xyz: what it is and why
+- https://kagiboy.xyz/demo: the real ROM, the simulated chip and a phone app, side by side
+- https://kagiboy.xyz/about: the story behind it
 
 ## How the demo works
 
@@ -118,7 +118,9 @@ More detail: [docs/protocol.md](docs/protocol.md) (mailbox and commands),
 ## Security model and known limits
 
 What the design protects against: someone who steals the cartridge, a
-compromised phone, and someone sniffing Bluetooth. What you approve is what the
+compromised phone asking for a send you didn't mean, and someone sniffing
+Bluetooth. Swaps are a preview for now: the cartridge decodes and signs them
+with its own token list, but the signature isn't what SODAX executes yet. What you approve is what the
 chip decoded and showed on the Game Boy, and only the A button on the Game Boy
 approves it. On real hardware the keys sit in an NXP SE050 secure element with
 a hardware PIN retry counter.

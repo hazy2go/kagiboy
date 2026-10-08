@@ -36,7 +36,7 @@ Bluetooth, and using a secure element.
 
 The demo runs the real ROM in an in-browser emulator with a simulated key chip
 and a phone panel, on Solana devnet and Ethereum Sepolia. The hardware is a
-design (docs/hardware.md): RP2350 MCU, NXP SE050C secure element, CYW43439
+design (docs/hardware.md): RP2350 MCU, NXP SE050E2 secure element, CYW43439
 Bluetooth, LIS3DH accelerometer, ~$14 in parts at 100 units.
 
 ## Capabilities and Constraints

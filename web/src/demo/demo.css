@@ -50,6 +50,7 @@
 .next-step .btn {
   align-self: center;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .next-step .px {
@@ -818,8 +819,14 @@
     translate: 0 -50%;
   }
 
+  /* stacked on a tablet: the console gets the column's width, not the shrink-wrapped width of its
+     centred cell (which left it about 70 px wide above a full-size phone) */
+  .rig > .rig-gb {
+    justify-self: stretch;
+  }
+
   .device-stage {
-    width: 100%;
+    width: min(100%, 520px);
   }
 
   .phone {
@@ -965,10 +972,17 @@ html.demo-app-root body {
   -webkit-touch-callout: none;
 }
 
+/* as big as the pane allows, but always whole: the width is capped by the height left after the
+   controls, so narrow phones never push the A button off the side */
+.pane-gb {
+  container-type: size;
+}
+
 .pane-gb .device-stage {
-  width: auto;
-  height: 100%;
-  max-width: 100%;
+  width: min(100cqw, (100cqh - 64px) * 0.8);
+  height: auto;
+  justify-self: center;
+  align-self: center;
   touch-action: none;
 }
 

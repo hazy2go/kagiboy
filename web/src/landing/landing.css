@@ -348,7 +348,7 @@
 }
 
 .faint {
-  opacity: 0.55;
+  opacity: 0.8;
 }
 
 .scroll-hint {
@@ -535,7 +535,7 @@
 }
 
 .ghost-slip .px {
-  color: rgba(43, 47, 58, 0.62);
+  color: rgba(43, 47, 58, 0.8);
 }
 
 .ghost-slip .px:first-child {
@@ -870,6 +870,7 @@
   }
 
   .limits {
+    grid-row: 2;
     justify-self: start;
   }
 
@@ -1395,13 +1396,20 @@
 }
 
 /* short phones (iPhone SE and smaller): keep the headline clear of the console and the buttons on one line */
-@media (max-width: 860px) and (max-height: 720px) {
+@media (max-width: 860px) and (max-height: 760px) {
   .ch-hero .lede-short {
     display: none;
   }
 
   .ch-hero h1 {
     font-size: clamp(28px, 8.4vw, 34px);
+  }
+}
+
+/* reduced motion: no scroll-driven film on phones either, just the hero */
+@media (prefers-reduced-motion: reduce) and (max-width: 860px), (prefers-reduced-motion: reduce) and (max-aspect-ratio: 799/1000) {
+  .stage {
+    height: 100svh;
   }
 }
 

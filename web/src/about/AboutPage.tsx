@@ -81,6 +81,7 @@ export function AboutPage() {
         </div>
       </nav>
 
+      <main className="kb-main">
       <header className="about-hero">
         <div>
           <p className="px eyebrow">THE STORY</p>
@@ -175,7 +176,7 @@ export function AboutPage() {
             <p>
               {PLACEHOLDER_PHOTOS
                 ? "Mockups for now: the scenes are generated, the screens are the real ROM. Photos of my own Game Boy running it are on the way."
-                : "The same ROM as the live demo, on my own Game Boy, loaded from a flash cart. The keys in this test build live in the ROM's stand-in chip until the cartridge exists."}
+                : "The same screens as the live demo, on my own Game Boy, loaded from a flash cart. This test build has a pretend chip inside the ROM: it holds no real keys and signs nothing, until the cartridge exists."}
             </p>
           </header>
           <MasonryLightbox
@@ -195,6 +196,7 @@ export function AboutPage() {
           </a>
         </div>
       </section>
+      </main>
 
       <footer className="kb-foot">
         <p>
