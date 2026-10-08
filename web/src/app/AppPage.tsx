@@ -342,7 +342,7 @@ function Wallet({ onSend, onReceive, onSwap, swaps }: { onSend: () => void; onRe
         </article>
       </section>
 
-      <div className="actions">
+      <div className="wallet-actions">
         <Action label="Send" onClick={onSend} d="M12 19V5m0 0-6 6m6-6 6 6" />
         <Action label="Receive" onClick={onReceive} d="M12 5v14m0 0 6-6m-6 6-6-6" />
         <Action label="Swap" onClick={onSwap} d="M7 4.5 4 7.5l3 3M4 7.5h13M17 13.5l3 3-3 3M20 16.5H7" />
@@ -376,7 +376,7 @@ function Wallet({ onSend, onReceive, onSwap, swaps }: { onSend: () => void; onRe
 
 function Action({ label: text, onClick, d }: { label: string; onClick: () => void; d: string }) {
   return (
-    <button className="action" onClick={onClick}>
+    <button className="wallet-action" onClick={onClick}>
       <span>
         <svg viewBox="0 0 24 24" aria-hidden>
           <path d={d} />

@@ -655,14 +655,14 @@ html.app-html body {
   color: var(--kb-ink-2);
 }
 
-.actions {
+.wallet-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 18px 0;
 }
 
-.action {
+.wallet-action {
   display: grid;
   justify-items: center;
   gap: 7px;
@@ -675,7 +675,7 @@ html.app-html body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.action span {
+.wallet-action span {
   display: grid;
   place-items: center;
   width: 56px;
@@ -688,11 +688,11 @@ html.app-html body {
   transition: transform 0.25s var(--app-spring);
 }
 
-.action:active span {
+.wallet-action:active span {
   transform: scale(0.9);
 }
 
-.action svg {
+.wallet-action svg {
   width: 22px;
   height: 22px;
   fill: none;
