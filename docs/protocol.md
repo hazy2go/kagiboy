@@ -100,15 +100,19 @@ they do not replace it.
 
 The mailbox PENDING byte says what waits for the owner: `1` a sign request, `2` a phone asking to pair.
 Pairing is Bluetooth numeric comparison done on the Game Boy: the phone and the Game Boy show the same
-random 6-digit code, and only an A press on the console lets the phone in. The pairing belongs to the
+random 6-digit code, and only an A press on the console lets the phone in. A phone may only ask while
+the Game Boy is listening: on its "Pair your phone!" screen, or in the minute after Phone > Pair new phone. The pairing belongs to the
 wallet, so wiping or restoring forgets it.
 
 ## Swap requests
 
-The phone can ask the cartridge to sign a swap quoted by SODAX: source and destination chain, sell token
-and amount, buy token and the least the user accepts (after every fee), the fees, and a deadline within the
-next hour. The chip checks every field, always sends the bought coins to its own address on the
-destination chain, and signs `sha256("kagiboy-swap-v1|src|dst|SELL|decimals|amount|BUY|decimals|min|fees|deadline|recipient")`
-with the key of the chain the coins leave from. This demo signs over token symbols and test network ids;
-before real swaps the digest must cover the token contract addresses and mainnet chain ids, and the signature
-must be over the actual SODAX intent transaction.
+The phone can ask the cartridge to sign a swap quoted by SODAX: source and destination chain, the sell
+token (by contract address or mint) and amount, the buy token and the least the user accepts (after every
+fee), and a deadline within the next hour. The phone never sends symbols, decimals or fees: the chip keeps
+its own list of the tokens it swaps (`web/src/chip/tokens.ts`, generated from SODAX's list) and refuses any
+other, works out the 0.1% partner fee and 0.1% solver fee itself, always sends the bought coins to its own
+address on the destination chain, and signs
+`sha256("kagiboy-swap-v2|srcChain|sellToken|decimals|amount|dstChain|buyToken|decimals|min|fees|partnerBps|partnerWallet|deadline|recipient")`
+with the key of the chain the coins leave from (chains are SODAX's mainnet names). This is a preview: SODAX
+doesn't check this signature, so before swaps go live the cartridge must decode and sign the real SODAX
+intent transaction instead.

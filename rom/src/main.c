@@ -781,6 +781,13 @@ static void pin_entry(const char *title, const char *sub) {
     hint(6, 17, BTN_A, "CONFIRM");
     marker(4, 10);
     screen_end();
+    /* a press left over from the last screen (a double tap, mashing A) must not confirm 0000:
+     * wait for every button to be let go, then drop anything queued */
+    while (held_keys) {
+        vsync();
+        anim_tick(++frame);
+    }
+    flush_input();
     for (;;) {
         p = wait_press();
         if (p & J_UP) pin[pos] = (pin[pos] + 1) % 10;
@@ -979,6 +986,8 @@ static uint8_t restore(void) {
 }
 
 /* The PIN leaves RAM and the mailbox as soon as the chip has answered. */
+static uint8_t pin_first[4]; /* the first entry while the PIN is chosen, until it's repeated */
+
 static void forget_pin(void) {
     memset(pin, 0, sizeof(pin));
     clear_req(4);
@@ -1002,10 +1011,30 @@ static void new_wallet(void) {
         show_words();
         break;
     }
-    pin_entry("Choose a PIN", restored ? "WORDS ACCEPTED" : "STEP 3 OF 3");
-    st = chip_call(CMD_SET_PIN, 0, pin, 4);
-    forget_pin();
-    expect_ok(st);
+    for (;;) {
+        pin_entry("Choose a PIN", restored ? "WORDS ACCEPTED" : "STEP 3 OF 3");
+        memcpy(pin_first, pin, 4);
+        pin_entry("Confirm PIN", "ENTER IT AGAIN");
+        if (memcmp(pin_first, pin, 4)) {
+            memset(pin_first, 0, 4);
+            forget_pin();
+            beep(0x40);
+            message(T_ICON_LOCK_0, "PINs don't match", "CHOOSE ONE AGAIN", 0);
+            hint(5, 17, BTN_A, "CONTINUE");
+            screen_end();
+            wait_a();
+            continue;
+        }
+        memset(pin_first, 0, 4);
+        st = chip_call(CMD_SET_PIN, 0, pin, 4);
+        forget_pin();
+        expect_ok(st);
+        if (st == 0) return;
+        message(T_ICON_LOCK_0, "PIN not saved", "TRY ANOTHER PIN", 0);
+        hint(5, 17, BTN_A, "CONTINUE");
+        screen_end();
+        wait_a();
+    }
 }
 
 /* Returns 1 when unlocked, 0 when the chip wiped itself. */
@@ -1017,7 +1046,7 @@ static uint8_t unlock(void) {
         forget_pin();
         expect_ok(st);
         if (st == 0) return 1;
-        if (st == 2) {
+        if (st == 2 || st == 3) { /* 3: there is no wallet on the chip (any more) */
             message(T_ICON_SHIELD_0, "Cartridge wiped", "TOO MANY WRONG PINS", "THE KEYS ARE GONE");
             hint(5, 17, BTN_A, "CONTINUE");
             screen_end();
@@ -1027,6 +1056,10 @@ static uint8_t unlock(void) {
         message(T_ICON_LOCK_0, "Wrong PIN", 0, 0);
         num(6, 9, (uint8_t)resp[0]);
         cap(8, 9, resp[0] == 1 ? "TRY LEFT" : "TRIES LEFT");
+        if (resp[0] == 1) {
+            capc(12, "ONE MORE WRONG PIN");
+            capc(13, "ERASES THE KEYS");
+        }
         hint(4, 17, BTN_A, "TRY AGAIN");
         screen_end();
         wait_a();
@@ -1291,7 +1324,10 @@ static void sign_request(void) {
         unit = amount + w;
         if (*unit) txt(2 + w, 6, unit + 1);
     } else {
-        wrap(1, 5, 18, amount, 2);
+        /* too wide for the big digits: the whole number on one line, its unit under it (the chip
+         * refuses amounts wider than 18, so a number is never split) */
+        txt_n(1, 5, amount, w);
+        if (amount[w]) txt(1, 6, amount + w + 1);
     }
     cap(1, 7, "FEE");
     txt_n(2, 8, fee, 16);
@@ -1579,7 +1615,7 @@ static void home_redraw(uint8_t paired) {
 
 static void home(void) {
     uint8_t p, r, paired, wave = 0;
-    uint16_t refresh = 0;
+    uint16_t refresh = 0, listen = 0;
     paired = PHONE_PAIRED();
     home_redraw(paired);
     for (;;) {
@@ -1590,6 +1626,7 @@ static void home(void) {
             paired = PHONE_PAIRED();
             home_redraw(paired);
             refresh = 0;
+            listen = 0;
             continue;
         }
         /* paired or unpaired from the phone while we sit here */
@@ -1597,16 +1634,24 @@ static void home(void) {
             paired = PHONE_PAIRED();
             home_redraw(paired);
             refresh = 0;
+            listen = 0;
         }
         p = pressed();
         if (p & J_SELECT) {
             beep(0xC0);
+            if (!paired) chip_call(CMD_PHONE, 3, 0, 0); /* only the "Pair your phone!" screen listens */
             r = menu();
             if (r) return;
+            paired = PHONE_PAIRED();
             home_redraw(paired);
+            listen = 0;
             continue;
         }
         if (!paired) {
+            /* while this screen is up the cartridge takes a pairing request; the chip's window
+             * lasts a minute, so open it again every 50 s */
+            if (listen == 0) chip_call(CMD_PHONE, 2, 0, 0);
+            if (++listen >= 3000) listen = 0;
             if (++refresh >= 20) {
                 refresh = 0;
                 pair_waves(++wave);

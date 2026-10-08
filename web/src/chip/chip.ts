@@ -6,6 +6,7 @@ import qrcode from "qrcode-generator";
 import bs58 from "bs58";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
 import { DEFAULT_EVM, EVM_NETWORKS, evmNetwork, type EvmNetwork } from "./networks";
+import { chipToken, PARTNER_FEE, SOLVER_FEE_BPS, sodaxChain } from "./tokens";
 import { concat, mnemonicFromIndices, newMnemonic, suggestWords, walletFromMnemonic, type Wallet } from "./keys";
 
 /**
@@ -46,15 +47,12 @@ export type SwapSide = { chain: "sol" } | { chain: "evm"; net: number };
 export interface SwapIntent {
   src: SwapSide;
   dst: SwapSide;
-  sellSymbol: string;
-  sellDecimals: number;
+  /** token address (or mint) as SODAX lists it; the cartridge looks up its symbol and decimals itself */
+  sellToken: string;
   sellAmount: bigint;
-  buySymbol: string;
-  buyDecimals: number;
+  buyToken: string;
   /** the least the user accepts: the quote minus slippage, after every fee */
   minReceive: bigint;
-  /** partner + solver fee, in the sell token */
-  fees: bigint;
   /** unix seconds */
   deadline: number;
 }
@@ -200,9 +198,12 @@ export class CartChip {
   requestPairing(name = "PHONE"): Promise<boolean> {
     if (!this.persisted || !this.unlocked) return Promise.reject(new Error("unlock the cartridge first"));
     if (this.pending) return Promise.reject(new Error("a request is already waiting on the Game Boy"));
-    // once a phone is paired, a new one may only ask while the owner has opened the window on the Game Boy
-    if (this.paired && !this.pairWindowOpen) {
-      return Promise.reject(new Error("On the Game Boy, open SELECT, then Phone, then Pair new phone."));
+    // a phone may only ask while the Game Boy is listening: its "Pair your phone!" screen, or the
+    // window the owner opens from SELECT, then Phone. A stranger can't start one at any other time.
+    if (!this.pairWindowOpen) {
+      return Promise.reject(
+        new Error(this.paired ? "On the Game Boy, open SELECT, then Phone, then Pair new phone." : "Go back to the Game Boy's home screen, where it says \"Pair your phone!\"."),
+      );
     }
     // one pairing at a time: a second phone can't swap its code in while the owner reads the first one's
     if (this.pairing) return Promise.reject(new Error("another phone is already asking to pair"));
@@ -282,7 +283,9 @@ export class CartChip {
     if (id !== cur.id || !cur.chain || !TX_STATES.has(state)) return;
     // a demo swap was never sent: the phone can't relabel it, and nothing reaches "confirmed" without its hash
     if (cur.state === "DEMO" || state === "DEMO") return;
-    if (state === "CONFIRMED" && (!cur.hash || detail.hash?.toLowerCase() !== cur.hash.toLowerCase())) return;
+    if ((state === "CONFIRMED" || state === "BROADCAST") && (!cur.hash || detail.hash?.toLowerCase() !== cur.hash.toLowerCase())) return;
+    // once it's out, the phone can't call it failed: that would invite sending the same payment twice
+    if ((cur.state === "BROADCAST" || cur.state === "CONFIRMED") && state !== "CONFIRMED" && state !== "UNKNOWN") return;
     let text = "";
     if (detail.reason !== undefined) {
       if (!Object.hasOwn(FAIL_REASON, detail.reason)) return;
@@ -394,7 +397,8 @@ export class CartChip {
   private writeReply(bus: Bus, seq: number, reply: Reply) {
     const bytes = typeof reply.data === "string" ? ascii(reply.data) : (reply.data ?? new Uint8Array());
     const n = Math.min(bytes.length, RESP_MAX);
-    for (let i = 0; i < n; i++) bus.write(MAILBOX + MB.RESP + i, bytes[i]);
+    // the whole reply area is rewritten, so nothing of an earlier reply (the recovery words) stays behind
+    for (let i = 0; i < RESP_MAX; i++) bus.write(MAILBOX + MB.RESP + i, i < n ? bytes[i] : 0);
     bus.write(MAILBOX + MB.RESP_LEN, n);
     bus.write(MAILBOX + MB.STATUS, reply.status);
     bus.write(MAILBOX + MB.RESP_SEQ, seq); // last, so the Game Boy never reads a half-written reply
@@ -441,7 +445,7 @@ export class CartChip {
 
       case CMD.SET_PIN: {
         // only during setup; changing an existing PIN would need the old one
-        if (this.persisted || !this.wallet || data.length !== 4) return { status: 1 };
+        if (this.persisted || !this.wallet || data.length !== 4 || data.some((d) => d > 9)) return { status: 1 };
         const pinSalt = hex(crypto.getRandomValues(new Uint8Array(16)));
         this.persisted = {
           mnemonic: this.wallet.mnemonic,
@@ -589,6 +593,8 @@ export class CartChip {
         return { status: 0 };
 
       case CMD.WIPE:
+        // only the owner, from the unlocked menu; a locked cartridge wipes itself after 5 wrong PINs
+        if (!this.unlocked) return { status: 1 };
         this.wipe();
         return { status: 0 };
 
@@ -757,10 +763,11 @@ export function qrBits(text: string): Uint8Array {
 
 /** Exact decimal amount: nothing rounded away, trailing zeros trimmed. */
 export function exact(units: bigint, decimals: number) {
-  return formatUnits(units, decimals);
+  const t = formatUnits(units, decimals);
+  // one Game Boy line: an amount is shown whole or not at all, never split or rounded
+  if (t.length > 18) throw new Error("this amount has too many digits to show on the Game Boy");
+  return t;
 }
-
-const SWAP_SYMBOL = /^[A-Za-z0-9.]{1,8}$/;
 
 /** A phone's name as the Game Boy can show it: capitals, digits and a few marks, 14 characters. */
 function cleanName(name: string) {
@@ -781,29 +788,44 @@ function sideName(side: SwapSide): string {
   return net.name.toUpperCase();
 }
 
-/** Checks a swap field by field (the phone is untrusted) and lays it out for the sign screen. */
+/**
+ * Checks a swap field by field (the phone is untrusted) and lays it out for the sign screen. The
+ * phone names tokens only by address: symbols, decimals and fees come from the cartridge itself.
+ */
 function decodeSwap(input: SwapIntent, wallet: Wallet): Snapshot {
   const i: SwapIntent = structuredClone(input);
-  if (!SWAP_SYMBOL.test(i.sellSymbol) || !SWAP_SYMBOL.test(i.buySymbol)) throw new Error("unknown token symbol");
-  for (const d of [i.sellDecimals, i.buyDecimals]) if (!Number.isInteger(d) || d < 0 || d > 36) throw new Error("bad decimals");
-  if (i.sellAmount <= 0n || i.minReceive <= 0n || i.fees < 0n || i.fees >= i.sellAmount) throw new Error("bad amounts");
+  const srcKey = sodaxChain(i.src);
+  const dstKey = sodaxChain(i.dst);
+  if (!srcKey || !dstKey) throw new Error("this cartridge doesn't swap on that network");
+  const sell = chipToken(srcKey, i.sellToken);
+  const get = chipToken(dstKey, i.buyToken);
+  if (!sell || !get) throw new Error("this cartridge doesn't know that token");
+  if (srcKey === dstKey && i.sellToken.toLowerCase() === i.buyToken.toLowerCase()) throw new Error("that swap goes nowhere");
+  if (typeof i.sellAmount !== "bigint" || typeof i.minReceive !== "bigint") throw new Error("bad amounts");
+  if (i.sellAmount <= 0n || i.minReceive <= 0n) throw new Error("bad amounts");
   const now = Date.now() / 1000;
-  if (!(i.deadline > now && i.deadline < now + 3600)) throw new Error("the quote has expired");
+  if (!Number.isSafeInteger(i.deadline) || !(i.deadline > now && i.deadline < now + 3600)) throw new Error("the quote has expired");
+  // the fees, worked out here the way SODAX does: they come out of what you pay
+  const partnerFee = (i.sellAmount * BigInt(PARTNER_FEE.bps)) / 10_000n;
+  const fees = partnerFee + (i.sellAmount * BigInt(SOLVER_FEE_BPS)) / 10_000n;
+  if (fees >= i.sellAmount) throw new Error("bad amounts");
   const from = sideName(i.src);
   const to = sideName(i.dst);
-  const sym = i.sellSymbol.toUpperCase();
-  const buy = i.buySymbol.toUpperCase();
+  const sym = sell.symbol.toUpperCase();
+  const buy = get.symbol.toUpperCase();
   // three 16-column rows in the address box: the promise, the amount, where it lands
   const line = (t: string) => t.padEnd(16, " ");
-  const min = fitFloor(i.minReceive, i.buyDecimals, 16 - buy.length - 1);
-  const fee = fitCeil(i.fees, i.sellDecimals, 16 - sym.length - 1);
+  const min = fitFloor(i.minReceive, get.decimals, 16 - buy.length - 1);
+  const fee = fitCeil(fees, sell.decimals, 16 - sym.length - 1);
+  const amount = `${exact(i.sellAmount, sell.decimals)} ${sym}`;
   // the coins arrive at this cartridge's own address on the destination chain
   const recipient = i.dst.chain === "sol" ? wallet.sol.publicKey.toBase58() : wallet.evm.address;
+  // what gets signed names the real chains and token contracts, the fee and who gets it
   const canonical = [
-    "kagiboy-swap-v1",
-    i.src.chain === "sol" ? "sol" : `evm:${i.src.net}`,
-    i.dst.chain === "sol" ? "sol" : `evm:${i.dst.net}`,
-    sym, i.sellDecimals, i.sellAmount, buy, i.buyDecimals, i.minReceive, i.fees, i.deadline, recipient,
+    "kagiboy-swap-v2",
+    srcKey, i.sellToken, sell.decimals, i.sellAmount,
+    dstKey, i.buyToken, get.decimals, i.minReceive,
+    fees, PARTNER_FEE.bps, PARTNER_FEE.wallet, i.deadline, recipient,
   ].join("|");
   return {
     chain: "swap",
@@ -811,7 +833,7 @@ function decodeSwap(input: SwapIntent, wallet: Wallet): Snapshot {
     digest: sha256(ascii(canonical)),
     shown: {
       network: `SWAP ${from}`,
-      amount: `${exact(i.sellAmount, i.sellDecimals)} ${sym}`,
+      amount,
       fee: `${fee} ${sym}`,
       to: line("GET AT LEAST") + line(`${min} ${buy}`) + line(`ON ${to}`),
     },
@@ -843,12 +865,14 @@ function ceilDecimals(units: bigint, decimals: number, places: number) {
   return formatUnits(((units + step - 1n) / step) * step, decimals);
 }
 
-/** Home-screen balance, at most 18 characters. */
+/** Home-screen balance: at most 11 characters of number, then the unit. */
 function balanceText(chain: Chain, units: bigint | null, sym: string) {
   if (units === null) return `-- ${sym}`;
   const [whole, frac = ""] = formatUnits(units, chain === "sol" ? 9 : 18).split(".");
-  const text = `${whole}.${frac.padEnd(4, "0").slice(0, 4)} ${sym}`;
-  return text.length <= 18 ? text : `>999999999 ${sym}`;
+  // the big digits have room for 11 characters before the unit: fewer decimals for big balances
+  const places = Math.max(0, Math.min(4, 10 - whole.length));
+  const num = whole.length > 11 ? ">9999999999" : places ? `${whole}.${frac.padEnd(places, "0").slice(0, places)}` : whole;
+  return `${num} ${sym}`;
 }
 
 function bytesEqual(a: Uint8Array, b: Uint8Array) {

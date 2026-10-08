@@ -117,11 +117,22 @@ await press("UP");
 snap("set-pin"); // PIN 1200
 await step("A");
 await frames(20);
+snap("confirm-pin");
+await press("UP");
+await press("RIGHT");
+await press("UP");
+await press("UP");
+await step("A");
+await frames(20);
 
 await frames(60);
 snap("pair-wait");
 await frames(40);
 snap("pair-wait-waves");
+// the recovery words don't stay readable on the cartridge bus once the PIN is set
+const mailboxText = Array.from({ length: 172 }, (_, i) => String.fromCharCode(gb.read(0xd800 + 0x44 + i) || 32)).join("");
+const firstWord = saved?.mnemonic.split(" ")[0] ?? "?";
+console.log("recovery words gone from the mailbox:", saved && !mailboxText.includes(` ${firstWord} `) && !mailboxText.startsWith(firstWord) ? "OK" : "LEAKED");
 // pairing: an unpaired phone can't ask for signatures or put balances on screen
 let unpairedBlocked = false;
 try {
@@ -223,8 +234,12 @@ const solSig = solRes?.approved && solRes.chain === "sol" ? bs58.encode(solRes.s
 chip.setTxStatus(solReq.id, "CONFIRMED", { hash: solSig });
 await frames(40);
 snap("tx-confirmed");
+// once it's on chain, the phone can't relabel it as failed (that invites sending twice)
+chip.setTxStatus(solReq.id, "FAILED", { reason: "NO_FUNDS" });
+await frames(40);
 const statusReply = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
 console.log("phone text on screen:", statusReply.includes("41 4c 4c") /* "ALL" */ ? "LEAKED" : "blocked");
+console.log("confirmed send can't be relabelled failed:", statusReply.includes("43 4f 4e 46") /* "CONF" */ && !statusReply.includes("46 41 49 4c") /* "FAIL" */ ? "OK" : "WRONG");
 await step("A");
 
 // requests the chip must refuse outright
@@ -328,16 +343,15 @@ await frames(60);
 const swap = {
   src: { chain: "sol" as const },
   dst: { chain: "evm" as const, net: 84532 },
-  sellSymbol: "SOL",
-  sellDecimals: 9,
+  sellToken: "11111111111111111111111111111111",
   sellAmount: 1_000_000_000n,
-  buySymbol: "USDC",
-  buyDecimals: 6,
+  buyToken: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
   minReceive: 114_693_184n,
-  fees: 2_000_000n,
   deadline: Math.floor(Date.now() / 1000) + 300,
 };
 refused("swap with an unknown network", { chain: "swap", swap: { ...swap, dst: { chain: "evm", net: 1 } } });
+refused("swap of a token the cartridge doesn't know", { chain: "swap", swap: { ...swap, buyToken: "0x0000000000000000000000000000000000000bad" } });
+refused("swap with a fractional deadline", { chain: "swap", swap: { ...swap, deadline: swap.deadline + 0.5 } });
 refused("expired swap quote", { chain: "swap", swap: { ...swap, deadline: 1 } });
 const swapReq = chip.requestSignature({ chain: "swap", swap });
 let swapRes: SignResult | null = null;
@@ -493,9 +507,11 @@ for (const word of PHRASE.split(" ")) {
   if (word === "legal") snap("restore-word"); // first time only matters
   await press("A", 2);
 }
-await frames(20);
+await frames(90);
 snap("restore-pin");
 await step("A"); // PIN 0000
+await frames(20);
+await step("A"); // and once more to confirm it
 await frames(20);
 const expected = walletFromMnemonic(PHRASE);
 console.log(

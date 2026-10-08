@@ -8,9 +8,11 @@
 import type { Sodax } from "@sodax/sdk";
 import type { SwapIntent, SwapSide } from "../chip/chip";
 import { EVM_NETWORKS } from "../chip/networks";
+import { chipToken, PARTNER_FEE } from "../chip/tokens";
 
-export const PARTNER_FEE_BPS = 10; // 0.1%
-export const PARTNER_WALLET = "0x95A8E0BcF616f7eF630b0D923667fbF52AA721AD";
+// the cartridge holds the fee too, and signs it with every swap
+export const PARTNER_FEE_BPS = PARTNER_FEE.bps; // 0.1%
+export const PARTNER_WALLET = PARTNER_FEE.wallet;
 export const SLIPPAGE_BPS = 50; // 0.5%: the least you accept is the quote minus this
 const QUOTE_TTL_S = 300;
 
@@ -71,8 +73,8 @@ export async function loadTokens(): Promise<Token[]> {
   const out: Token[] = [];
   for (const c of SWAP_CHAINS) {
     for (const t of all[c.key] ?? []) {
-      // the Game Boy can only show plain symbols; skip anything it would refuse
-      if (!/^[A-Za-z0-9.]{1,8}$/.test(t.symbol)) continue;
+      // the cartridge only signs tokens on its own list; skip anything it would refuse
+      if (!chipToken(c.key, t.address)) continue;
       out.push({ chain: c.key, symbol: t.symbol, name: t.name, decimals: t.decimals, address: t.address });
     }
   }
@@ -115,13 +117,10 @@ export function intentFor(q: Quote): SwapIntent {
   return {
     src: chainOf(q.sell.chain).side,
     dst: chainOf(q.buy.chain).side,
-    sellSymbol: q.sell.symbol,
-    sellDecimals: q.sell.decimals,
+    sellToken: q.sell.address,
     sellAmount: q.sellAmount,
-    buySymbol: q.buy.symbol,
-    buyDecimals: q.buy.decimals,
+    buyToken: q.buy.address,
     minReceive: q.minOut,
-    fees: q.partnerFee + q.solverFee,
     deadline: Math.floor(Date.now() / 1000) + QUOTE_TTL_S,
   };
 }
