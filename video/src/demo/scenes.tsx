@@ -602,15 +602,19 @@ export function D7({ marks }: P) {
   const sent = M(2, 19.6);
   const screen = Math.max(swap + 4.2, sent - 3.6);
   // the take: RIGHT through the networks, the swap tab and quote, the swap screen, A held
-  const netRate = (21.9 - 13.0) / (swap - 0.2);
-  const recSegs: Seg[] = [{ at: 0, from: 13.0, rate: netRate }];
+  // from a beat on Ethereum, RIGHT through Base, Arbitrum and HyperEVM, ending on Robinhood Chain
+  // (the take's fifth press wraps back to Ethereum, so the clip stops before it)
+  const takeFrom = 12.1;
+  const takeTo = 20.2;
+  const netRate = (takeTo - takeFrom) / (swap - 0.2);
+  const recSegs: Seg[] = [{ at: 0, from: takeFrom, rate: netRate }];
   const phoneSegs: Seg[] = [{ at: 0, from: 27.5, rate: (33.9 - 27.5) / (screen - swap) }];
   const lcdSegs: Seg[] = [
     { at: 0, from: 37.6, rate: (42.0 - 37.6) / (sent - screen) },
     { at: sent - screen, from: 42.0 },
   ];
   // which network the Game Boy is on: the take's RIGHT presses, in scene time
-  const take = 13.0 + t * netRate;
+  const take = takeFrom + Math.min(t, swap - 0.2) * netRate;
   // the take logged each mark after the press and its 1.5 s wait, so the presses were 1.62 s earlier
   const presses = [15.13, 16.81, 18.55, 20.2, 21.9].map((m) => m - 1.62);
   const net = presses.filter((x) => take >= x).length % 5;
@@ -724,29 +728,38 @@ const PRINTS: { src: string; w: number; h: number; x: number; y: number; rot: nu
   { src: "real/pin.webp", w: 360, h: 450, x: 1010, y: 410, rot: 3 },
   { src: "real/home.webp", w: 380, h: 475, x: 1420, y: 385, rot: -3 },
 ];
-function Print({ src, w, h, x, y, rot, at }: { src: string; w: number; h: number; x: number; y: number; rot: number; at: number }) {
+function Print({ src, w, h, x, y, rot, at, i }: { src: string; w: number; h: number; x: number; y: number; rot: number; at: number; i: number }) {
   const t = useT();
-  const q = ease(interpolate(t, [at, at + 0.7], [0, 1], clamp));
+  const q = ease(interpolate(t, [at, at + 0.8], [0, 1], clamp));
   if (q <= 0) return null;
-  // settles from a little higher and more tilted, then keeps drifting very slowly
-  const drift = (t - at) * 1.4;
+  // after it lands it keeps living: each print floats and sways on its own slow rhythm,
+  // and the photo inside creeps in like a Ken Burns move
+  const since = Math.max(0, t - at);
+  const settle = interpolate(since, [0.6, 1.6], [0, 1], clamp);
+  const ph = i * 1.7;
+  const bob = Math.sin(since * 0.9 + ph) * 7 * settle;
+  const sway = Math.sin(since * 0.6 + ph * 1.3) * 1.1 * settle;
+  const zoom = 1 + 0.07 * interpolate(since, [0.4, 9], [0, 1], { ...clamp, easing: (u) => u * (2 - u) });
+  const panX = Math.sin(ph) * 10 * (zoom - 1) * 14;
   return (
     <div
       style={{
         position: "absolute",
         left: x,
-        top: y + (1 - q) * -50 + drift * 0.4,
+        top: y + (1 - q) * -60 + bob,
         width: w,
         padding: 12,
         paddingBottom: 34,
         background: "#fff",
         borderRadius: 6,
-        boxShadow: "0 30px 60px -28px rgba(40,44,90,0.55), 0 2px 6px rgba(40,44,90,0.12)",
-        transform: `rotate(${rot + (1 - q) * 5}deg) scale(${1.04 - 0.04 * q})`,
+        boxShadow: `0 ${30 + bob * 0.6}px ${60 + bob}px -28px rgba(40,44,90,0.55), 0 2px 6px rgba(40,44,90,0.12)`,
+        transform: `rotate(${rot + (1 - q) * 6 + sway}deg) scale(${1.05 - 0.05 * q})`,
         opacity: q,
       }}
     >
-      <Img src={staticFile(src)} style={{ display: "block", width: w - 24, height: h - 24 * (h / w), objectFit: "cover", borderRadius: 2 }} />
+      <div style={{ width: w - 24, height: h - 24 * (h / w), overflow: "hidden", borderRadius: 2 }}>
+        <Img src={staticFile(src)} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom}) translateX(${panX}px)` }} />
+      </div>
     </div>
   );
 }
@@ -760,9 +773,11 @@ export function D8({ marks }: P) {
     <SceneFade>
       <Glow shift={300} />
       <AbsoluteFill style={{ opacity: 1 - card }}>
+        <AbsoluteFill style={{ transform: `translate(${Math.sin(t * 0.35) * 8}px, ${Math.cos(t * 0.28) * 5}px)` }}>
         {PRINTS.map((pr, i) => (
-          <Print key={pr.src} {...pr} at={0.5 + i * 0.55} />
+          <Print key={pr.src} {...pr} i={i} at={0.5 + i * 0.55} />
         ))}
+        </AbsoluteFill>
         <div style={{ position: "absolute", left: 120, top: 190, width: 700, display: "flex", flexDirection: "column", gap: 18 }}>
           <Show from={0.4}>
             <span style={{ fontFamily: PX, fontSize: 22, letterSpacing: 5, color: C.accent }}>THE REAL CARTRIDGE</span>
