@@ -303,10 +303,11 @@ function ProductArt({ art }: { art: (typeof PRODUCTS)[number]["art"] }) {
   );
 }
 
-export function Who({ dur }: P) {
+export function Who({ dur, marks = [] }: P) {
   const f = useCurrentFrame();
-  const b1 = Math.round(dur * 0.3);
-  const b2 = Math.round(dur * 0.56);
+  // the shelf holds until the products line, then the cards come in as they're named
+  const b1 = marks.find((m) => m.text.startsWith("This isn't"))?.at ?? Math.round(dur * 0.3);
+  const b2 = marks.find((m) => m.text.startsWith("We're starting"))?.at ?? Math.round(dur * 0.6);
   const s1 = interpolate(f, [0, 18, b1 - 10, b1 + 6], [0, 1, 1, 0], clamp);
   const s2 = interpolate(f, [b1, b1 + 18, b2 - 10, b2 + 6], [0, 1, 1, 0], clamp);
   const s3 = interpolate(f, [b2, b2 + 18], [0, 1], clamp);
@@ -338,7 +339,7 @@ export function Who({ dur }: P) {
         </Pop>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 380px)", gap: 28 }}>
           {PRODUCTS.map((pr, i) => (
-            <Pop key={pr.h} start={b2 + 14 + i * 8}>
+            <Pop key={pr.h} start={b2 + [20, 48, 80, 140][i]}>
               <Card style={{ width: 380, height: 500, padding: 14, display: "flex", flexDirection: "column", gap: 16, boxSizing: "border-box" }}>
                 <ProductArt art={pr.art} />
                 <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -349,9 +350,6 @@ export function Who({ dur }: P) {
             </Pop>
           ))}
         </div>
-        <Pop start={b2 + 60}>
-          <div style={{ fontFamily: SANS, fontSize: 32, color: C.ink2 }}>From Japan, where these consoles still turn up at flea markets.</div>
-        </Pop>
       </AbsoluteFill>
     </AbsoluteFill>
   );

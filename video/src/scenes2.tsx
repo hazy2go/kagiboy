@@ -341,11 +341,12 @@ const CHIPS = [
   ["NXP SE050E2", "Keeps your keys. Five wrong PINs and it wipes."],
   ["RP2350", "Talks to the Game Boy, reads every request."],
   ["CYW43439", "Bluetooth to your phone. Public data only."],
-  ["LIS3DH", "Turns a shake into randomness."],
+  ["LIS3DH", "Your shake and button mashing become randomness."],
 ];
-export function Apart({ dur }: P) {
+export function Apart({ dur, marks = [] }: P) {
   const sec = dur / 30;
-  const step = Math.round((dur * 0.62) / CHIPS.length);
+  // each card comes in as its chip is named: the first a beat into the line, then one per sentence
+  const at = (i: number) => (i === 0 ? (marks[0]?.at ?? 0) + 30 : marks[i]?.at ?? 30 + i * Math.round((dur * 0.62) / CHIPS.length));
   return (
     <AbsoluteFill>
       <Glow shift={200} />
@@ -366,7 +367,7 @@ export function Apart({ dur }: P) {
           <Eyebrow>Inside the cartridge</Eyebrow>
         </Pop>
         {CHIPS.map(([n, d], i) => (
-          <Pop key={n} start={30 + i * step}>
+          <Pop key={n} start={at(i)}>
             <Card style={{ padding: "24px 30px", display: "flex", flexDirection: "column", gap: 6, background: "rgba(255,255,255,0.88)" }}>
               <span style={{ fontFamily: PX, fontSize: 32, color: C.ink }}>{n}</span>
               <span style={{ fontFamily: SANS, fontSize: 30, color: C.ink2 }}>{d}</span>
