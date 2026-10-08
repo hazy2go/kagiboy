@@ -41,10 +41,18 @@ chip.setBalance("evm", 420_000_000_000_000_000n);
 const addr = chip.addresses!;
 
 const account = [0, 1].map((c) => bytes(handle(0x06, c).data));
-// the EVM card on every network LEFT/RIGHT can pick, in allowlist order
+// the EVM card on every network LEFT/RIGHT can pick, in allowlist order; each network has its own
+// balance, so switching visibly changes the amount and not just the name
+const DEMO_EVM_BALANCE: Record<number, bigint> = {
+  11155111: 420_000_000_000_000_000n, // 0.42 ETH
+  84532: 185_000_000_000_000_000n, // 0.185 ETH
+  421614: 73_000_000_000_000_000n, // 0.073 ETH
+  998: 2_500_000_000_000_000_000n, // 2.5 HYPE
+  46630: 50_000_000_000_000_000n, // 0.05 ETH
+};
 const evmAccounts = EVM_NETWORKS.map((n) => {
   chip.setEvmNetwork(n.id);
-  chip.setBalance("evm", 420_000_000_000_000_000n);
+  chip.setBalance("evm", DEMO_EVM_BALANCE[n.id] ?? 420_000_000_000_000_000n);
   return bytes(handle(0x06, 1).data);
 });
 chip.setEvmNetwork(EVM_NETWORKS[0].id);
