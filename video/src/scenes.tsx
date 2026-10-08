@@ -286,34 +286,19 @@ const PRODUCTS: { h: string; d: string; art: "cart" | "limited" | "japan" | "bun
   { h: "Bundle", d: "With a restored Game Boy", art: "bundle" },
 ];
 
-/** The picture on each product card; all four share one size. */
+/** The picture on each product card: studio renders of the real model (assets/3d/products.py), one size. */
 function ProductArt({ art }: { art: (typeof PRODUCTS)[number]["art"] }) {
-  const box = { position: "relative" as const, height: 300, borderRadius: 22, overflow: "hidden", background: "linear-gradient(160deg,#EAF1FF,#FBF2F6)", display: "flex", alignItems: "center", justifyContent: "center" };
-  const cart = (style: React.CSSProperties) => <Img src={a("01-renders/cart-cutout.png")} style={{ position: "absolute", height: 230, objectFit: "contain", ...style }} />;
-  if (art === "cart") return <div style={box}>{cart({ height: 250 })}</div>;
-  if (art === "limited")
-    return (
-      <div style={box}>
-        {/* the same cartridge in three numbered colourways */}
-        {cart({ left: 6, top: 52, height: 200, filter: "sepia(1) saturate(4) hue-rotate(215deg) brightness(0.92)", transform: "rotate(-9deg)" })}
-        {cart({ right: 0, top: 52, height: 200, filter: "sepia(1) saturate(3.4) hue-rotate(125deg) brightness(0.98)", transform: "rotate(8deg)" })}
-        {cart({ left: 88, top: 34, height: 226, filter: "sepia(1) saturate(4) hue-rotate(295deg) brightness(1.0)" })}
-        <div style={{ position: "absolute", right: 14, bottom: 14, background: C.ink, color: "#fff", borderRadius: 999, padding: "8px 14px", fontFamily: PX, fontSize: 20, letterSpacing: 2 }}>No. 001/500</div>
-      </div>
-    );
-  if (art === "japan")
-    return (
-      <div style={{ ...box, background: "radial-gradient(70% 70% at 50% 40%, #3a4060, #12141d)" }}>
-        {/* not revealed yet: the cartridge as a silhouette */}
-        {cart({ height: 250, filter: "brightness(0) drop-shadow(0 0 1px rgba(207,226,255,0.9)) drop-shadow(0 0 18px rgba(143,178,255,0.35))", opacity: 0.92 })}
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: DISPLAY, fontWeight: 700, fontSize: 130, color: "rgba(255,255,255,0.92)" }}>?</div>
-        <div style={{ position: "absolute", left: 16, top: 14, fontFamily: PX, fontSize: 20, letterSpacing: 3, color: "#cfe2ff" }}>JAPAN ONLY</div>
-      </div>
-    );
+  const dark = art === "japan";
   return (
-    <div style={box}>
-      {/* a restored Game Boy with the cartridge in it */}
-      <Img src={a("01-renders/gb-cart-cutout.png")} style={{ height: 286, objectFit: "contain" }} />
+    <div style={{ position: "relative", height: 300, borderRadius: 22, overflow: "hidden", background: dark ? "radial-gradient(70% 70% at 50% 42%, #2b3150, #0f1119)" : "linear-gradient(165deg,#EEF3FF,#FBF3F7)" }}>
+      <Img src={a(`01-renders/prod-${art}.png`)} style={{ position: "absolute", left: "50%", top: "50%", width: 352, height: 352, transform: "translate(-50%, -50%)", objectFit: "cover" }} />
+      {art === "limited" && <div style={{ position: "absolute", right: 14, bottom: 14, background: C.ink, color: "#fff", borderRadius: 999, padding: "8px 14px", fontFamily: PX, fontSize: 20, letterSpacing: 2 }}>No. 001/500</div>}
+      {dark && (
+        <>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: DISPLAY, fontWeight: 700, fontSize: 110, color: "rgba(255,255,255,0.9)" }}>?</div>
+          <div style={{ position: "absolute", left: 16, top: 14, fontFamily: PX, fontSize: 20, letterSpacing: 3, color: "#cfe2ff" }}>JAPAN ONLY</div>
+        </>
+      )}
     </div>
   );
 }
