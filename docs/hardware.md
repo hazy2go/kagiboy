@@ -61,8 +61,9 @@ compromises the phone, and someone who sniffs Bluetooth.
   screen: it only sends numbers and fixed status codes, and the cartridge writes
   every word. Only the A button approves, and the cartridge signs exactly the
   bytes it showed. Anything the firmware can't decode is refused (no blind
-  signing): today that means plain SOL transfers and plain native-coin transfers
-  on the allowed EVM networks only.
+  signing): today that means plain SOL transfers, plain native-coin transfers
+  on the allowed EVM networks, and SODAX swap intents (shown in full, never
+  sent by the demo build).
 - **Network allowlist and spending limits on EVM.** The cartridge signs only for
   chain ids on its allowlist and names the network on the Game Boy screen from the
   transaction itself. The demo allows five testnets: Ethereum Sepolia (11155111),

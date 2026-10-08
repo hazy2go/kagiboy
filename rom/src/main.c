@@ -538,12 +538,12 @@ static uint8_t request_waiting(void) {
     /* the demo's stand-in for the phone: a held START raises a request */
     static uint8_t start_held;
     if (held_keys == J_START) {
-        if (++start_held == 60) demo_raise();
+        if (++start_held == 60 && !demo_phone_gone) demo_raise();
     } else {
         start_held = 0;
     }
     /* no real phone on a flash cart: one "arrives" a few seconds after the Game Boy starts listening */
-    if (demo_state == STATE_UNLOCKED && (demo_window || demo_phone_gone) && !demo_pairing && ++demo_window_t == 240) demo_pairing = 1;
+    if (demo_state == STATE_UNLOCKED && (demo_window || demo_phone_gone) && !demo_pairing && demo_window_t < 240 && ++demo_window_t == 240) demo_pairing = 1;
 #endif
     return REQ_KIND() ? 1 : 0;
 }
@@ -1232,13 +1232,17 @@ static void tx_result(void) {
  * owner, holding the Game Boy, can let a new phone in. */
 static void pair_request(void) {
     uint8_t p, st;
+    static char code[7];
     if (chip_call(CMD_PAIR, 0, 0, 0) != 0) return;
+    /* keep the code we show: accepting sends it back, so only this exact pairing can go through */
+    memcpy(code, resp, 6);
+    code[6] = 0;
     beep(0xF0);
     screen_begin();
     header(T_ICON_PHONE_0, "Pair phone?", "NEW PHONE");
     capc(5, "CHECK YOUR PHONE");
     box(5, 7, 10, 4);
-    big(7, 8, resp); /* 6 digits */
+    big(7, 8, code); /* 6 digits */
     capc(13, "SAME CODE THERE?");
     capc(14, "THEN PRESS A");
     hint(1, 17, BTN_A, "PAIR");
@@ -1250,7 +1254,7 @@ static void pair_request(void) {
         p = wait_press();
     } while (!(p & (J_A | J_B)));
     if (p & J_A) {
-        st = chip_call(CMD_PAIR, 1, 0, 0);
+        st = chip_call(CMD_PAIR, 1, (const uint8_t *)code, 6);
         if (st == 0) message(T_ICON_CHECK_0, "Paired", "THIS PHONE CAN NOW", "ASK YOU TO SIGN");
         else message(T_ICON_PHONE_0, "Expired", "ASK AGAIN FROM", "THE PHONE");
     } else {
@@ -1381,6 +1385,7 @@ static uint8_t pair_window(void) {
         anim_tick(++frame);
         if (request_waiting()) {
             sign_request(); /* the pairing screen: same code on both, A to accept */
+            chip_call(CMD_PHONE, 3, 0, 0); /* whatever it was, stop listening */
             return 1;
         }
         if (pressed() & J_B) {

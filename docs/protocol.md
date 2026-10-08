@@ -27,7 +27,8 @@ The two sides talk through a 256-byte mailbox.
 | `0xF0` | 1 | chip | `0xC7` while the chip is powered (presence) |
 | `0xF1` | 1 | chip | accelerometer X, signed |
 | `0xF2` | 1 | chip | accelerometer Y, signed |
-| `0xF3` | 1 | chip | `1` while the phone has a transaction waiting for approval |
+| `0xF3` | 1 | chip | what waits for the owner: `1` a sign request, `2` a phone asking to pair, `0` nothing |
+| `0xF4` | 1 | chip | `1` once a phone is paired with this wallet; the home screen asks you to pair until then |
 
 One writer per byte, so the two sides never overwrite each other. The Game Boy
 waits until `resp_seq == req_seq`, then copies the response out. Replies that
@@ -79,16 +80,17 @@ transfer from its own key and labels it `SOLANA`; the phone uses devnet.
 | `0x04` | SET_PIN | 4 digits | |
 | `0x05` | UNLOCK | 4 digits | status 0 ok, 1 wrong (`data[0]` = tries left), 2 wiped, 3 no wallet |
 | `0x06` | ACCOUNT | `arg` = chain (0 Solana, 1 EVM) | `address\0balance\0name\0`. `balance` is formatted by the chip from base units (at most 18 characters, e.g. `0.5000 HYPE`, `-- ETH` while unknown). `name` is the network shown on the Game Boy's home screen: `Solana`, or for EVM the network the phone has selected (`Ethereum`, `Base`, `Arbitrum`, `HyperEVM`, `Robinhood`) |
-| `0x07` | PENDING | | `chain, to\0amount\0fee\0network\0`, all decoded by the chip from its own snapshot of the transaction (status 1 = nothing pending) |
+| `0x07` | PENDING | | `chain, to\0amount\0fee\0network\0`, all decoded by the chip from its own snapshot of the request (status 1 = nothing pending or no paired phone). A swap reports chain 1 and fills the fields as SEND amount, fee, `SWAP <FROM CHAIN>` and a 3-row `GET AT LEAST <min> <token> ON <chain>` box |
 | `0x08` | SIGN | `arg` = 1 approve, 0 reject | status 0 signed, 1 could not sign (nothing was signed) |
 | `0x09` | WIPE | | |
-| `0x0A` | TXSTATUS | | `state\0detail\0`: state is SIGNED, BROADCAST, CONFIRMED, FAILED or UNKNOWN; detail is a shortened hash or a fixed reason. Both are chosen by the chip from codes; the phone never sends text |
+| `0x0A` | TXSTATUS | | `state\0detail\0`: state is SIGNED, BROADCAST, CONFIRMED, FAILED, UNKNOWN or DEMO (a swap the demo build signed but never sends; the phone can't change it); CONFIRMED needs the hash the chip signed; detail is a shortened hash or a fixed reason. Both are chosen by the chip from codes; the phone never sends text |
 | `0x0B` | LOCK | | |
 | `0x0C` | QR | `arg` = chain | `size`, then `size×size` bits row by row (1 = dark). 29×29 for both address types; the ROM draws it with 16 tiles, one per 2×2 block |
 | `0x0D` | WORDS | word prefix (lowercase) | `count`, then per suggestion a 2-byte word index and the word, 0-terminated (max 4, exact match first) |
 | `0x0E` | RESTORE | 12 × 2-byte word indices | status 0 ok, 2 checksum failed |
 | `0x0F` | NETWORK | arg 1 next, 2 previous | switches the EVM network on the home card (allowlist order, wraps); status 0 ok, 1 locked or bad arg. The cartridge tells the phone, which follows |
-| `0x10` | PAIR | arg 0 get code, 1 accept, 2 refuse | arg 0 replies the 6-digit code as text; 1 stores the phone as paired with this wallet; status 1 when no pairing waits. Until a phone is paired the chip refuses its sign requests and balances |
+| `0x10` | PAIR | arg 0 get code, 1 accept (data: the 6 digits the Game Boy showed), 2 refuse | arg 0 replies the 6-digit code as text; 1 stores the phone as paired, only if the digits match the waiting request; status 1 when no pairing waits. One pairing at a time, and it lapses after 60 s. Once a phone is paired, a new one may only ask while the owner has opened the window with PHONE arg 2 |
+| `0x11` | PHONE | arg 0 info, 1 forget, 2 open pairing window (60 s), 3 close it | arg 0 replies `name\0id\0date\0` of the paired phone (status 1 if none); 1 forgets it and drops any request it left waiting |
 
 Randomness: the chip's hardware RNG is the source. Button timings and
 accelerometer samples are hashed into the pool on top of it; they add to it,
@@ -100,3 +102,13 @@ The mailbox PENDING byte says what waits for the owner: `1` a sign request, `2` 
 Pairing is Bluetooth numeric comparison done on the Game Boy: the phone and the Game Boy show the same
 random 6-digit code, and only an A press on the console lets the phone in. The pairing belongs to the
 wallet, so wiping or restoring forgets it.
+
+## Swap requests
+
+The phone can ask the cartridge to sign a swap quoted by SODAX: source and destination chain, sell token
+and amount, buy token and the least the user accepts (after every fee), the fees, and a deadline within the
+next hour. The chip checks every field, always sends the bought coins to its own address on the
+destination chain, and signs `sha256("kagiboy-swap-v1|src|dst|SELL|decimals|amount|BUY|decimals|min|fees|deadline|recipient")`
+with the key of the chain the coins leave from. This demo signs over token symbols and test network ids;
+before real swaps the digest must cover the token contract addresses and mainnet chain ids, and the signature
+must be over the actual SODAX intent transaction.

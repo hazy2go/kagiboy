@@ -118,6 +118,7 @@ interface Pending {
 }
 
 const MAX_TRIES = 5;
+const PAIR_TIMEOUT_MS = 60_000;
 const PLAIN_TRANSFER_GAS = 21000n;
 // rollups (Arbitrum, Robinhood Chain) count their L1 cost in gas, so a plain send can need more than 21000
 const MAX_TRANSFER_GAS = 600_000n;
@@ -203,13 +204,19 @@ export class CartChip {
     if (this.paired && !this.pairWindowOpen) {
       return Promise.reject(new Error("On the Game Boy, open SELECT, then Phone, then Pair new phone."));
     }
+    // one pairing at a time: a second phone can't swap its code in while the owner reads the first one's
+    if (this.pairing) return Promise.reject(new Error("another phone is already asking to pair"));
     this.pairingName = cleanName(name);
-    this.pairing?.resolve(false);
     const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000;
     const code = String(n).padStart(6, "0");
+    const gen = this.generation;
     return new Promise<boolean>((resolve) => {
       this.pairing = { code, resolve };
       this.emit();
+      // nobody answered: the request lapses, so it can't sit there blocking the owner's own requests
+      setTimeout(() => {
+        if (this.pairing?.code === code && this.generation === gen) this.dropPairing();
+      }, PAIR_TIMEOUT_MS);
     });
   }
 
@@ -221,12 +228,16 @@ export class CartChip {
     delete p.phone;
     this.storage.save(p);
     this.balances = { sol: null, evm: null };
+    // a forgotten phone's waiting request goes with it
+    this.dropPending("locked");
     this.emit();
   }
 
   private dropPairing() {
-    this.pairing?.resolve(false);
+    if (!this.pairing) return;
+    this.pairing.resolve(false);
     this.pairing = null;
+    this.emit();
   }
 
   /** Balances arrive as base units (lamports / wei); the chip formats them itself. */
@@ -269,6 +280,9 @@ export class CartChip {
     // checked at runtime, not just by types: Bluetooth input is untrusted
     const cur = this.txStatus;
     if (id !== cur.id || !cur.chain || !TX_STATES.has(state)) return;
+    // a demo swap was never sent: the phone can't relabel it, and nothing reaches "confirmed" without its hash
+    if (cur.state === "DEMO" || state === "DEMO") return;
+    if (state === "CONFIRMED" && (!cur.hash || detail.hash?.toLowerCase() !== cur.hash.toLowerCase())) return;
     let text = "";
     if (detail.reason !== undefined) {
       if (!Object.hasOwn(FAIL_REASON, detail.reason)) return;
@@ -317,6 +331,7 @@ export class CartChip {
     this.balances = { sol: null, evm: null };
     this.dropPending("power");
     this.dropPairing();
+    this.pairWindowUntil = 0;
     this.emit();
   }
 
@@ -465,6 +480,8 @@ export class CartChip {
         if (!this.unlocked || !pr || !this.persisted) return { status: 1 };
         if (arg === 0) return { status: 0, data: `${pr.code}\0` };
         if (arg !== 1 && arg !== 2) return { status: 1 };
+        // the Game Boy sends back the code it showed; accept only that exact pairing
+        if (arg === 1 && String.fromCharCode(...data.slice(0, 6)) !== pr.code) return { status: 1 };
         this.pairing = null;
         if (arg === 1) {
           // a new phone replaces the old one: one cartridge, one phone
@@ -474,6 +491,7 @@ export class CartChip {
           this.pairWindowUntil = 0;
         }
         pr.resolve(arg === 1);
+        this.pairWindowUntil = 0;
         this.emit();
         return { status: 0 };
       }
@@ -493,6 +511,8 @@ export class CartChip {
           this.storage.save(per);
           this.balances = { sol: null, evm: null };
           this.dropPairing();
+          this.dropPending("locked");
+          this.pairWindowUntil = 0;
           this.emit();
           return { status: 0 };
         }
@@ -524,7 +544,7 @@ export class CartChip {
       }
 
       case CMD.PENDING: {
-        if (!this.unlocked || !this.pending) return { status: 1 };
+        if (!this.unlocked || !this.pending || !this.paired) return { status: 1 };
         const { snap } = this.pending;
         const { to, amount, fee, network } = snap.shown;
         return {
@@ -537,6 +557,11 @@ export class CartChip {
         const p = this.pending;
         if (!this.unlocked || !this.wallet || !p) return { status: 1 };
         this.pending = null;
+        if (!this.paired) {
+          p.resolve({ approved: false, reason: "locked" });
+          this.emit();
+          return { status: 1 };
+        }
         if (arg !== 1) {
           p.resolve({ approved: false, reason: "rejected" });
           this.emit();
@@ -560,6 +585,7 @@ export class CartChip {
         this.balances = { sol: null, evm: null };
         this.dropPending("locked");
         this.dropPairing();
+        this.pairWindowUntil = 0;
         return { status: 0 };
 
       case CMD.WIPE:
@@ -684,6 +710,8 @@ function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
 
   // round-trip through the wire format so later edits to the phone's object can't leak in
   const tx = parseTransaction(serializeTransaction({ ...req.tx, type: "eip1559" })) as TransactionSerializableEIP1559;
+  if (req.tx.chainId === undefined) throw new Error("the transaction must name its network (chainId)");
+  if (!req.tx.maxFeePerGas) throw new Error("the transaction has no fee set");
   const net = evmNetwork(tx.chainId);
   if (!net) throw new Error("this cartridge doesn't sign on that network");
   if (!tx.to) throw new Error("contract deployment is not supported");

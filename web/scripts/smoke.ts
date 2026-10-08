@@ -143,6 +143,10 @@ console.log("B turns the phone away:", (await pairing) === false && !chip.paired
 await frames(100);
 pairing = chip.requestPairing();
 await frames(40);
+// a second phone can't swap its code in while the owner is reading the first one's
+let takeover = "";
+await chip.requestPairing("ATTACKER").catch((e) => (takeover = (e as Error).message));
+console.log("second pairing refused while one waits:", takeover.includes("already asking") ? "OK" : "WRONG", takeover);
 await step("A");
 console.log("A pairs the phone:", (await pairing) === true && chip.paired ? "OK" : "WRONG");
 await frames(100);
@@ -399,9 +403,15 @@ console.log("Phone screen names the paired phone:", info.length > 10 ? "OK" : "W
 await step("SELECT"); // forget?
 await frames(10);
 snap("phone-forget");
+// a request arrives from the phone while the owner is about to forget it
+const late = chip.requestSignature({ chain: "evm", tx: { ...sepoliaTx, nonce: 31 } });
+let lateRes: SignResult | null = null;
+late.result.then((r) => (lateRes = r));
 await step("A");
 await frames(120);
 console.log("forgotten from the Game Boy:", !chip.paired ? "OK" : "WRONG");
+await frames(10);
+console.log("its waiting request was dropped:", !chip.hasPending && (lateRes as SignResult | null)?.approved === false ? "OK" : "WRONG", lateRes);
 snap("phone-none");
 await step("B"); // back to the menu
 await step("B"); // home: asks to pair again

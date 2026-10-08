@@ -104,7 +104,9 @@ Phone app (web/src/phone)      balances, builds and broadcasts transactions
   It snapshots each request, decodes it itself and refuses anything it can't
   show in full on the Game Boy (no blind signing). Today that means one plain
   SOL transfer, or one plain native-coin transfer on an allowed EVM network
-  (chain id allowlist, gas limit 21000 to 600000, fee cap 0.01 of the coin).
+  (chain id allowlist, gas limit 21000 to 600000, fee cap 0.01 of the coin),
+  or a SODAX swap intent shown in full (amount, least you get, fees, chains).
+  The demo signs swaps but never sends them.
 - **Phone:** talks to public RPCs for Solana devnet and the five EVM testnets.
   It can send balances as numbers and transaction status as fixed codes; the
   chip writes every word that appears on the Game Boy.
