@@ -65,7 +65,7 @@ The phone app (`web/src/phone/`, `web/src/app/`) talks to the networks: balances
 
 ### Signing on Solana
 
-<img src="docs/media/chip-checks.jpg" alt="The chip's checks before it shows a Solana request: fee payer, one instruction, a System Program transfer" width="100%">
+<img src="docs/media/sign-screen.jpg" alt="The Game Boy's sign screen for 0.05 SOL: the exact amount, the fee and the full address over three lines" width="100%">
 
 This is the part I care about most. The phone builds a normal `SystemProgram.transfer` and hands over the serialized message bytes, nothing else. The chip copies those bytes, so nothing can change them later, and decodes them itself: the fee payer has to be this cartridge, there has to be exactly one instruction, it has to be a plain transfer from this wallet, and the amount and full address have to fit on the Game Boy screen. If any of that fails, there's no prompt at all. You hold A, the chip signs those exact bytes with ed25519, and the phone broadcasts.
 
