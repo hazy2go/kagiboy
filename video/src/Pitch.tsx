@@ -7,7 +7,7 @@ import { Apart, Drawer, Feel, Finale, Memory, Present, Reveal } from "./scenes2"
 
 export const FPS = 30;
 const LEAD = 0.5; // seconds of picture before each voice line
-const TAIL = 0.9; // and after
+const TAIL = 1.4; // and after
 const END = 5;
 const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
@@ -51,12 +51,17 @@ export function Pitch() {
           <Captions text={text} from={Math.round(LEAD * FPS)} seconds={seconds} />
         </Sequence>
       ))}
-      {/* a dry, low hum from the present to the end, looped */}
-      <Sequence from={parts[1].from} name="bed">
+      {/* "Sweet September" (Mixkit, free license): in under the memories, low under the voice, up on the end card */}
+      <Sequence from={45} name="music">
         <Audio
-          src={staticFile("sfx/wind-hum.mp3")}
-          loop
-          volume={(fr) => 0.22 * interpolate(fr, [0, 45, total - parts[1].from - 60, total - parts[1].from], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
+          src={staticFile("music-bed.mp3")}
+          volume={(fr) => {
+            const at = fr + 45;
+            const fadeIn = interpolate(at, [45, 135], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            const lift = interpolate(at, [end.from, end.from + 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            const fadeOut = interpolate(at, [total - 45, total], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            return (0.13 + 0.17 * lift) * fadeIn * fadeOut;
+          }}
         />
       </Sequence>
       <Sequence from={end.from} durationInFrames={end.dur} name="end">

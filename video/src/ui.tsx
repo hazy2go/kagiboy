@@ -102,7 +102,8 @@ export function Captions({ text, from, seconds }: { text: string; from: number; 
   if (!shown) return null;
   return (
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 56, pointerEvents: "none" }}>
-      <div style={{ maxWidth: 1400, textAlign: "center", fontFamily: SANS, fontSize: 34, lineHeight: 1.35, color: C.ink, background: "rgba(255,255,255,0.82)", padding: "10px 22px", borderRadius: 14, boxShadow: "0 6px 24px -14px rgba(31,35,48,0.35)" }}>
+      {/* fansub style: soft yellow with a thin dark outline, readable on any shot, no box */}
+      <div style={{ maxWidth: 1500, textAlign: "center", fontFamily: SANS, fontWeight: 600, fontSize: 40, lineHeight: 1.3, color: "#FFE45C", WebkitTextStroke: "5px rgba(12,12,16,0.92)", paintOrder: "stroke fill", textShadow: "0 3px 10px rgba(0,0,0,0.45)", padding: "0 24px" }}>
         {shown}
       </div>
     </AbsoluteFill>

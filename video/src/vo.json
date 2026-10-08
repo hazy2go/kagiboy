@@ -2,55 +2,55 @@
  {
   "id": "s1",
   "title": "1 \u00b7 The memory",
-  "seconds": 13.44,
+  "seconds": 14.77,
   "text": "My dad found it at a flea market. I was too young to know what a Nintendo was. I just knew it was mine. The game was Super Mario Land. I never beat it. I didn't care. I had the music, and a whole world I could carry around."
  },
  {
   "id": "s2",
   "title": "2 \u00b7 Now",
-  "seconds": 15.76,
+  "seconds": 17.33,
   "text": "Now the most important things I own are numbers on a phone. A phone that buzzes all day with offers, links, and people who want something from me. And when it asks me to approve something, it's the same phone telling me what I'm approving. I just have to trust it. Every single time."
  },
  {
   "id": "s3",
   "title": "3 \u00b7 The drawer",
-  "seconds": 3.65,
+  "seconds": 4.01,
   "text": "The safe answer is a hardware wallet. Most of them end up in a drawer."
  },
  {
   "id": "s4",
   "title": "4 \u00b7 The idea",
-  "seconds": 16.08,
+  "seconds": 17.69,
   "text": "So I picked up my old Game Boy again, and it hit me. It's the most honest screen I've ever owned. It doesn't go online. It doesn't run apps. It only does what my thumbs tell it to. What if it guarded my keys? That's kagiboy: a cartridge for the Game Boy you already have."
  },
  {
   "id": "s5",
   "title": "5 \u00b7 How it feels",
-  "seconds": 22.77,
+  "seconds": 25.04,
   "text": "Turning it on feels like a new save file. Mash the buttons, shake it, and that's your randomness. Write down twelve words. Pick a PIN. Your phone and the Game Boy show the same six digits, and A lets it in. After that, your phone can ask, but it can't decide. The cartridge reads every request itself and puts the amount and the address on that tiny screen. Nothing moves until you hold A."
  },
  {
   "id": "s6",
   "title": "6 \u00b7 Try it",
-  "seconds": 16.25,
+  "seconds": 17.86,
   "text": "Don't take my word for it. Open kagiboy.xyz/demo. The same Game Boy software runs in your browser, next to the phone app. It signs testnet transactions on six chains, from Solana to Robinhood Chain, and swaps through SODAX, every swap checked on the Game Boy first."
  },
  {
   "id": "s7",
   "title": "7 \u00b7 Inside",
-  "seconds": 13.15,
+  "seconds": 14.46,
   "text": "Inside, a secure chip that never lets your keys out, a chip that talks to the Game Boy, and Bluetooth that only carries what's public. Five wrong PINs and it forgets everything. Your twelve words bring it all back, in any normal wallet."
  },
  {
   "id": "s8",
   "title": "8 \u00b7 Who it's for",
-  "seconds": 17.86,
+  "seconds": 19.64,
   "text": "I'm making this for people like me, kids who grew up with a Game Boy and somehow ended up in crypto. A hundred and eighteen million Game Boys were sold. This isn't something you hide away. It's something you put on a shelf, or give to someone you love. And I live in Japan, where these consoles still turn up at flea markets."
  },
  {
   "id": "s9",
   "title": "9 \u00b7 Close",
-  "seconds": 14.5,
+  "seconds": 15.93,
   "text": "Next, it leaves the browser: a real cartridge, then our own board, and two outside security audits before anyone can buy one. Crypto shouldn't feel like something you're scared of. It should feel like that day at the flea market. kagiboy. Press start."
  }
 ]

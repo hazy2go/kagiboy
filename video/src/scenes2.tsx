@@ -13,19 +13,14 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export function Memory({ dur }: P) {
   const f = useCurrentFrame();
   const flash = interpolate(f, [dur - 14, dur - 4, dur], [0, 1, 1], clamp);
-  const open = 26; // a beat of black while the deck clunks and the tape spins up
+  const open = 58; // black while the deck takes the tape and spins up
   const c1 = Math.round(dur * 0.36);
   const c2 = Math.round(dur * 0.62);
   const snow = interpolate(f, [open - 10, open, open + 6], [0, 1, 0], clamp);
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
-      <Audio src={staticFile("sfx/tape-switch.mp3")} volume={0.9} />
-      <Sequence from={8}>
-        <Audio src={staticFile("sfx/static.mp3")} volume={0.35} />
-      </Sequence>
-      <Sequence from={open}>
-        <Audio src={staticFile("sfx/crt-hum.mp3")} volume={0.1} />
-      </Sequence>
+      {/* the cassette goes in, the mechanism threads it, the motor spins up, then tracking static */}
+      <Audio src={staticFile("sfx/vhs-start.wav")} volume={0.95} />
       <Sequence from={open} durationInFrames={c1 - open}>
         <Vhs osd="▶ PLAY">
           <Photo src={staticFile("gen/g1.png")} dur={c1 - open} zoom={1.3} origin="18% 6%" pos="0% 0%" push={0.07} />
@@ -48,24 +43,89 @@ export function Memory({ dur }: P) {
   );
 }
 
+/* a modern phone at night: lock screen, notifications piling up, then a wallet's signing sheet */
+const NOTES = [
+  { app: "Rewards", color: "#F5A524", glyph: "★", title: "You have 500 USDC to claim", body: "Claim before midnight. Tap to connect your wallet." },
+  { app: "Messages", color: "#34C759", glyph: "✉", title: "+1 (415) 555-0147", body: "hey is this you in this video?? bit.ly/…" },
+  { app: "Airdrop Hub", color: "#7C5CFF", glyph: "◆", title: "Season 3 is live", body: "You're eligible. Approve the request to receive." },
+  { app: "Wallet", color: "#3B6FE0", glyph: "◎", title: "Signature request", body: "app-claim.xyz wants you to sign" },
+];
+
 function Phone({ f, prompt }: { f: number; prompt: number }) {
-  const pings = ["You won an airdrop!", "Claim 500 USDC now", "Approve this request?", "Your wallet needs attention"];
+  const W = 430;
+  const H = 900;
   return (
-    <div style={{ width: 420, height: 860, borderRadius: 66, background: "#fff", border: `12px solid ${C.ink}`, boxShadow: "0 60px 120px -40px rgba(0,0,0,0.7)", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", width: 120, height: 32, borderRadius: 20, background: C.ink }} />
-      <div style={{ position: "absolute", inset: "70px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-        {pings.map((p, i) => {
-          const t = interpolate(f, [16 + i * 14, 28 + i * 14], [0, 1], clamp);
-          return (
-            <div key={p} style={{ opacity: t, transform: `translateY(${(1 - t) * -24}px) scale(${0.96 + t * 0.04})`, background: "#F3F4F8", borderRadius: 18, padding: "16px 18px", fontFamily: SANS, fontSize: 22, color: C.ink }}>
-              {p}
+    <div style={{ position: "relative", width: W, height: H }}>
+      {/* side buttons */}
+      <div style={{ position: "absolute", left: -5, top: 190, width: 5, height: 70, borderRadius: 3, background: "#3a3d45" }} />
+      <div style={{ position: "absolute", left: -5, top: 280, width: 5, height: 70, borderRadius: 3, background: "#3a3d45" }} />
+      <div style={{ position: "absolute", right: -5, top: 240, width: 5, height: 110, borderRadius: 3, background: "#3a3d45" }} />
+      {/* titanium frame and glass */}
+      <div style={{ position: "absolute", inset: 0, borderRadius: 72, background: "linear-gradient(145deg, #6b6f78, #2b2e35 40%, #55585f)", padding: 7, boxShadow: "0 80px 140px -40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)" }}>
+        <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 66, overflow: "hidden", background: "radial-gradient(120% 80% at 20% 0%, #3a2a6b 0%, #1a1730 45%, #0b0b14 100%)" }}>
+          {/* wallpaper glow */}
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(60% 40% at 80% 85%, rgba(255,110,150,0.35), transparent 70%), radial-gradient(50% 35% at 10% 60%, rgba(90,140,255,0.3), transparent 70%)" }} />
+          {/* dynamic island */}
+          <div style={{ position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", width: 126, height: 36, borderRadius: 20, background: "#000" }} />
+          {/* status bar */}
+          <div style={{ position: "absolute", top: 22, left: 40, right: 40, display: "flex", justifyContent: "space-between", fontFamily: SANS, fontWeight: 600, fontSize: 18, color: "#fff" }}>
+            <span>23:41</span>
+            <span style={{ letterSpacing: 2 }}>▮▮▮ ◔</span>
+          </div>
+          {/* lock screen clock */}
+          <div style={{ position: "absolute", top: 86, left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.92)" }}>
+            <div style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500 }}>Thursday 9 October</div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 104, letterSpacing: -3, lineHeight: 1 }}>23:41</div>
+          </div>
+          {/* notifications, newest on top, sliding in */}
+          <div style={{ position: "absolute", left: 16, right: 16, top: 270, display: "flex", flexDirection: "column", gap: 10 }}>
+            {NOTES.map((n, i) => {
+              const t = interpolate(f, [10 + i * 16, 22 + i * 16], [0, 1], { ...clamp, easing: ease });
+              return (
+                <div key={n.app} style={{ opacity: t, transform: `translateY(${(1 - t) * -30}px) scale(${0.94 + t * 0.06})`, background: "rgba(255,255,255,0.16)", backdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 24, padding: "14px 16px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 40, height: 40, flex: "none", borderRadius: 10, background: n.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 22 }}>{n.glyph}</div>
+                  <div style={{ flex: 1, minWidth: 0, fontFamily: SANS, color: "#fff" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, opacity: 0.75 }}>
+                      <span style={{ fontWeight: 600 }}>{n.app}</span>
+                      <span>now</span>
+                    </div>
+                    <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}>{n.title}</div>
+                    <div style={{ fontSize: 15, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.body}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {/* the wallet's signing sheet */}
+          <div style={{ position: "absolute", inset: 0, background: `rgba(0,0,0,${0.45 * prompt})` }} />
+          <div style={{ position: "absolute", left: 10, right: 10, bottom: 10, transform: `translateY(${(1 - prompt) * 560}px)`, background: "#16171d", borderRadius: 52, padding: "22px 26px 30px", fontFamily: SANS, color: "#fff", boxShadow: "0 -20px 60px rgba(0,0,0,0.5)" }}>
+            <div style={{ width: 44, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.25)", margin: "0 auto 18px" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg,#F5A524,#ff6f91)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>★</div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 600 }}>Confirm transaction</div>
+                <div style={{ fontSize: 15, opacity: 0.6 }}>app-claim.xyz</div>
+              </div>
             </div>
-          );
-        })}
-        <div style={{ flex: 1 }} />
-        <div style={{ opacity: prompt, transform: `translateY(${(1 - prompt) * 40}px)`, background: C.ink, color: "#fff", borderRadius: 22, padding: "22px 18px", fontFamily: SANS, fontSize: 24, textAlign: "center" }}>
-          Sign transaction?
-          <div style={{ marginTop: 14, background: "#fff", color: C.ink, borderRadius: 14, padding: "12px 0", fontWeight: 600 }}>Approve</div>
+            <div style={{ marginTop: 20, background: "rgba(255,255,255,0.06)", borderRadius: 18, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10, fontSize: 17 }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ opacity: 0.6 }}>You send</span>
+                <span style={{ fontWeight: 600 }}>2.40 SOL</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ opacity: 0.6 }}>Network fee</span>
+                <span>0.00005 SOL</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ opacity: 0.6 }}>To</span>
+                <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 15 }}>7xKX…9fQp</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+              <div style={{ flex: 1, textAlign: "center", padding: "16px 0", borderRadius: 18, background: "rgba(255,255,255,0.1)", fontWeight: 600, fontSize: 18 }}>Reject</div>
+              <div style={{ flex: 1, textAlign: "center", padding: "16px 0", borderRadius: 18, background: "#3B6FE0", fontWeight: 600, fontSize: 18 }}>Confirm</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -99,7 +159,7 @@ export function Present({ dur }: P) {
         </AbsoluteFill>
         <AbsoluteFill style={{ background: "rgba(8,10,16,0.45)" }} />
         <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 120 }}>
-          <Phone f={f - cut1} prompt={interpolate(f - cut1, [80, 100], [0, 1], clamp)} />
+          <Phone f={f - cut1} prompt={interpolate(f - cut1, [96, 120], [0, 1], { ...clamp, easing: ease })} />
           <div style={{ width: 760, display: "flex", flexDirection: "column", gap: 18 }}>
             <Pop start={40}>
               <Title size={80} style={{ color: "#fff" }}>The phone that asks me to approve</Title>
