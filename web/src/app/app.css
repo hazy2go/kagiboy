@@ -3,7 +3,7 @@
 
 .app {
   --app-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --app-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --app-spring: cubic-bezier(0.23, 1, 0.32, 1); /* quick ease-out, no overshoot */
   --app-radius: 26px;
   --app-card: rgba(255, 255, 255, 0.78);
   --app-glass-line: rgba(255, 255, 255, 0.9);
