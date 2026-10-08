@@ -262,8 +262,44 @@
   margin-bottom: 26px;
 }
 
-.about-cta .actions {
-  justify-content: center;
+.about-cta > p {
+  margin: 0 auto 32px;
+  max-width: 30rem;
+  font-size: 18px;
+  color: var(--kb-ink-2);
+}
+
+/* the same waitlist ticket as the home page, on a soft blue-pink glow (on the section: the ticket's
+   own filter makes it a stacking context, which would put a glow in front of its paper) */
+.about-cta {
+  position: relative;
+  isolation: isolate;
+}
+
+.about-cta::before {
+  content: "";
+  position: absolute;
+  inset: 34% 12% 12%;
+  z-index: -1;
+  background:
+    radial-gradient(40% 55% at 32% 55%, rgba(207, 226, 255, 0.75), transparent 70%),
+    radial-gradient(40% 55% at 70% 50%, rgba(255, 220, 232, 0.75), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.about-cta > .about-cta-demo {
+  margin: 34px auto 0;
+  font-size: 16px;
+  color: var(--kb-ink-3);
+}
+
+.about-cta-demo a {
+  color: var(--kb-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
 }
 
 @media (max-width: 860px) {
@@ -343,11 +379,6 @@
 
   .gallery-grid img {
     border-radius: 16px;
-  }
-
-  .about-cta .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
   }
 }
 

@@ -243,9 +243,31 @@ function MobileDemo() {
   const at = TABS.findIndex((t) => t.id === tab);
   // the wallet is set up but the phone isn't paired yet: point people at the Wallet tab
   const needsPair = s.powered && s.chip.state === "unlocked" && !s.chip.paired && !s.chip.pairingCode;
+  // ...and the first time, dim everything else so the eye goes down to it. Once the Wallet tab has been
+  // opened it isn't forced again (until pairing starts over, e.g. after a refused code).
+  const [spotSeen, setSpotSeen] = useState(false);
+  const [spotReady, setSpotReady] = useState(false);
+  useEffect(() => {
+    if (!needsPair) {
+      setSpotSeen(false);
+      setSpotReady(false);
+      return;
+    }
+    if (tab === "phone") setSpotSeen(true);
+    // a beat first, so the Game Boy's "Pair your phone!" is read before the room dims
+    const t = setTimeout(() => setSpotReady(true), 900);
+    return () => clearTimeout(t);
+  }, [needsPair, tab]);
+  const spotlight = needsPair && spotReady && !spotSeen && tab !== "phone";
 
   return (
-    <div className="kb demo-app">
+    <div className={`kb demo-app ${spotlight ? "spotlight" : ""}`}>
+      <div className="pair-scrim" aria-hidden onClick={() => setTab("phone")} />
+      {spotlight && (
+        <p className="pair-hint" role="status">
+          Tap <b>Wallet</b> to pair your phone
+        </p>
+      )}
       <header className="app-top">
         <div className="app-top-row">
           <Link to="/" className="kb-word" aria-label="kagiboy home">

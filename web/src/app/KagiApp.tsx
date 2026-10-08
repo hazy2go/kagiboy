@@ -56,7 +56,7 @@ export function KagiApp({ onOpen, full = false }: { onOpen?: () => void; full?: 
 
   return (
     <SheetHost.Provider value={{ el: root, contained: !full }}>
-      <div ref={setRoot} className={cn("kapp relative flex flex-col overflow-hidden bg-background font-sans text-foreground antialiased", full ? "min-h-svh" : "h-full")}>
+      <div ref={setRoot} className={cn("kapp", full ? "kapp-full" : "kapp-fill")}>
         <Header />
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

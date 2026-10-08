@@ -1042,6 +1042,7 @@ html.demo-app-root body {
 }
 
 .tabbar {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   padding: 6px calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
@@ -1124,6 +1125,91 @@ html.demo-app-root body {
   font-style: normal;
 }
 
+/* first time the phone needs pairing: the room dims and only the Wallet tab stays lit */
+.pair-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(12, 14, 22, 0.52);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--kb-ease);
+}
+
+.demo-app.spotlight .pair-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.demo-app.spotlight .tabbar {
+  position: relative;
+  z-index: 51;
+  background: #fff;
+}
+
+/* the rest of the bar dims with the room */
+.demo-app .tabbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 14, 22, 0.52);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--kb-ease);
+}
+
+.demo-app.spotlight .tabbar::after {
+  opacity: 1;
+}
+
+.demo-app.spotlight .tabbar button.beckon {
+  z-index: 1;
+  isolation: isolate;
+}
+
+.demo-app.spotlight .tabbar button:not(.beckon) {
+  pointer-events: none;
+}
+
+.demo-app .pair-hint {
+  position: fixed;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  z-index: 52;
+  left: 50%;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--kb-ink);
+  font: 500 14px/1.2 var(--kb-sans);
+  white-space: nowrap;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.5);
+  transform: translateX(-50%);
+  animation: pair-hint-in 0.5s var(--kb-ease) both;
+}
+
+/* a little pointer down to the tab */
+.demo-app .pair-hint::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@keyframes pair-hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
 @keyframes tab-beckon {
   0%,
   100% {
@@ -1154,8 +1240,14 @@ html.demo-app-root body {
 
   .tabbar .dot,
   .tabbar button.beckon::before,
-  .tabbar button.beckon svg {
+  .tabbar button.beckon svg,
+  .pair-hint {
     animation: none;
+  }
+
+  .pair-scrim,
+  .demo-app .tabbar::after {
+    transition: none;
   }
 }
 

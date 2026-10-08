@@ -1,8 +1,15 @@
 /* Tailwind for the kagiboy app only: theme tokens and utilities, no global reset (preflight), and
-   classes are collected from src/app alone, so the landing page and demo styles are untouched. */
+   classes are collected from src/app alone, so the landing page and demo styles are untouched.
+   The utilities are scoped to the app: the site has its own Tailwind build with the same class
+   names (src/site/tw.css), and once this stylesheet is loaded it stays loaded across pages, so
+   unscoped, its p-0 would beat the site's pl-14 and its border-border would point at app colours. */
 @layer theme, utilities;
 @import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@layer utilities {
+  @scope (.kapp) {
+    @tailwind utilities source(none);
+  }
+}
 @source "./";
 
 /* shadcn-style tokens the 21st components read, mapped onto the app's materials */
@@ -41,6 +48,28 @@
   --muted: var(--k-muted);
   --muted-foreground: var(--k-fg-2);
   --border: var(--k-line);
+}
+
+/* the app's root: the utilities are scoped to .kapp and @scope only reaches its descendants,
+   so the root's own layout and materials are written out here */
+.kapp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--k-bg);
+  color: var(--k-fg);
+  font-family: "Funnel Sans", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.kapp-full {
+  min-height: 100svh;
+}
+
+.kapp-fill {
+  height: 100%;
 }
 
 /* the app inside the demo's drawn phone, and as the phone layout's Wallet tab */

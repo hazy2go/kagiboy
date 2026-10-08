@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Waitlist } from "../landing/Waitlist";
 import "./about.css";
 import { MasonryLightbox } from "../site/ui/masonry-lightbox";
 import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
@@ -185,16 +186,13 @@ export function AboutPage() {
         </section>
       )}
 
-      <section className="about-cta">
+      <section className="about-cta" id="waitlist">
         <h2>Want to follow along?</h2>
-        <div className="actions">
-          <Link to="/demo" className="btn btn-ink">
-            Press Start
-          </Link>
-          <a href="/#waitlist" className="btn btn-paper">
-            Join the waitlist
-          </a>
-        </div>
+        <p>Leave your email and I'll write once, when the first cartridges are ready.</p>
+        <Waitlist />
+        <p className="about-cta-demo">
+          Or try it right now: <Link to="/demo">press start on the live demo</Link>
+        </p>
       </section>
       </main>
 
