@@ -337,7 +337,7 @@ export function Who({ dur }: P) {
 }
 
 /* 8 · what's next, then the close */
-const ROAD = ["Dev-board cartridge", "Our own board", "Two security audits", "First 500"];
+const ROAD = ["A real cartridge", "The kagiboy brand", "Security audits", "Then on sale"];
 export function Next({ dur }: P) {
   const f = useCurrentFrame();
   const b = Math.round(dur * 0.55);
