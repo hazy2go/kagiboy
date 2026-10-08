@@ -1,7 +1,7 @@
 # kagiboy web
 
 The website and browser demo for kagiboy, deployed at
-https://kagiboy.vercel.app (Vercel root directory: `web`). See the
+https://kagiboy.xyz (Vercel root directory: `web`). See the
 [root README](../README.md) for what kagiboy is and how the pieces fit.
 
 ## What's here

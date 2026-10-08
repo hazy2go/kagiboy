@@ -133,7 +133,7 @@ export function D1({ dur, marks }: P) {
       <Show from={M(2, 10)} style={{ position: "absolute", inset: 0 }}>
         <div style={{ position: "absolute", inset: 0, transform: `scale(${key ? 1.08 : 1})`, transformOrigin: `${chip.x}px ${chip.y - 110}px` }}>
           <Callout x={chip.x} y={chip.y - 150} eyebrow="CARTRIDGE CHIP" accent={key ? PINK : C.accent}>
-            {key ? "Holds the keys" : "Simulated in the browser"}
+            {key ? "Holds the keys" : "Reads every request"}
           </Callout>
         </div>
       </Show>
