@@ -1,0 +1,24 @@
+/* A Game Boy render whose screen plays the flea-market pixel loop (landing origin, About hero). */
+.flea-gb {
+  position: relative;
+  width: clamp(220px, 24vw, 320px);
+  aspect-ratio: 900 / 1600;
+  margin: 0;
+  filter: drop-shadow(0 30px 40px rgba(60, 70, 120, 0.18));
+}
+
+.flea-gb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* the LCD's place in front-ortho.webp (x 215..675, y 346..760 of 900x1600) */
+.flea-gb canvas {
+  position: absolute;
+  left: 23.89%;
+  top: 21.63%;
+  width: 51.11%;
+  height: 25.88%;
+  image-rendering: pixelated;
+}

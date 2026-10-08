@@ -9,6 +9,7 @@ import { Timeline, type TimelineStep } from "../site/ui/timeline";
 import { Comparison } from "../site/ui/comparison";
 import { Accordion } from "../site/ui/accordion";
 import "../site/tw.css";
+import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
 import "./landing.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -628,47 +629,5 @@ export function Landing() {
         </p>
       </footer>
     </div>
-  );
-}
-
-/** The origin story on a Game Boy screen: an original pixel loop, played only while it's in view. */
-function FleaMarketGameBoy() {
-  const lcd = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = lcd.current;
-    if (!canvas) return;
-    let loop: import("./fleaLoop").FleaLoop | null = null;
-    let visible = false;
-    let gone = false;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    import("./fleaLoop").then(({ FleaLoop }) => {
-      if (gone) return;
-      loop = new FleaLoop(canvas);
-      loop.still();
-      if (visible && !reduced) loop.start();
-    });
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (!loop || reduced) return;
-      if (visible) loop.start();
-      else loop.stop();
-    });
-    io.observe(canvas);
-    return () => {
-      gone = true;
-      io.disconnect();
-      loop?.stop();
-    };
-  }, []);
-  return (
-    <figure className="origin-gb">
-      <img src="/renders/front-ortho.webp" alt="" loading="lazy" />
-      <canvas
-        ref={lcd}
-        className="origin-lcd"
-        role="img"
-        aria-label="Pixel animation: a kid walks through a flea market, finds a Game Boy on a table and holds it up as music plays"
-      />
-    </figure>
   );
 }

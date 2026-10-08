@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./about.css";
 import { MasonryLightbox } from "../site/ui/masonry-lightbox";
+import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
 import "../site/tw.css";
 
 // Photos of kagiboy on hazy's own Game Boy (the real ROM from a flash cart). The section hides
@@ -32,6 +33,12 @@ const WHY = [
     paper: "lavender",
     body: "I'm not out to beat the big wallet companies. This is for people who grew up with a Game Boy and ended up in crypto, like me.",
   },
+] as const;
+
+const SHELF = [
+  { name: "MARIO LAND", note: "NEVER BEAT IT" },
+  { name: "CASTLEVANIA", note: "THEN THIS" },
+  { name: "POKEMON YELLOW", note: "AND THIS" },
 ] as const;
 
 const PLAYER = [
@@ -81,35 +88,73 @@ export function AboutPage() {
       </nav>
 
       <header className="about-hero">
-        <p className="px eyebrow">THE STORY</p>
-        <h1>My first console came from a flea market.</h1>
-        <p className="lede">
-          My dad bought it for me when I was so young I didn't even know what Nintendo was. All I knew was that I was holding
-          something magical.
-        </p>
+        <div>
+          <p className="px eyebrow">THE STORY</p>
+          <h1>My first console came from a flea market.</h1>
+          <p className="lede">
+            My dad bought it for me when I was so young I didn't even know what Nintendo was. All I knew was that I was holding
+            something magical.
+          </p>
+        </div>
+        <FleaMarketGameBoy className="about-flea" />
       </header>
 
       <section className="story" aria-label="How kagiboy started">
-        <p>
-          The game was Super Mario Land. I never beat it. It was way too hard for me, and I didn't care, because I had the
-          music and a whole world I could carry around. The most exciting thing on a phone back then was Snake on a Nokia.
-          This was a real game, in my hands, anywhere I wanted.
-        </p>
-        <p>
-          Then came Castlevania, then Pokémon Yellow. That grey Game Boy was the first console I ever called my own, and
-          it never really left me. Today I live in Japan and collect old consoles: Game Boy, PSP, PS1, N64, GameCube. The
-          Game Boy is still my favourite.
-        </p>
-        <h2>Crypto never felt like that.</h2>
-        <p>
-          I've spent years working in Web3, and holding keys has always made me a little nervous, whatever wallet I used.
-          Meanwhile hardware wallets keep getting fancier, with touchscreens, Wi-Fi and colour displays. To me, every extra feature is one more thing to worry about.
-        </p>
-        <p>
-          One day I looked at my Game Boy and thought: you can't connect this to anything. No Wi-Fi, no Bluetooth, no
-          extras. Just a screen and some buttons. What if the cartridge held my keys, my phone could only ask, and this little screen was the only place I could say yes?
-          The cartridge would need a tiny radio to hear the phone, but it would only ever carry public data.
-        </p>
+        <div className="story-part">
+          <div>
+            <p>
+              The game was Super Mario Land. I never beat it. It was way too hard for me, and I didn't care, because I had the
+              music and a whole world I could carry around. The most exciting thing on a phone back then was Snake on a Nokia.
+              This was a real game, in my hands, anywhere I wanted.
+            </p>
+            <p>
+              Then came Castlevania, then Pokémon Yellow. That grey Game Boy was the first console I ever called my own, and
+              it never really left me. Today I live in Japan and collect old consoles: Game Boy, PSP, PS1, N64, GameCube. The
+              Game Boy is still my favourite.
+            </p>
+          </div>
+          <aside className="shelf" aria-label="The first three games">
+            {SHELF.map((g, i) => (
+              <div key={g.name} className="shelf-cart print-in" style={{ ["--i" as string]: i }}>
+                <span className="shelf-ridges" aria-hidden />
+                <span className="shelf-label">
+                  <b className="px">{g.name}</b>
+                  <span className="px">{g.note}</span>
+                </span>
+              </div>
+            ))}
+          </aside>
+        </div>
+        <div className="story-part">
+          <div>
+            <h2>Crypto never felt like that.</h2>
+            <p>
+              I've spent years working in Web3, and holding keys has always made me a little nervous, whatever wallet I used.
+              Meanwhile hardware wallets keep getting fancier, with touchscreens, Wi-Fi and colour displays. To me, every extra feature is one more thing to worry about.
+            </p>
+            <p>
+              One day I looked at my Game Boy and thought: you can't connect this to anything. No Wi-Fi, no Bluetooth, no
+              extras. Just a screen and some buttons. What if the cartridge held my keys, my phone could only ask, and this little screen was the only place I could say yes?
+              The cartridge would need a tiny radio to hear the phone, but it would only ever carry public data.
+            </p>
+          </div>
+          <aside className="less print-in" aria-label="What a Game Boy doesn't have">
+            <p className="px less-title">WHAT IT DOESN'T HAVE</p>
+            <ul>
+              {["Wi-Fi", "Touchscreen", "App store", "Camera", "Updates over the air"].map((f) => (
+                <li key={f}>
+                  <s>{f}</s>
+                </li>
+              ))}
+            </ul>
+            <p className="px less-title">WHAT IT HAS</p>
+            <ul className="has">
+              <li>A screen</li>
+              <li>Eight buttons</li>
+              <li>A slot for the cartridge</li>
+            </ul>
+          </aside>
+        </div>
       </section>
 
       <section className="why" aria-label="Why kagiboy">
