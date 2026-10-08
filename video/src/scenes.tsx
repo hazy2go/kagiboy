@@ -2,7 +2,7 @@ import { AbsoluteFill, Img, Sequence, interpolate, useCurrentFrame } from "remot
 import { Console } from "./Three";
 import { C, Card, DISPLAY, Eyebrow, GameBoy, Glow, PX, Pop, SANS, Title, a, useIn, useSpring } from "./ui";
 
-type P = { dur: number };
+type P = { dur: number; marks?: { at: number; text: string }[] };
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
 /* 1 · the flea market: a real photo, then the Game Boy wakes up */
@@ -279,12 +279,45 @@ export function Inside({ dur }: P) {
 }
 
 /* 7 · who it's for: the Game Boy generation, and a wallet you'd keep on a shelf */
-const PRODUCTS = [
-  ["$129", "The cartridge"],
-  ["Limited", "Numbered colourways"],
-  ["Japan", "A Japan-only edition"],
-  ["Bundle", "With a restored Game Boy"],
+const PRODUCTS: { h: string; d: string; art: "cart" | "limited" | "japan" | "bundle" }[] = [
+  { h: "$129", d: "The cartridge", art: "cart" },
+  { h: "Limited", d: "Numbered colourways", art: "limited" },
+  { h: "Japan", d: "A Japan-only edition", art: "japan" },
+  { h: "Bundle", d: "With a restored Game Boy", art: "bundle" },
 ];
+
+/** The picture on each product card; all four share one size. */
+function ProductArt({ art }: { art: (typeof PRODUCTS)[number]["art"] }) {
+  const box = { position: "relative" as const, height: 300, borderRadius: 22, overflow: "hidden", background: "linear-gradient(160deg,#EAF1FF,#FBF2F6)", display: "flex", alignItems: "center", justifyContent: "center" };
+  const cart = (style: React.CSSProperties) => <Img src={a("01-renders/cart-cutout.png")} style={{ position: "absolute", height: 230, objectFit: "contain", ...style }} />;
+  if (art === "cart") return <div style={box}>{cart({ height: 250 })}</div>;
+  if (art === "limited")
+    return (
+      <div style={box}>
+        {/* the same cartridge in three numbered colourways */}
+        {cart({ left: 6, top: 52, height: 200, filter: "sepia(1) saturate(4) hue-rotate(215deg) brightness(0.92)", transform: "rotate(-9deg)" })}
+        {cart({ right: 0, top: 52, height: 200, filter: "sepia(1) saturate(3.4) hue-rotate(125deg) brightness(0.98)", transform: "rotate(8deg)" })}
+        {cart({ left: 88, top: 34, height: 226, filter: "sepia(1) saturate(4) hue-rotate(295deg) brightness(1.0)" })}
+        <div style={{ position: "absolute", right: 14, bottom: 14, background: C.ink, color: "#fff", borderRadius: 999, padding: "8px 14px", fontFamily: PX, fontSize: 20, letterSpacing: 2 }}>No. 001/500</div>
+      </div>
+    );
+  if (art === "japan")
+    return (
+      <div style={{ ...box, background: "radial-gradient(70% 70% at 50% 40%, #3a4060, #12141d)" }}>
+        {/* not revealed yet: the cartridge as a silhouette */}
+        {cart({ height: 250, filter: "brightness(0) drop-shadow(0 0 1px rgba(207,226,255,0.9)) drop-shadow(0 0 18px rgba(143,178,255,0.35))", opacity: 0.92 })}
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: DISPLAY, fontWeight: 700, fontSize: 130, color: "rgba(255,255,255,0.92)" }}>?</div>
+        <div style={{ position: "absolute", left: 16, top: 14, fontFamily: PX, fontSize: 20, letterSpacing: 3, color: "#cfe2ff" }}>JAPAN ONLY</div>
+      </div>
+    );
+  return (
+    <div style={box}>
+      {/* a restored Game Boy with the cartridge in it */}
+      <Img src={a("01-renders/gb-cart-cutout.png")} style={{ height: 286, objectFit: "contain" }} />
+    </div>
+  );
+}
+
 export function Who({ dur }: P) {
   const f = useCurrentFrame();
   const b1 = Math.round(dur * 0.3);
@@ -318,12 +351,15 @@ export function Who({ dur }: P) {
         <Pop start={b2 + 4}>
           <Eyebrow>For the Game Boy generation</Eyebrow>
         </Pop>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 360px)", gap: 28 }}>
-          {PRODUCTS.map(([h, d], i) => (
-            <Pop key={h} start={b2 + 14 + i * 8}>
-              <Card style={{ padding: "40px 34px", display: "flex", flexDirection: "column", gap: 10, background: i === 0 ? "linear-gradient(140deg,#EAF1FF,#FFEFF4)" : "#fff" }}>
-                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 64, letterSpacing: -2, color: C.ink }}>{h}</span>
-                <span style={{ fontFamily: SANS, fontSize: 30, color: C.ink2 }}>{d}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 380px)", gap: 28 }}>
+          {PRODUCTS.map((pr, i) => (
+            <Pop key={pr.h} start={b2 + 14 + i * 8}>
+              <Card style={{ width: 380, height: 500, padding: 14, display: "flex", flexDirection: "column", gap: 16, boxSizing: "border-box" }}>
+                <ProductArt art={pr.art} />
+                <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 52, letterSpacing: -1.5, color: C.ink, lineHeight: 1.05 }}>{pr.h}</span>
+                  <span style={{ fontFamily: SANS, fontSize: 26, color: C.ink2, whiteSpace: "nowrap" }}>{pr.d}</span>
+                </div>
               </Card>
             </Pop>
           ))}
@@ -336,11 +372,11 @@ export function Who({ dur }: P) {
   );
 }
 
-/* 8 · what's next, then the close */
 const ROAD = ["A real cartridge", "The kagiboy brand", "Security audits", "Then on sale"];
-export function Next({ dur }: P) {
+export function Next({ dur, marks = [] }: P) {
   const f = useCurrentFrame();
-  const b = Math.round(dur * 0.55);
+  // the closing line comes up as it's spoken
+  const b = marks.find((m) => m.text.startsWith("Crypto"))?.at ?? Math.round(dur * 0.55);
   const s1 = interpolate(f, [0, 18, b - 10, b + 6], [0, 1, 1, 0], clamp);
   const s2 = interpolate(f, [b, b + 24], [0, 1], clamp);
   const line = interpolate(f, [10, b - 30], [0, 1], clamp);

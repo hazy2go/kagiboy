@@ -86,19 +86,16 @@ export function GameBoy({ screens, at = 0, height = 900, style, overlay }: { scr
   );
 }
 
-/** Subtitles, timed by sentence length across the voiceover */
-export function Captions({ text, from, seconds }: { text: string; from: number; seconds: number }) {
+/** Subtitles: each sentence from the moment it's spoken (word timings of the recording) */
+export function Captions({ cues, from, end }: { cues: { t: number; text: string }[]; from: number; end: number }) {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const parts = text.match(/[^.!?:]+[.!?:]?/g)?.map((s) => s.trim()).filter(Boolean) ?? [text];
-  const total = parts.reduce((n, s) => n + s.length, 0);
-  let t0 = from;
+  const t = (f - from) / fps;
   let shown = "";
-  for (const s of parts) {
-    const len = (s.length / total) * seconds * fps;
-    if (f >= t0 && f < t0 + len) shown = s;
-    t0 += len;
-  }
+  cues.forEach((c, i) => {
+    const until = cues[i + 1]?.t ?? end + 0.4;
+    if (t >= c.t && t < until) shown = c.text;
+  });
   if (!shown) return null;
   return (
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 56, pointerEvents: "none" }}>

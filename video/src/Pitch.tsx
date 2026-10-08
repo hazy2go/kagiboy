@@ -13,7 +13,7 @@ const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
 const MIN: Record<string, number> = { s3: 6.5 };
 // the opening waits for the VHS blue screen and its tracking noise before the voice comes in
-const LEADS: Record<string, number> = { s1: 4.0 };
+const LEADS: Record<string, number> = { s1: 2.85 };
 
 /** Scene lengths follow the voiceover (src/vo.json, re-measured when the real recording lands). */
 export const timeline = () => {
@@ -45,13 +45,14 @@ export function Pitch() {
   const { parts, end, total } = timeline();
   return (
     <AbsoluteFill style={{ background: "#fff" }}>
-      {parts.map(({ id, Scene, from, dur, seconds, text, lead }) => (
+      {parts.map(({ id, Scene, from, dur, cues, end: spoken, lead }) => (
         <Sequence key={id} from={from} durationInFrames={dur} name={id}>
-          <Scene dur={dur} />
+          {/* each sentence start, in this scene frames, for scenes that cut on a line */}
+          <Scene dur={dur} marks={cues.map((c) => ({ at: Math.round((lead + c.t) * FPS), text: c.text }))} />
           <Sequence from={Math.round(lead * FPS)}>
             <Audio src={staticFile(`vo/${id}.wav`)} />
           </Sequence>
-          <Captions text={text} from={Math.round(lead * FPS)} seconds={seconds} />
+          <Captions cues={cues} from={Math.round(lead * FPS)} end={spoken} />
         </Sequence>
       ))}
       {/* "alright apothecary" by boipurple (trash kid), royalty free: in under the memories, low under the voice, up on the end card */}

@@ -4,7 +4,7 @@ import { poseAt as poseAtP } from "../../web/src/landing/scene";
 import { C, Card, DISPLAY, Eyebrow, Glow, PX, Pop, SANS, Title, a } from "./ui";
 import { Clip, Photo, Vhs } from "./vhs";
 
-type P = { dur: number };
+type P = { dur: number; marks?: { at: number; text: string }[] };
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -14,8 +14,8 @@ export function Memory({ dur }: P) {
   const f = useCurrentFrame();
   const flash = interpolate(f, [dur - 10, dur - 3, dur], [0, 1, 1], clamp);
   // 0: black, the cassette goes in · blue: the deck's blue screen while it spins up · open: the picture
-  const blue = 48;
-  const open = 120;
+  const blue = 18;
+  const open = 84;
   const c1 = Math.round(open + (dur - open) * 0.4);
   const c2 = Math.round(open + (dur - open) * 0.7);
   return (
