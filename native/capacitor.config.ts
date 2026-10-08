@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // kagiboy native shell. The web app (../web) is a BrowserRouter SPA; Capacitor
 // serves web/dist from capacitor://localhost (iOS) / https://localhost (Android)
 // and falls back to index.html for unknown paths, so appStartPath boots straight
-// into the /app route instead of the landing page.
+// into the /demo route instead of the landing page.
 const config: CapacitorConfig = {
   appId: "xyz.kagiboy.app",
   appName: "kagiboy",

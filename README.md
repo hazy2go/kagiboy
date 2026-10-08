@@ -150,9 +150,12 @@ Two internal audits are in `docs/` ([audit-security.md](docs/audit-security.md),
   Negligible today (about 2×10⁻¹⁶ ETH on Base Sepolia).
 - **Balances come from the phone.** The chip formats them, but it can't verify
   them.
-- `pnpm audit --prod` reports 4 moderate advisories (`stream-json` and `uuid`,
-  pulled in through `@solana/web3.js`); none are meaningfully reachable in the
-  browser.
+- `pnpm audit --prod` reports 8 advisories (3 high), all deep inside the
+  `@sodax/sdk` tree: `bigint-buffer`, `toml`, `ws` 7, `stream-json`, `uuid`.
+  Patched releases need a major-version bump the SDK doesn't support yet;
+  same-major fixes are pinned in `web/pnpm-workspace.yaml`. The SDK only loads
+  when you open the swap screen, and none of these are meaningfully reachable
+  in the browser.
 - The waitlist API still tells a caller whether an email is already on the list.
 
 **The hardware design**

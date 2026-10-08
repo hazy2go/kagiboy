@@ -31,14 +31,15 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     /* fall through to validation */
   }
-  if (!EMAIL.test(email) || email.length > 254) {
+  if (email.length > 254 || !EMAIL.test(email)) {
     return Response.json({ error: "That email doesn't look right." }, { status: 400 });
   }
   try {
     const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
     const key = `waitlist:rate:${ip}`;
+    // the window is created with its expiry in one step, so a failed EXPIRE can't lock an IP out forever
+    await redis("SET", key, 0, "EX", 600, "NX");
     const hits = Number(await redis("INCR", key));
-    if (hits === 1) await redis("EXPIRE", key, 600);
     if (hits > LIMIT) return Response.json({ error: "Too many tries. Give it a few minutes." }, { status: 429 });
 
     // repeats are answered before a number is drawn, so they never use one up

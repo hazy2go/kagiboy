@@ -2,7 +2,7 @@
 
 A [Capacitor 8](https://capacitorjs.com) wrapper around the web app in `../web`.
 It bundles `web/dist` into a native app (`xyz.kagiboy.app`, "kagiboy") and boots
-straight into the `/app` route (`server.appStartPath: "/app"` in
+straight into the `/demo` route (`server.appStartPath: "/demo"` in
 `capacitor.config.ts`).
 
 **Status:** the shell runs **the same simulated cartridge as the web demo**. It
@@ -12,7 +12,7 @@ has no native Bluetooth yet. See [Bluetooth plan](#bluetooth-plan).
 
 | path | what |
 | --- | --- |
-| `capacitor.config.ts` | app id/name, `webDir: ../web/dist`, start path `/app` |
+| `capacitor.config.ts` | app id/name, `webDir: ../web/dist`, start path `/demo`|
 | `ios/` | Xcode project (Swift Package Manager, no CocoaPods) |
 | `android/` | Android Studio / Gradle project |
 | `assets/` | icon + splash sources (placeholders, from `scripts/make-assets.py`) |
@@ -71,11 +71,11 @@ pnpm android                         # opens android/ in Android Studio → Run
 
 - The web app uses `BrowserRouter`. Capacitor serves `web/dist` from
   `capacitor://localhost` (iOS) and `https://localhost` (Android). Both fall back
-  to `index.html` for any extension-less path, so `/app`, `/demo` and the rest resolve.
+  to `index.html` for any extension-less path, so `/demo`, `/about` and the rest resolve.
 - **iOS quirk:** `CAPBridgeViewController` won't load unless a file or folder
   exists at `public/<appStartPath>`. The app crashes with "Unable to load …/public//app"
   otherwise. `scripts/ios-start-path.mjs` runs as the `capacitor:copy:after`
-  hook and drops an empty `public/app/` marker into the iOS copy. It runs
+  hook and drops an empty `public/demo/` marker into the iOS copy. It runs
   automatically on every `cap sync`/`cap copy`/`cap run`, and `web/` is never touched.
 - Root-relative fetches like `/wallet.gb` resolve against the local origin and work.
   `/api/waitlist` (landing page only) would not, but the native shell never
