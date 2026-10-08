@@ -2,13 +2,14 @@ import { AbsoluteFill, Audio, Sequence, continueRender, delayRender, staticFile 
 import { useEffect, useState } from "react";
 import vo from "./vo.json";
 import { Captions } from "./ui";
-import { End, Flea, How, Idea, Inside, Next, Problem, Proof, Who } from "./scenes";
+import { Next, Proof, Who } from "./scenes";
+import { Apart, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
 
 export const FPS = 30;
 const LEAD = 0.5; // seconds of picture before each voice line
 const TAIL = 0.9; // and after
 const END = 5;
-const SCENES = [Flea, Problem, Idea, How, Proof, Inside, Who, Next];
+const SCENES = [Memory, Present, Reveal, Feel, Proof, Apart, Who, Next];
 
 /** Scene lengths follow the voiceover (src/vo.json, re-measured when the real recording lands). */
 export const timeline = () => {
@@ -49,7 +50,7 @@ export function Pitch() {
         </Sequence>
       ))}
       <Sequence from={end.from} durationInFrames={end.dur} name="end">
-        <End />
+        <Finale />
       </Sequence>
     </AbsoluteFill>
   );

@@ -10,7 +10,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
  * camera settles on the screen.
  */
 
-interface Pose {
+export interface Pose {
   az: number; // camera azimuth around the console, radians (0 = facing the screen)
   el: number; // camera elevation, radians
   dist: number; // metres from target
@@ -61,7 +61,7 @@ const TALL_KEYS: [number, Pose][] = [
 
 const smooth = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 
-function poseAt(p: number, keys = KEYS): Pose {
+export function poseAt(p: number, keys = KEYS): Pose {
   for (let i = 0; i < keys.length - 1; i++) {
     const [a, pa] = keys[i];
     const [b, pb] = keys[i + 1];
@@ -112,11 +112,12 @@ export class HeroScene {
   private lastRender = 0;
   private lastPose = "";
 
-  constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean } = {}) {
+  constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean; offline?: boolean } = {}) {
     this.still = !!opts.still;
     this.plainFraming = !!opts.plainFraming;
     if (opts.fixed) this.fixed = { ...KEYS[0][1], ...opts.fixed };
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+    // offline (the pitch video): frames are read back from the canvas after rendering
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: !!opts.offline });
     // phones have 3x screens and less GPU: 1.75x keeps it sharp and the scroll smooth
     this.maxRatio = Math.min(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches ? 1.75 : 2);
     this.ratio = this.maxRatio;
@@ -294,6 +295,20 @@ export class HeroScene {
     return this.current;
   }
 
+  /**
+   * Offline rendering for the pitch video: progress `p` along the same choreography (or an explicit
+   * pose) at time `t` seconds, with no easing toward a target and no adaptive resolution, so every
+   * frame is the same on every render.
+   */
+  renderAt(p: number, t: number, pose?: Partial<Pose>) {
+    this.target = this.current = p;
+    const tall = this.camera.aspect < 0.8 && !this.plainFraming;
+    const at = pose ? { ...poseAt(p, tall ? TALL_KEYS : KEYS), ...pose } : poseAt(p, tall ? TALL_KEYS : KEYS);
+    this.place(at, t, tall, pose ? 0 : Math.max(0, 1 - p / 0.12));
+    this.renderer.render(this.scene, this.camera);
+    this.needs = false;
+  }
+
   /** Render one frame; returns the eased progress. */
   frame(): number {
     this.clock.update();
@@ -307,6 +322,21 @@ export class HeroScene {
 
     // a slow breath while the hero is at rest
     const rest = this.still || this.fixed ? 0 : Math.max(0, 1 - this.current / 0.12); // the demo console holds still so its buttons are easy to hit
+    this.place(pose, t, tall, rest);
+
+    // nothing moved and the screen didn't change: keep the last frame on the canvas
+    const c = this.camera;
+    const key = `${c.position.x.toFixed(6)},${c.position.y.toFixed(6)},${c.position.z.toFixed(6)},${this.gb.position.y.toFixed(6)},${this.gb.rotation.y.toFixed(6)},${pose.apart.toFixed(4)},${pose.lift.toFixed(5)}`;
+    if (!this.needs && key === this.lastPose) return this.current;
+    this.lastPose = key;
+    this.adapt();
+    this.renderer.render(this.scene, c);
+    this.needs = false;
+    return this.current;
+  }
+
+  /** Puts the console, the cartridge and the camera where a pose says, at time `t`. */
+  private place(pose: Pose, t: number, tall: boolean, rest: number) {
     const breathe = Math.sin(t * 0.9) * 0.004 * rest;
     const jolt = this.wobble ? (Math.random() - 0.5) * 0.06 * this.wobble : 0;
     this.gb.position.y = breathe + jolt * 0.04;
@@ -345,15 +375,6 @@ export class HeroScene {
         obj.position.set(home.x + (x[n] ?? 0) * s, home.y, home.z + (z[n] ?? 0) * s);
       }
     }
-
-    // nothing moved and the screen didn't change: keep the last frame on the canvas
-    const key = `${c.position.x.toFixed(6)},${c.position.y.toFixed(6)},${c.position.z.toFixed(6)},${this.gb.position.y.toFixed(6)},${this.gb.rotation.y.toFixed(6)},${pose.apart.toFixed(4)},${pose.lift.toFixed(5)}`;
-    if (!this.needs && key === this.lastPose) return this.current;
-    this.lastPose = key;
-    this.adapt();
-    this.renderer.render(this.scene, c);
-    this.needs = false;
-    return this.current;
   }
 
   /** Watch the time between rendered frames; trade a little resolution for smoothness only when needed. */
