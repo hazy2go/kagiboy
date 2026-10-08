@@ -257,16 +257,13 @@ type StepShot = { from: number; eyebrow: string; title: string; screen: string; 
 const SCREEN = (u: number) => ({ az: lerp(-0.08, -0.02, u), el: 0.02, dist: lerp(0.26, 0.23, u), tx: 0, ty: 0.03, lift: 0, shift: 0.26 });
 const SHOTS: StepShot[] = [
   { from: 0, eyebrow: "A new save file", title: "Turn it on", screen: "02-new-or-restore", pose: (u) => ({ az: lerp(-0.62, -0.38, u), el: 0.12, dist: lerp(0.5, 0.44, u), tx: 0.004, ty: 0.03, lift: 0, shift: 0.18 }) },
-  { from: 0.12, eyebrow: "01", title: "Mash the buttons", screen: "03-mash-buttons",
+  { from: 0.16, eyebrow: "01", title: "Mash the buttons", screen: "03-mash-buttons",
     pose: (u) => ({ az: lerp(0.18, 0.05, u), el: 0.18, dist: lerp(0.21, 0.19, u), tx: 0.004, ty: -0.032, lift: 0, shift: 0.26 }),
     held: (t) => { const k = Math.floor(t * 30); return k % 6 < 3 ? [["ButtonA", "DPad", "ButtonB", "DPad"][Math.floor(k / 6) % 4]] : []; } },
-  { from: 0.2, eyebrow: "02", title: "Shake it", screen: "04-shake",
+  { from: 0.3, eyebrow: "02", title: "Shake it", screen: "04-shake",
     pose: (u, t) => ({ az: -0.3 + Math.sin(t * 31) * 0.05, el: 0.1 + Math.cos(t * 27) * 0.04, dist: 0.46, tx: Math.sin(t * 23) * 0.004, ty: 0.02 + Math.cos(t * 29) * 0.004, lift: 0, shift: 0.2 }) },
-  { from: 0.27, eyebrow: "03", title: "Write down 12 words", screen: "05-recovery-words", pose: SCREEN },
-  { from: 0.35, eyebrow: "04", title: "Pick a PIN", screen: "06-choose-pin", pose: SCREEN, held: (t) => (Math.floor(t * 30) % 16 < 5 ? ["DPad"] : []) },
-  { from: 0.41, eyebrow: "05", title: "Pair your phone", screen: "08-pair-code", pose: (u) => ({ ...SCREEN(u), shift: 0.27, dist: lerp(0.3, 0.27, u) }) },
-  { from: 0.57, eyebrow: "Every request", title: "Your phone can't decide.", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
-  { from: 0.84, eyebrow: "", title: "Hold A to sign", screen: "11-approve-send", pose: (u) => ({ az: lerp(0.32, 0.26, u), el: 0.16, dist: lerp(0.13, 0.115, u), tx: 0.031, ty: -0.021, lift: 0, shift: 0.18 }), held: () => ["ButtonA"] },
+  { from: 0.47, eyebrow: "Every request", title: "Your phone can't decide.", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
+  { from: 0.8, eyebrow: "", title: "Hold A to sign", screen: "11-approve-send", pose: (u) => ({ az: lerp(0.32, 0.26, u), el: 0.16, dist: lerp(0.13, 0.115, u), tx: 0.031, ty: -0.021, lift: 0, shift: 0.18 }), held: () => ["ButtonA"] },
   { from: 0.94, eyebrow: "", title: "Signed", screen: "12-signed-confirmed", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.25, 0.235, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
 ];
 

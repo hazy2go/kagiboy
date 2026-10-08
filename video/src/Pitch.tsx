@@ -3,15 +3,16 @@ import { useEffect, useState } from "react";
 import vo from "./vo.json";
 import { Captions } from "./ui";
 import { Next, Proof, Who } from "./scenes";
-import { Apart, Drawer, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
+import { Drawer, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
 
 export const FPS = 30;
 const LEAD = 0.45; // seconds of picture before each voice line
-const TAIL = 0.9; // and after
-const END = 4;
-const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
+const TAIL = 0.55; // and after
+const END = 3;
+// "Inside" (the chips) was cut to fit two minutes; the technical demo covers the hardware
+const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
-const MIN: Record<string, number> = { s3: 6.5 };
+const MIN: Record<string, number> = { s3: 5.8 };
 // the opening waits for the VHS blue screen and its tracking noise before the voice comes in
 const LEADS: Record<string, number> = { s1: 2.85 };
 

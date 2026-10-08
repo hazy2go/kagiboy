@@ -306,7 +306,7 @@ function ProductArt({ art }: { art: (typeof PRODUCTS)[number]["art"] }) {
 export function Who({ dur, marks = [] }: P) {
   const f = useCurrentFrame();
   // the shelf holds until the products line, then the cards come in as they're named
-  const b1 = marks.find((m) => m.text.startsWith("This isn't"))?.at ?? Math.round(dur * 0.3);
+  const b1 = marks.find((m) => m.text.startsWith("You put it on your shelf"))?.at ?? Math.round(dur * 0.3);
   const b2 = marks.find((m) => m.text.startsWith("We're starting"))?.at ?? Math.round(dur * 0.6);
   const s1 = interpolate(f, [0, 18, b1 - 10, b1 + 6], [0, 1, 1, 0], clamp);
   const s2 = interpolate(f, [b1, b1 + 18, b2 - 10, b2 + 6], [0, 1, 1, 0], clamp);
