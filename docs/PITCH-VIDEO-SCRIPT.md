@@ -28,9 +28,9 @@ Visuals reference the Drive asset folder (see `PITCH-DECK-BRIEF.md`): `photo-*` 
 > From then on, your phone can only ask. The cartridge reads every request itself and shows the real amount and address on the Game Boy. Nothing gets signed until you hold A.
 
 ### 1:22–1:48 · It works today (validation)
-**Visual:** screen recording of kagiboy.xyz/demo: the 3D Game Boy and the phone app side by side, a send approved on the Game Boy. Then the swap: quote in the app, `screen-13-approve-swap` on the Game Boy. Chain logos row in. Then `photo-boot` (the real Game Boy on a desk).
+**Visual:** screen recording of kagiboy.xyz/demo: the 3D Game Boy and the phone app side by side, a send approved on the Game Boy. Then the swap: quote in the app, `screen-13-approve-swap` on the Game Boy. Chain logos row in.
 
-> And this isn't a mockup. The software runs today, on my own Game Boy, and in your browser at kagiboy.xyz/demo: the real Game Boy software, right next to the phone app. It signs real testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. And it gets live swap quotes from SODAX, checked and signed on the Game Boy.
+> It works today. At kagiboy.xyz/demo, the Game Boy software runs in your browser, right next to the phone app. It signs testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain, and gets live swap quotes from SODAX, checked and signed on the Game Boy.
 
 ### 1:48–2:08 · What's inside
 **Visual:** the exploded cartridge (`site-04-stage-inside-chips` or `cartridge-exploded`), the four chips light up one by one with their labels.

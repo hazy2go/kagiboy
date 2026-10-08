@@ -26,8 +26,8 @@
  {
   "id": "s5",
   "title": "1:22\u20131:48 \u00b7 It works today (validation)",
-  "seconds": 21.8,
-  "text": "And this isn't a mockup. The software runs today, on my own Game Boy, and in your browser at kagiboy.xyz/demo: the real Game Boy software, right next to the phone app. It signs real testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. And it gets live swap quotes from SODAX, checked and signed on the Game Boy."
+  "seconds": 17.98,
+  "text": "It works today. At kagiboy.xyz/demo, the Game Boy software runs in your browser, right next to the phone app. It signs testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain, and gets live swap quotes from SODAX, checked and signed on the Game Boy."
  },
  {
   "id": "s6",

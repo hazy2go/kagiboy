@@ -1,4 +1,5 @@
-import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, Sequence, interpolate, useCurrentFrame } from "remotion";
+import { Console } from "./Three";
 import { C, Card, DISPLAY, Eyebrow, GameBoy, Glow, PX, Pop, SANS, Title, a, useIn, useSpring } from "./ui";
 
 type P = { dur: number };
@@ -204,11 +205,9 @@ export function How({ dur }: P) {
 /* 5 · it works today: the live demo, a swap, the real console */
 export function Proof({ dur }: P) {
   const f = useCurrentFrame();
-  const b1 = Math.round(dur * 0.42);
-  const b2 = Math.round(dur * 0.78);
+  const b1 = Math.round(dur * 0.5);
   const s1 = interpolate(f, [0, 18, b1 - 10, b1 + 6], [0, 1, 1, 0], clamp);
-  const s2 = interpolate(f, [b1, b1 + 18, b2 - 10, b2 + 6], [0, 1, 1, 0], clamp);
-  const s3 = interpolate(f, [b2, b2 + 18], [0, 1], clamp);
+  const s2 = interpolate(f, [b1, b1 + 18], [0, 1], clamp);
   const chains = ["solana", "ethereum", "base", "arbitrum", "hyperevm"];
   return (
     <AbsoluteFill>
@@ -228,7 +227,7 @@ export function Proof({ dur }: P) {
         <GameBoy screens={["13-approve-swap"]} height={900} />
         <div style={{ width: 760, display: "flex", flexDirection: "column", gap: 30 }}>
           <Pop start={b1 + 6}>
-            <Eyebrow>Real testnet transactions</Eyebrow>
+            <Eyebrow>Live demo · six chains</Eyebrow>
           </Pop>
           <Pop start={b1 + 16}>
             <Title size={80}>Six chains. Live swap quotes. Signed on the Game Boy.</Title>
@@ -240,19 +239,6 @@ export function Proof({ dur }: P) {
               ))}
               <Img src={a("07-chain-logos/robinhood.svg")} style={{ width: 72, height: 72, borderRadius: 36 }} />
             </div>
-          </Pop>
-        </div>
-      </AbsoluteFill>
-      <AbsoluteFill style={{ opacity: s3, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 110 }}>
-        <div style={{ height: 860, aspectRatio: "1400 / 1317", overflow: "hidden", borderRadius: 32, boxShadow: "0 40px 80px -30px rgba(31,35,48,0.45)" }}>
-          <Img src={a("02-real-photos/photo-boot.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "88% 50%" }} />
-        </div>
-        <div style={{ width: 620 }}>
-          <Pop start={b2 + 10}>
-            <Title size={84}>Not a mockup.</Title>
-          </Pop>
-          <Pop start={b2 + 26}>
-            <div style={{ fontFamily: SANS, fontSize: 40, lineHeight: 1.35, color: C.ink2, marginTop: 22 }}>The same software, on my own Game Boy.</div>
           </Pop>
         </div>
       </AbsoluteFill>
@@ -306,7 +292,6 @@ export function Who({ dur }: P) {
   const s1 = interpolate(f, [0, 18, b1 - 10, b1 + 6], [0, 1, 1, 0], clamp);
   const s2 = interpolate(f, [b1, b1 + 18, b2 - 10, b2 + 6], [0, 1, 1, 0], clamp);
   const s3 = interpolate(f, [b2, b2 + 18], [0, 1], clamp);
-  const photos = ["boot", "welcome", "mash", "shake", "pin", "home"];
   return (
     <AbsoluteFill>
       <Glow shift={240} />
@@ -315,21 +300,20 @@ export function Who({ dur }: P) {
         <Title size={260} style={{ letterSpacing: -10 }}>118.69M</Title>
         <div style={{ fontFamily: SANS, fontSize: 22, color: C.ink3 }}>Source: Wikipedia</div>
       </AbsoluteFill>
-      <AbsoluteFill style={{ opacity: s2, alignItems: "center", justifyContent: "center" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 260px)", gap: 22 }}>
-          {photos.map((p, i) => {
-            const t = interpolate(f, [b1 + i * 5, b1 + 20 + i * 5], [0, 1], clamp);
-            return (
-              <div key={p} style={{ height: 325, borderRadius: 22, overflow: "hidden", opacity: t, transform: `translateY(${(1 - t) * 30}px)`, boxShadow: "0 24px 48px -28px rgba(31,35,48,0.45)" }}>
-                <Img src={a(`02-real-photos/photo-${p}.jpg`)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-            );
-          })}
-        </div>
-        <Pop start={b1 + 30} style={{ marginTop: 56 }}>
-          <Title size={72}>A wallet you'd keep on a shelf.</Title>
-        </Pop>
-      </AbsoluteFill>
+      <Sequence from={b1 - 4} durationInFrames={b2 - b1 + 14}>
+        <AbsoluteFill style={{ opacity: s2 }}>
+          {/* a slow turn, like an object on a shelf */}
+          <Console
+            screens={["01-boot"]}
+            shot={{ p: () => 0, screen: () => "01-boot", pose: (t) => ({ az: -0.9 + t * 0.16, el: 0.14, dist: 0.5, tx: 0.004, ty: 0.03, lift: 0, shift: 0.2 }) }}
+          />
+          <div style={{ position: "absolute", left: 140, top: 420, width: 760 }}>
+            <Pop start={14}>
+              <Title size={92}>A wallet you'd keep on a shelf.</Title>
+            </Pop>
+          </div>
+        </AbsoluteFill>
+      </Sequence>
       <AbsoluteFill style={{ opacity: s3, alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 48 }}>
         <Pop start={b2 + 4}>
           <Eyebrow>For the Game Boy generation</Eyebrow>

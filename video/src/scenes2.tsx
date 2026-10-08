@@ -71,7 +71,6 @@ export function Present({ dur }: P) {
   const cut1 = 150;
   const cut2 = Math.round(dur * 0.6);
   const cold = { filter: "saturate(0.55) contrast(1.05) brightness(0.8) hue-rotate(-8deg)" };
-  const close = interpolate(f, [cut2 + 40, cut2 + 85], [0, 1], { ...clamp, easing: ease });
   return (
     <AbsoluteFill style={{ background: "#0b0d12" }}>
       <Sequence durationInFrames={cut1}>
@@ -106,28 +105,7 @@ export function Present({ dur }: P) {
         </AbsoluteFill>
       </Sequence>
       <Sequence from={cut2}>
-        <Glow shift={40} />
-        <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 140 }}>
-          <div style={{ width: 620, height: 440, position: "relative" }}>
-            <div style={{ position: "absolute", inset: 0, borderRadius: 26, background: "#EEF0F5", border: `1px solid ${C.line}` }} />
-            <div style={{ position: "absolute", left: 210, top: 150, width: 200, height: 120, borderRadius: 18, background: "#C9CCD6" }}>
-              <div style={{ position: "absolute", left: 30, top: 34, width: 140, height: 40, borderRadius: 8, background: "#9EA3B0" }} />
-            </div>
-            <div style={{ position: "absolute", left: -10, right: -10, bottom: -10, height: 270 * close, borderRadius: 28, background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 30px 60px -30px rgba(31,35,48,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 120, height: 14, borderRadius: 7, background: "#D9DCE4", opacity: close }} />
-            </div>
-          </div>
-          <div style={{ width: 720 }}>
-            <Pop start={10}>
-              <Title size={84}>Hardware wallets fix that.</Title>
-            </Pop>
-            <Pop start={70}>
-              <Title size={84} style={{ color: C.ink2 }}>
-                But they live in a drawer.
-              </Title>
-            </Pop>
-          </div>
-        </AbsoluteFill>
+        <Drawer dur={dur - cut2} />
       </Sequence>
     </AbsoluteFill>
   );
@@ -182,80 +160,99 @@ export function Reveal({ dur }: P) {
   );
 }
 
-/* 4 · how it feels: the real console, the real screens, thumbs on the buttons */
-const STEPS = [
-  { at: 0.0, eyebrow: "Step 1", title: "Mash and shake", screens: ["03-mash-buttons", "04-shake"] },
-  { at: 0.2, eyebrow: "Step 2", title: "Write 12 words", screens: ["05-recovery-words"] },
-  { at: 0.3, eyebrow: "Step 3", title: "Pick a PIN", screens: ["06-choose-pin"] },
-  { at: 0.4, eyebrow: "Step 4", title: "Pair your phone", screens: ["08-pair-code"] },
-  { at: 0.58, eyebrow: "Every request", title: "Hold A to sign", screens: ["11-approve-send", "12-signed-confirmed"] },
+/* 4 · how it feels: one shot per step, on the real console */
+type StepShot = { from: number; eyebrow: string; title: string; screen: string; pose: (u: number, t: number) => Record<string, number>; held?: (t: number) => string[] };
+const SCREEN = (u: number) => ({ az: lerp(-0.08, -0.02, u), el: 0.02, dist: lerp(0.26, 0.23, u), tx: 0, ty: 0.03, lift: 0, shift: 0.26 });
+const SHOTS: StepShot[] = [
+  { from: 0, eyebrow: "A new game", title: "Setting it up", screen: "02-new-or-restore", pose: (u) => ({ az: lerp(-0.62, -0.38, u), el: 0.12, dist: lerp(0.5, 0.44, u), tx: 0.004, ty: 0.03, lift: 0, shift: 0.18 }) },
+  { from: 0.12, eyebrow: "01", title: "Mash the buttons", screen: "03-mash-buttons",
+    pose: (u) => ({ az: lerp(0.18, 0.05, u), el: 0.18, dist: lerp(0.21, 0.19, u), tx: 0.004, ty: -0.032, lift: 0, shift: 0.26 }),
+    held: (t) => { const k = Math.floor(t * 30); return k % 6 < 3 ? [["ButtonA", "DPad", "ButtonB", "DPad"][Math.floor(k / 6) % 4]] : []; } },
+  { from: 0.2, eyebrow: "02", title: "Shake it", screen: "04-shake",
+    pose: (u, t) => ({ az: -0.3 + Math.sin(t * 31) * 0.05, el: 0.1 + Math.cos(t * 27) * 0.04, dist: 0.46, tx: Math.sin(t * 23) * 0.004, ty: 0.02 + Math.cos(t * 29) * 0.004, lift: 0, shift: 0.2 }) },
+  { from: 0.27, eyebrow: "03", title: "Write down 12 words", screen: "05-recovery-words", pose: SCREEN },
+  { from: 0.35, eyebrow: "04", title: "Pick a PIN", screen: "06-choose-pin", pose: SCREEN, held: (t) => (Math.floor(t * 30) % 16 < 5 ? ["DPad"] : []) },
+  { from: 0.41, eyebrow: "05", title: "Pair your phone", screen: "08-pair-code", pose: (u) => ({ ...SCREEN(u), shift: 0.27, dist: lerp(0.3, 0.27, u) }) },
+  { from: 0.57, eyebrow: "Every request", title: "The phone only asks", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
+  { from: 0.84, eyebrow: "", title: "Hold A to sign", screen: "11-approve-send", pose: (u) => ({ az: lerp(0.32, 0.26, u), el: 0.16, dist: lerp(0.13, 0.115, u), tx: 0.031, ty: -0.021, lift: 0, shift: 0.18 }), held: () => ["ButtonA"] },
+  { from: 0.94, eyebrow: "", title: "Signed", screen: "12-signed-confirmed", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.25, 0.235, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
 ];
-const SCREENS = STEPS.flatMap((s) => s.screens);
 
 export function Feel({ dur }: P) {
-  const f = useCurrentFrame();
-  const p = f / dur;
-  const sec = dur / 30;
-  const step = (u: number) => STEPS.reduce((k, s, i) => (u >= s.at ? i : k), 0);
-  const screenAt = (t: number) => {
-    const u = t / sec;
-    const i = step(u);
-    const s = STEPS[i];
-    const end = STEPS[i + 1]?.at ?? 1;
-    // the last step: approve while A is held, then signed
-    if (i === 4) return u < s.at + (end - s.at) * 0.62 ? s.screens[0] : s.screens[1];
-    return s.screens[Math.min(s.screens.length - 1, Math.floor(((u - s.at) / (end - s.at)) * s.screens.length))];
-  };
-  const held = (t: number) => {
-    const u = t / sec;
-    const i = step(u);
-    const fr = Math.floor(t * 30);
-    if (i === 0 && u < 0.1) return fr % 8 < 4 ? [["DPad", "ButtonA", "ButtonB"][Math.floor(fr / 8) % 3]] : []; // mashing
-    if (i === 2) return fr % 18 < 6 ? ["DPad"] : [];
-    if (i === 3 && u > 0.5) return fr % 30 < 8 ? ["ButtonA"] : [];
-    const s4 = STEPS[4].at;
-    if (i === 4 && u > s4 + 0.06 && u < s4 + (1 - s4) * 0.62) return ["ButtonA"]; // hold to sign
-    return [];
-  };
-  const pairing = p >= STEPS[3].at && p < STEPS[4].at;
   return (
-    <AbsoluteFill>
-      <Glow shift={120} />
-      <Console
-        screens={SCREENS}
-        shot={{
-          p: () => 0,
-          screen: screenAt,
-          held,
-          pose: (t) => {
-            const u = t / sec;
-            return { az: lerp(-0.34, -0.12, u), el: lerp(0.12, 0.05, u), dist: lerp(0.44, 0.37, u), tx: 0.002, ty: lerp(0.012, 0.004, u), lift: 0, shift: 0.22 };
-          },
-        }}
-      />
-      <div style={{ position: "absolute", left: 140, top: 170, display: "flex", flexDirection: "column", gap: 34 }}>
-        <Pop start={0}>
-          <Eyebrow>Setup feels like starting a new game</Eyebrow>
-        </Pop>
-        {STEPS.map((s, i) => {
-          const on = p >= s.at && p < (STEPS[i + 1]?.at ?? 1.01);
-          const seen = p >= s.at;
-          return (
-            <div key={s.title} style={{ opacity: seen ? (on ? 1 : 0.32) : 0.1, display: "flex", alignItems: "baseline", gap: 28, transform: `translateX(${on ? 0 : -8}px)` }}>
-              <span style={{ fontFamily: PX, fontSize: 28, color: on ? C.accent : C.ink3, width: 300, whiteSpace: "nowrap" }}>{s.eyebrow}</span>
-              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 72, letterSpacing: -2.5, color: C.ink }}>{s.title}</span>
+    <AbsoluteFill style={{ background: "#fff" }}>
+      {SHOTS.map((sh, i) => {
+        const a0 = Math.round(sh.from * dur);
+        const a1 = Math.round((SHOTS[i + 1]?.from ?? 1) * dur);
+        const len = a1 - a0;
+        return (
+          <Sequence key={sh.title} from={a0} durationInFrames={len}>
+            <Glow shift={120 + i * 20} />
+            <Console
+              screens={[sh.screen]}
+              shot={{ p: () => 0, plain: true, screen: () => sh.screen, held: sh.held, pose: (t) => sh.pose(Math.min(1, t / (len / 30)), t) as never }}
+            />
+            {sh.title === "Pair your phone" && (
+              <div style={{ position: "absolute", left: 120, top: 640 }}>
+                <Pop start={6}>
+                  <Card style={{ padding: "34px 40px", display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+                    <span style={{ fontFamily: SANS, fontSize: 26, color: C.ink2 }}>On your phone</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 84, letterSpacing: 8, color: C.ink }}>636073</span>
+                    <span style={{ fontFamily: SANS, fontSize: 24, color: C.ink3 }}>the same code as the Game Boy</span>
+                  </Card>
+                </Pop>
+              </div>
+            )}
+            <div style={{ position: "absolute", left: 120, top: 400 }}>
+              <Pop start={3}>
+                <Card style={{ padding: "28px 36px", display: "flex", flexDirection: "column", gap: 12, background: "rgba(255,255,255,0.94)" }}>
+                  {sh.eyebrow && <Eyebrow>{sh.eyebrow}</Eyebrow>}
+                  <Title size={70} style={{ whiteSpace: "nowrap" }}>{sh.title}</Title>
+                </Card>
+              </Pop>
             </div>
-          );
-        })}
-      </div>
-      {pairing && (
-        <div style={{ position: "absolute", left: 140, top: 790, opacity: interpolate(f, [STEPS[3].at * dur, STEPS[3].at * dur + 15], [0, 1], clamp) }}>
-          <Card style={{ padding: "22px 30px", display: "flex", gap: 22, alignItems: "center" }}>
-            <span style={{ fontFamily: SANS, fontSize: 24, color: C.ink2 }}>Same code on your phone</span>
-            <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 56, letterSpacing: 6, color: C.ink }}>636073</span>
-          </Card>
+          </Sequence>
+        );
+      })}
+    </AbsoluteFill>
+  );
+}
+
+/* 2b · inside the drawer: we look up at the room as the drawer slides shut */
+export function Drawer({ dur }: P) {
+  const f = useCurrentFrame();
+  const shut0 = Math.round(dur * 0.45);
+  const open = interpolate(f, [shut0, dur - 8], [1, 0], { ...clamp, easing: (t) => t * t * (3 - 2 * t) });
+  const H = 1080 * 0.62 * open;
+  const glow = 0.25 + 0.75 * open;
+  return (
+    <AbsoluteFill style={{ background: "#0d0b0a" }}>
+      {/* the room, seen through the drawer's opening */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: H, overflow: "hidden", background: "#fbfbfd" }}>
+        <Glow shift={40} />
+        <div style={{ position: "absolute", left: 140, top: 150, width: 1500 }}>
+          <Pop start={6}>
+            <Title size={92}>Hardware wallets fix that.</Title>
+          </Pop>
+          <Pop start={Math.round(dur * 0.3)}>
+            <Title size={92} style={{ color: C.ink2, marginTop: 18 }}>
+              But they live in a drawer.
+            </Title>
+          </Pop>
         </div>
-      )}
+      </div>
+      {/* the drawer's front edge and its shadow */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: H - 2, height: 26, background: "linear-gradient(#2a221d, #120f0d)", boxShadow: "0 18px 40px rgba(0,0,0,0.6)" }} />
+      {/* inside the drawer: its floor and side walls, lit by what's left of the room */}
+      <div style={{ position: "absolute", left: 0, right: 0, top: H + 24, bottom: 0, background: `linear-gradient(180deg, rgba(92,70,56,${0.95 * glow}), rgba(40,30,24,${0.9 * glow}) 45%, #0d0b0a 95%)` }} />
+      <div style={{ position: "absolute", left: 0, top: H + 24, bottom: 0, width: 260, background: "linear-gradient(90deg, rgba(0,0,0,0.75), transparent)", clipPath: "polygon(0 0, 100% 18%, 100% 100%, 0 100%)" }} />
+      <div style={{ position: "absolute", right: 0, top: H + 24, bottom: 0, width: 260, background: "linear-gradient(270deg, rgba(0,0,0,0.75), transparent)", clipPath: "polygon(0 18%, 100% 0, 100% 100%, 0 100%)" }} />
+      {/* a plain hardware wallet, forgotten on the drawer floor */}
+      <div style={{ position: "absolute", left: 960 - 330, bottom: 150, width: 660, height: 200, transform: "perspective(1100px) rotateX(58deg) rotateZ(-6deg)", filter: `brightness(${0.3 + 0.7 * glow})` }}>
+        <div style={{ position: "absolute", inset: 0, borderRadius: 36, background: "linear-gradient(160deg, #4a4d55, #2c2e34)", boxShadow: "0 40px 60px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.12)" }} />
+        <div style={{ position: "absolute", left: 60, top: 50, width: 330, height: 100, borderRadius: 12, background: "#14151a", boxShadow: "inset 0 0 0 3px #3a3c43" }} />
+        <div style={{ position: "absolute", right: 70, top: 64, width: 72, height: 72, borderRadius: 36, background: "#5a5d65", boxShadow: "inset 0 -4px 0 rgba(0,0,0,0.3)" }} />
+      </div>
     </AbsoluteFill>
   );
 }

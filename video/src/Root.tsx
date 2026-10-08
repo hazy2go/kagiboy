@@ -3,6 +3,7 @@ import { FPS, Pitch, timeline } from "./Pitch";
 import { AbsoluteFill } from "remotion";
 import { Console } from "./Three";
 import { Glow } from "./ui";
+import { Probe } from "./Probe";
 
 function Test3D() {
   return (
@@ -17,6 +18,7 @@ export function Root() {
   return (
     <>
       <Composition id="Pitch" component={Pitch} durationInFrames={timeline().total} fps={FPS} width={1920} height={1080} />
+      <Composition id="Probe" component={Probe} durationInFrames={4} fps={FPS} width={1920} height={1080} />
       <Composition id="Test3D" component={Test3D} durationInFrames={300} fps={FPS} width={1920} height={1080} />
     </>
   );
