@@ -1,35 +1,14 @@
 import type { ReactNode } from "react";
-import { AbsoluteFill, Img, OffthreadVideo, interpolate, random, staticFile, useCurrentFrame } from "remotion";
-import { PX } from "./ui";
+import { AbsoluteFill, Img, OffthreadVideo, interpolate, staticFile, useCurrentFrame } from "remotion";
 
 /** A memory: 4:3 inside black, warm VHS grade, scanlines, grain, colour fringing and the deck's OSD. */
-export function Vhs({ children, osd = "PLAY ▶", stamp }: { children: ReactNode; osd?: string; stamp?: string }) {
-  const f = useCurrentFrame();
-  // the picture breathes a little, like a worn tape
-  const jitter = (random(`j${Math.floor(f / 2)}`) - 0.5) * 2;
-  const roll = (f * 3) % 1080;
+/** A memory: 4:3 inside black with a warm, soft tape grade. The real VHS overlay goes on top (Memory). */
+export function Vhs({ children }: { children: ReactNode }) {
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
       <div style={{ position: "absolute", left: 240, top: 0, width: 1440, height: 1080, overflow: "hidden" }}>
-        {/* red and blue fringes under the picture */}
-        <div style={{ position: "absolute", inset: 0, transform: `translateX(${3 + jitter}px)`, mixBlendMode: "screen", opacity: 0.55, filter: "sepia(1) saturate(6) hue-rotate(-40deg)" }}>{children}</div>
-        <div style={{ position: "absolute", inset: 0, transform: `translateX(${-3 - jitter}px)`, mixBlendMode: "screen", opacity: 0.45, filter: "sepia(1) saturate(6) hue-rotate(170deg)" }}>{children}</div>
-        <div style={{ position: "absolute", inset: 0, transform: `translateX(${jitter * 0.6}px)`, filter: "saturate(0.72) contrast(1.08) sepia(0.28) brightness(1.04) blur(0.7px)" }}>{children}</div>
-        {/* scanlines */}
-        <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 4px)" }} />
-        {/* a soft tracking band rolling down */}
-        <div style={{ position: "absolute", left: 0, right: 0, top: roll - 60, height: 60, background: "linear-gradient(transparent, rgba(255,255,255,0.08), transparent)" }} />
-        {/* grain */}
-        <svg width="1440" height="1080" style={{ position: "absolute", inset: 0, opacity: 0.18, mixBlendMode: "overlay" }}>
-          <filter id={`g${f}`}>
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={f % 97} />
-          </filter>
-          <rect width="100%" height="100%" filter={`url(#g${f})`} />
-        </svg>
-        {/* vignette */}
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)" }} />
-        <div style={{ position: "absolute", left: 56, top: 44, fontFamily: PX, fontSize: 40, color: "#f4f4f4", textShadow: "2px 2px 0 rgba(0,0,0,0.6)", letterSpacing: 4 }}>{osd}</div>
-        {stamp && <div style={{ position: "absolute", right: 56, bottom: 44, fontFamily: PX, fontSize: 34, color: "#f4f4f4", textShadow: "2px 2px 0 rgba(0,0,0,0.6)", letterSpacing: 3 }}>{stamp}</div>}
+        <div style={{ position: "absolute", inset: 0, filter: "saturate(0.78) contrast(1.06) sepia(0.22) brightness(1.03) blur(0.9px)" }}>{children}</div>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.5) 100%)" }} />
       </div>
     </AbsoluteFill>
   );

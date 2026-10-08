@@ -13,7 +13,7 @@ const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
 const MIN: Record<string, number> = { s3: 6.5 };
 // the opening waits for the VHS blue screen and its tracking noise before the voice comes in
-const LEADS: Record<string, number> = { s1: 2.1 };
+const LEADS: Record<string, number> = { s1: 4.3 };
 
 /** Scene lengths follow the voiceover (src/vo.json, re-measured when the real recording lands). */
 export const timeline = () => {
@@ -54,13 +54,13 @@ export function Pitch() {
           <Captions text={text} from={Math.round(lead * FPS)} seconds={seconds} />
         </Sequence>
       ))}
-      {/* "Sweet September" (Mixkit, free license): in under the memories, low under the voice, up on the end card */}
-      <Sequence from={45} name="music">
+      {/* "soiree" by boipurple (trash kid), royalty free: in under the memories, low under the voice, up on the end card */}
+      <Sequence from={120} name="music">
         <Audio
-          src={staticFile("music-bed.mp3")}
+          src={staticFile("music-soiree.mp3")}
           volume={(fr) => {
-            const at = fr + 45;
-            const fadeIn = interpolate(at, [45, 135], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            const at = fr + 120;
+            const fadeIn = interpolate(at, [120, 210], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
             const lift = interpolate(at, [end.from, end.from + 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
             const fadeOut = interpolate(at, [total - 45, total], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
             return (0.13 + 0.17 * lift) * fadeIn * fadeOut;

@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { Console } from "./Three";
 import { poseAt as poseAtP } from "../../web/src/landing/scene";
 import { C, Card, DISPLAY, Eyebrow, Glow, PX, Pop, SANS, Title, a } from "./ui";
@@ -12,33 +12,48 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /* 1 · a memory on tape: the deck, a car window, a kid at a window, then my own Game Boy */
 export function Memory({ dur }: P) {
   const f = useCurrentFrame();
-  const flash = interpolate(f, [dur - 14, dur - 4, dur], [0, 1, 1], clamp);
-  const open = 58; // black while the deck takes the tape and spins up
-  const c1 = Math.round(dur * 0.36);
-  const c2 = Math.round(dur * 0.62);
-  const snow = interpolate(f, [open - 10, open, open + 6], [0, 1, 0], clamp);
+  const flash = interpolate(f, [dur - 10, dur - 3, dur], [0, 1, 1], clamp);
+  // 0: black, the cassette goes in · blue: the deck's blue screen while it spins up · open: the picture
+  const blue = 48;
+  const open = 120;
+  const c1 = Math.round(open + (dur - open) * 0.4);
+  const c2 = Math.round(open + (dur - open) * 0.7);
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
-      {/* the cassette goes in, the mechanism threads it, the motor spins up, then tracking static */}
-      <Audio src={staticFile("sfx/vhs-start.wav")} volume={0.95} />
+      <Audio src={staticFile("sfx/vhs-intro.wav")} volume={1} />
+      <Sequence from={open}>
+        <Audio src={staticFile("sfx/real-vhs.mp3")} volume={0.14} startFrom={30 * 20} />
+      </Sequence>
       <Sequence from={open} durationInFrames={c1 - open}>
-        <Vhs osd="▶ PLAY">
+        <Vhs>
           <Photo src={staticFile("gen/g1.png")} dur={c1 - open} zoom={1.3} origin="18% 6%" pos="0% 0%" push={0.07} />
         </Vhs>
       </Sequence>
       <Sequence from={c1} durationInFrames={c2 - c1}>
-        <Vhs osd="▶ PLAY">
+        <Vhs>
           <Clip name="car-window-retro" from={2} dur={c2 - c1} />
         </Vhs>
       </Sequence>
       <Sequence from={c2}>
-        <Vhs osd="▶ PLAY">
+        <Vhs>
           <Photo src={staticFile("gen/g3.png")} dur={dur - c2} zoom={1.3} origin="30% 10%" pos="0% 0%" push={0.08} />
         </Vhs>
       </Sequence>
-      {/* the deck's blue screen while the tape loads, then tracking noise rolls into the picture */}
-      {f >= 10 && f < open && <BlueScreen f={f - 10} len={open - 10} />}
-      <AbsoluteFill style={{ background: "#d8d8d8", opacity: snow * 0.5, mixBlendMode: "screen" }} />
+      {/* a real VCR's PLAY screen and tape noise over the memories (Pixabay, free license) */}
+      <Sequence from={open}>
+        <AbsoluteFill style={{ mixBlendMode: "screen", opacity: 0.9 }}>
+          <OffthreadVideo src={staticFile("vhs/overlay-261503.mp4")} muted style={{ position: "absolute", left: 240, width: 1440, height: 1080, objectFit: "cover" }} />
+        </AbsoluteFill>
+      </Sequence>
+      {f >= blue && f < open && <BlueScreen f={f - blue} len={open - blue} />}
+      {/* real tracking static as the picture comes in, and again as the tape snaps to the present */}
+      {[open - 14, dur - 16].map((at) => (
+        <Sequence key={at} from={at} durationInFrames={18}>
+          <AbsoluteFill style={{ mixBlendMode: "screen" }}>
+            <OffthreadVideo src={staticFile("vhs/overlay-225225.mp4")} startFrom={30} muted style={{ position: "absolute", left: 240, width: 1440, height: 1080, objectFit: "cover" }} />
+          </AbsoluteFill>
+        </Sequence>
+      ))}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
   );
@@ -46,25 +61,11 @@ export function Memory({ dur }: P) {
 
 /** A VCR's blue screen with its PLAY readout; the last frames break up into tracking noise. */
 function BlueScreen({ f, len }: { f: number; len: number }) {
-  const noise = interpolate(f, [len - 14, len], [0, 1], clamp);
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
       <div style={{ position: "absolute", left: 240, top: 0, width: 1440, height: 1080, overflow: "hidden", background: "#1f2fd0" }}>
         <div style={{ position: "absolute", left: 90, top: 70, fontFamily: PX, fontSize: 56, color: "#fff", letterSpacing: 6, textShadow: "3px 3px 0 rgba(0,0,0,0.35)" }}>PLAY ▶</div>
         <div style={{ position: "absolute", right: 90, top: 70, fontFamily: PX, fontSize: 44, color: "#fff", letterSpacing: 4 }}>SP</div>
-        {/* tracking: bright bands rolling and the picture tearing */}
-        {[0, 1, 2, 3, 4, 5].map((k) => {
-          const y = ((f * 37 + k * 211) % 1180) - 100;
-          return <div key={k} style={{ position: "absolute", left: 0, right: 0, top: y, height: 10 + (k % 3) * 14, background: "rgba(255,255,255,0.85)", opacity: noise, transform: `translateX(${((f * 13 + k * 97) % 60) - 30}px)` }} />;
-        })}
-        <svg width="1440" height="1080" style={{ position: "absolute", inset: 0, opacity: 0.85 * noise }}>
-          <filter id={`bs${f}`}>
-            <feTurbulence type="fractalNoise" baseFrequency="0.9 0.02" numOctaves="2" seed={f % 89} />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter={`url(#bs${f})`} />
-        </svg>
-        <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 4px)" }} />
       </div>
     </AbsoluteFill>
   );
