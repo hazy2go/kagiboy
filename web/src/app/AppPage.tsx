@@ -1,5 +1,5 @@
 import "../polyfill"; // must run before @solana/web3.js loads
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import qrcode from "qrcode-generator";
 import { formatUnits, parseUnits } from "viem";
@@ -10,6 +10,13 @@ import { useSession } from "../demo/session";
 import { explorer } from "../phone/phone";
 import { chainOf, intentFor, loadTokens, PARTNER_FEE_BPS, quote, SLIPPAGE_BPS, SWAP_CHAINS, type Quote, type Token } from "./swap";
 import { CHAIN_ICONS, SYMBOL_ICONS, TOKEN_ICONS } from "./tokenIcons";
+import { blip, PixelIcon, type PixelName } from "./pixel";
+import { SwapTicket, type TicketToken } from "./ui/swap-ticket";
+import { ThreeDButton } from "./ui/three-d-button";
+import { BottomSheet } from "./ui/bottom-sheet";
+import AnimatedBackground from "./ui/animated-background";
+import { TransactionList, type ActivityItem } from "./ui/transaction-list";
+import "./tw.css";
 import "../demo/demo.css";
 import "./app.css";
 
@@ -22,6 +29,7 @@ interface SwapRecord {
   route: string;
   state: "waiting" | "signed" | "rejected" | "failed";
   at: number;
+  fees: string;
 }
 
 /**
@@ -80,9 +88,9 @@ export function AppPage() {
               Balances, sends and swaps across Solana and five EVM networks, with SODAX swaps built in. Nothing is signed
               until you see it on the Game Boy and hold A.
             </p>
-            <button className="pill-btn ghost" onClick={() => setSheet(true)}>
+            <ThreeDButton variant="soft" size="lg" className="kb-cta" onClick={() => setSheet(true)}>
               Show the Game Boy
-            </button>
+            </ThreeDButton>
           </section>
         )}
         <div className="app-device">
@@ -114,8 +122,10 @@ export function KagiApp({ onOpen, full = false }: { onOpen?: () => void; full?: 
   const [tab, setTab] = useState<Tab>("wallet");
   const [swaps, setSwaps] = useState<SwapRecord[]>([]);
   const stage = !s.powered ? "connect" : s.chip.state === "none" ? "setup" : s.chip.state === "locked" ? "unlock" : !s.chip.paired ? "pair" : "main";
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   return (
-    <div className={`kapp app-screen ${full ? "is-full" : ""}`}>
+    <SheetHost.Provider value={{ el: root, contained: !full }}>
+    <div ref={setRoot} className={`kapp app-screen ${full ? "is-full" : ""}`}>
       <StatusBar />
       <div className="app-view" key={stage}>
         {stage === "connect" && <Connect onOpen={onOpen} />}
@@ -125,6 +135,7 @@ export function KagiApp({ onOpen, full = false }: { onOpen?: () => void; full?: 
         {stage === "main" && <Main tab={tab} setTab={setTab} swaps={swaps} setSwaps={setSwaps} onOpen={onOpen} />}
       </div>
     </div>
+    </SheetHost.Provider>
   );
 }
 
@@ -137,7 +148,7 @@ function StatusBar() {
     <div className="app-status">
       <strong className="app-brand">kagiboy</strong>
       <span className={`app-link ${linked ? "is-on" : ""}`}>
-        <span className="app-link-dot" aria-hidden />
+        <span className={`gb-led ${linked ? "is-on" : s.powered ? "is-warn" : ""}`} aria-hidden />
         {!s.powered ? "No cartridge" : s.chip.state === "locked" ? "Locked" : s.chip.state === "none" ? "Setting up" : linked ? "Cartridge linked" : "Not paired"}
       </span>
     </div>
@@ -172,15 +183,14 @@ function Connect({ onOpen }: { onOpen?: () => void }) {
   return (
     <Hero art={<Radar />} title="Connect your kagiboy">
       <p className="hero-lede">Put the cartridge in your Game Boy and switch it on. Your keys stay in the cartridge; this app can only ask.</p>
-      <button
-        className="pill-btn"
+      <ThreeDButton variant="solid" size="lg" className="kb-cta"
         onClick={() => {
           s.powerOn();
           onOpen?.();
         }}
       >
         Switch on
-      </button>
+      </ThreeDButton>
     </Hero>
   );
 }
@@ -217,9 +227,9 @@ function Unlock({ onOpen }: { onOpen?: () => void }) {
 function OpenGameBoy({ onOpen }: { onOpen?: () => void }) {
   if (!onOpen) return null;
   return (
-    <button className="pill-btn ghost" onClick={onOpen}>
+    <ThreeDButton variant="soft" size="lg" className="kb-cta" onClick={onOpen}>
       Open the Game Boy
-    </button>
+    </ThreeDButton>
   );
 }
 
@@ -244,20 +254,20 @@ function Pair() {
     <Hero art={<Radar live />} title="Pair this phone">
       <p className="hero-lede">Both screens will show the same 6-digit code. Accept it on the Game Boy, and this phone can ask the cartridge to sign.</p>
       {s.phone.pairState === "refused" && <p className="hero-note">{s.phone.pairError || "Pairing was turned down on the Game Boy."}</p>}
-      <button className="pill-btn" onClick={() => s.phone.pair()}>
+      <ThreeDButton variant="solid" size="lg" className="kb-cta" onClick={() => s.phone.pair()}>
         Pair cartridge
-      </button>
+      </ThreeDButton>
     </Hero>
   );
 }
 
 /* ---------- the wallet ---------- */
 
-const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
-  { id: "wallet", label: "Wallet", icon: <path d="M4 7.5h16v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18V7.5Zm0 0V6a1.5 1.5 0 0 1 1.5-1.5H17M15.5 13.5h1.5" /> },
-  { id: "swap", label: "Swap", icon: <path d="M7 4.5 4 7.5l3 3M4 7.5h13M17 13.5l3 3-3 3M20 16.5H7" /> },
-  { id: "act-screen", label: "Activity", icon: <path d="M4 12h3.5l2.5-6 4 12 2.5-6H20" /> },
-  { id: "cartridge", label: "Cartridge", icon: <path d="M6 3.5h9l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1ZM8.5 8h7v5h-7z" /> },
+const TABS: { id: Tab; label: string; icon: PixelName }[] = [
+  { id: "wallet", label: "Wallet", icon: "wallet" },
+  { id: "swap", label: "Swap", icon: "swap" },
+  { id: "act-screen", label: "Activity", icon: "activity" },
+  { id: "cartridge", label: "Cartridge", icon: "cartridge" },
 ];
 
 function Main({
@@ -273,6 +283,7 @@ function Main({
   setSwaps: React.Dispatch<React.SetStateAction<SwapRecord[]>>;
   onOpen?: () => void;
 }) {
+  const s = useSession();
   const [sheet, setSheet] = useState<null | "send" | "receive">(null);
   return (
     <>
@@ -283,14 +294,25 @@ function Main({
         {tab === "cartridge" && <Cartridge onOpen={onOpen} />}
       </div>
       <nav className="app-tabs" aria-label="App">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? "is-on" : ""} onClick={() => setTab(t.id)} aria-current={tab === t.id ? "page" : undefined}>
-            <svg viewBox="0 0 24 24" aria-hidden>
-              {t.icon}
-            </svg>
-            {t.label}
-          </button>
-        ))}
+        <AnimatedBackground
+          defaultValue={tab}
+          className="tab-pill"
+          transition={{ type: "spring", bounce: 0.15, duration: 0.45 }}
+          onValueChange={(id) => {
+            if (!id || id === tab) return;
+            blip(s.muted, 880);
+            setTab(id as Tab);
+          }}
+        >
+          {TABS.map((t) => (
+            <button key={t.id} data-id={t.id} type="button" className={tab === t.id ? "is-on" : ""} aria-current={tab === t.id ? "page" : undefined}>
+              <span className="tab-inner">
+                <PixelIcon name={t.icon} size={22} />
+                {t.label}
+              </span>
+            </button>
+          ))}
+        </AnimatedBackground>
       </nav>
       <Sheet open={sheet === "send"} onClose={() => setSheet(null)} title="Send">
         <SendSheet onDone={() => setSheet(null)} />
@@ -311,41 +333,67 @@ function Wallet({ onSend, onReceive, onSwap, swaps }: { onSend: () => void; onRe
   const recent = [...s.phone.activity.slice(0, 2).map((a) => ({ id: a.id, title: `Sent ${a.amount}`, sub: label(a.state), at: 0 })), ...swaps.slice(0, 2).map((w) => ({ id: w.id, title: `${w.sell} → ${w.buy}`, sub: swapLabel(w.state), at: w.at }))];
   return (
     <div className="wallet">
-      <section className="acct-cards" aria-label="Accounts">
-        <article className="acct acct-sol" style={{ ["--n" as string]: 0 }}>
-          <header>
-            <span>Solana</span>
-            <span className="acct-net">Devnet</span>
-          </header>
-          <Amount value={sol} decimals={9} symbol="SOL" />
-          <p className="acct-addr">{addr ? short(addr.sol) : "…"}</p>
-        </article>
-        <article className="acct acct-evm" style={{ ["--n" as string]: 1 }}>
-          <header>
-            <select className="acct-pick" value={net.id} onChange={(e) => s.phone.setEvmNetwork(Number(e.target.value))} aria-label="EVM network">
-              {EVM_NETWORKS.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.name === "Robinhood" ? "Robinhood Chain" : n.name}
-                </option>
-              ))}
-            </select>
-            <span className="acct-net">Testnet</span>
-          </header>
-          <Amount value={evm} decimals={18} symbol={net.symbol} />
-          <p className="acct-addr">{addr ? short(addr.evm) : "…"}</p>
-          {evm === 0n && net.faucet && (
-            <a className="acct-fund" href={net.faucet} target="_blank" rel="noreferrer" onClick={() => addr && navigator.clipboard?.writeText(addr.evm).catch(() => {})}>
-              Get test {net.symbol} ↗
-            </a>
-          )}
-          {evm === 0n && !net.faucet && net.fundHint && <p className="acct-hint">{net.fundHint}</p>}
-        </article>
+      <section className="gb-panel" aria-label="Accounts">
+        <div className="gb-bezel-top" aria-hidden>
+          <i />
+          <span>DOT MATRIX WITH SECURE CHIP</span>
+          <i />
+        </div>
+        <div className="gb-bezel-body">
+          <div className="gb-led-col" aria-hidden>
+            <span className={`gb-led ${s.chip.paired ? "is-on" : ""}`} />
+            <small>LINK</small>
+          </div>
+          <div className="lcd">
+            <div className="lcd-head">
+              <PixelIcon name="key" size={14} />
+              <b>kagiboy</b>
+              <span>UNLOCKED</span>
+            </div>
+            <div className="lcd-acct">
+              <div className="lcd-acct-top">
+                <img src={CHAIN_ICONS.solana} alt="" />
+                <span>Solana</span>
+                <em>DEVNET</em>
+              </div>
+              <Amount value={sol} decimals={9} symbol="SOL" />
+              <p className="lcd-addr">{addr ? short(addr.sol) : "…"}</p>
+            </div>
+            <div className="lcd-acct">
+              <div className="lcd-acct-top">
+                <img src={CHAIN_ICONS[SWAP_CHAINS.find((c) => c.side.chain === "evm" && c.side.net === net.id)?.key ?? "ethereum"]} alt="" />
+                <select className="lcd-pick" value={net.id} onChange={(e) => s.phone.setEvmNetwork(Number(e.target.value))} aria-label="EVM network">
+                  {EVM_NETWORKS.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.name === "Robinhood" ? "Robinhood Chain" : n.name}
+                    </option>
+                  ))}
+                </select>
+                <em>TESTNET</em>
+              </div>
+              <Amount value={evm} decimals={18} symbol={net.symbol} />
+              <p className="lcd-addr">{addr ? short(addr.evm) : "…"}</p>
+            </div>
+          </div>
+        </div>
       </section>
 
+      {(evm === 0n && (net.faucet || net.fundHint)) && (
+        <div className="fund-row">
+          {net.faucet ? (
+            <a className="fund-chip" href={net.faucet} target="_blank" rel="noreferrer" onClick={() => addr && navigator.clipboard?.writeText(addr.evm).catch(() => {})}>
+              Get test {net.symbol} ↗
+            </a>
+          ) : (
+            <p className="acct-hint">{net.fundHint}</p>
+          )}
+        </div>
+      )}
+
       <div className="wallet-actions">
-        <Action label="Send" onClick={onSend} d="M12 19V5m0 0-6 6m6-6 6 6" />
-        <Action label="Receive" onClick={onReceive} d="M12 5v14m0 0 6-6m-6 6-6-6" />
-        <Action label="Swap" onClick={onSwap} d="M7 4.5 4 7.5l3 3M4 7.5h13M17 13.5l3 3-3 3M20 16.5H7" />
+        <Action label="Send" onClick={onSend} icon="send" />
+        <Action label="Receive" onClick={onReceive} icon="receive" />
+        <Action label="Swap" onClick={onSwap} icon="swap" />
       </div>
 
       {sol === 0n && (
@@ -374,15 +422,21 @@ function Wallet({ onSend, onReceive, onSwap, swaps }: { onSend: () => void; onRe
   );
 }
 
-function Action({ label: text, onClick, d }: { label: string; onClick: () => void; d: string }) {
+/** A round button in console plastic, its label printed in the Game Boy's navy italics. */
+function Action({ label: text, onClick, icon }: { label: string; onClick: () => void; icon: PixelName }) {
+  const s = useSession();
   return (
-    <button className="wallet-action" onClick={onClick}>
-      <span>
-        <svg viewBox="0 0 24 24" aria-hidden>
-          <path d={d} />
-        </svg>
+    <button
+      className="wallet-action"
+      onClick={() => {
+        blip(s.muted);
+        onClick();
+      }}
+    >
+      <span className="console-btn">
+        <PixelIcon name={icon} size={22} />
       </span>
-      {text}
+      <b>{text}</b>
     </button>
   );
 }
@@ -392,8 +446,8 @@ function Amount({ value, decimals, symbol }: { value: bigint | null; decimals: n
   const target = value === null ? null : Number(formatUnits(value, decimals));
   const shown = useTween(target ?? 0);
   return (
-    <p className="acct-amount">
-      {target === null ? <span className="shimmer">0.0000</span> : shown.toFixed(4)} <small>{symbol}</small>
+    <p className="lcd-amount">
+      {target === null ? <span className="lcd-dash">--.----</span> : shown.toFixed(4)} <small>{symbol}</small>
     </p>
   );
 }
@@ -411,8 +465,6 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
   const [quoting, setQuoting] = useState(false);
   const [qErr, setQErr] = useState("");
   const [picking, setPicking] = useState<null | "sell" | "buy">(null);
-  const [flip, setFlip] = useState(0);
-  const [details, setDetails] = useState(false);
   const [result, setResult] = useState<null | { state: "signed" | "rejected" | "failed"; text: string }>(null);
   const [tick, setTick] = useState(0);
 
@@ -486,6 +538,7 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
       route: `${chainOf(q.sell.chain).name} → ${chainOf(q.buy.chain).name}`,
       state: "waiting",
       at: Date.now(),
+      fees: `${fmt(q.partnerFee + q.solverFee, q.sell.decimals)} ${q.sell.symbol}`,
     };
     try {
       const req = s.chip.requestSignature({ chain: "swap", swap: intentFor(q) });
@@ -513,125 +566,104 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
 
       {loadErr && <p className="err">{loadErr}</p>}
 
-      <div className="swap-box">
-        <div className="swap-side">
-          <span className="swap-label">You pay</span>
-          <div className="swap-row">
-            <input
-              className="swap-amt"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))}
-              aria-label="Amount to pay"
-              placeholder="0"
-            />
-            <TokenButton token={sell} onClick={() => setPicking("sell")} />
-          </div>
-        </div>
-
-        <button
-          className="swap-flip"
-          style={{ rotate: `${flip * 180}deg` }}
-          onClick={() => {
-            setFlip((f) => f + 1);
-            setSell(buy);
-            setBuy(sell);
-          }}
-          aria-label="Swap direction"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 5v14m0 0 5-5m-5 5-5-5" />
-          </svg>
-        </button>
-
-        <div className="swap-side is-get">
-          <span className="swap-label">You get</span>
-          <div className="swap-row">
-            <p className={`swap-amt is-out ${quoting ? "is-busy" : ""}`} aria-live="polite">
-              {q ? outShown.toFixed(Math.min(6, q.buy.decimals > 6 ? 6 : 4)) : quoting ? <span className="shimmer">0.0000</span> : "0"}
-            </p>
-            <TokenButton token={buy} onClick={() => setPicking("buy")} />
-          </div>
-        </div>
-      </div>
-
       {qErr && <p className="err">{qErr}</p>}
 
-      {q && (
-        <button className={`swap-details ${details ? "is-open" : ""}`} onClick={() => setDetails((d) => !d)} aria-expanded={details}>
-          <span className="swap-rate">
-            1 {q.sell.symbol} ≈ {rate(q)} {q.buy.symbol}
-          </span>
-          <span className="swap-chev" aria-hidden>
-            ›
-          </span>
-          <dl>
-            <div>
-              <dt>Route</dt>
-              <dd>
-                {chainOf(q.sell.chain).name} → {chainOf(q.buy.chain).name} via SODAX
-              </dd>
-            </div>
-            <div>
-              <dt>Least you'll get</dt>
-              <dd>
-                {fmt(q.minOut, q.buy.decimals)} {q.buy.symbol}
-              </dd>
-            </div>
-            <div>
-              <dt>kagiboy fee ({PARTNER_FEE_BPS / 100}%)</dt>
-              <dd>
-                {fmt(q.partnerFee, q.sell.decimals)} {q.sell.symbol}
-              </dd>
-            </div>
-            <div>
-              <dt>SODAX fee (0.1%)</dt>
-              <dd>
-                {fmt(q.solverFee, q.sell.decimals)} {q.sell.symbol}
-              </dd>
-            </div>
-            <div>
-              <dt>Slippage</dt>
-              <dd>{SLIPPAGE_BPS / 100}%</dd>
-            </div>
-          </dl>
-        </button>
-      )}
-
-      <button className="pill-btn wide" disabled={!q || quoting || s.chip.hasPending} onClick={review}>
-        {s.chip.hasPending ? "Waiting for your Game Boy…" : "Review on Game Boy"}
-      </button>
+      <SwapTicket
+        pay={sell && ticketToken(sell)}
+        get={buy && ticketToken(buy)}
+        amount={amount}
+        onAmount={setAmount}
+        out={q ? outShown.toFixed(Math.min(6, q.buy.decimals > 6 ? 6 : 4)) : ""}
+        quoting={quoting}
+        onFlip={() => {
+          blip(s.muted, 784);
+          setSell(buy);
+          setBuy(sell);
+        }}
+        onPick={(side) => setPicking(side === "pay" ? "sell" : "buy")}
+        picking={picking === null ? null : picking === "sell" ? "pay" : "get"}
+        onClosePicker={() => setPicking(null)}
+        picker={
+          tokens && (
+            <TokenList
+              tokens={tokens}
+              onPick={(t) => {
+                blip(s.muted, 880);
+                if (picking === "sell") setSell(t);
+                else setBuy(t);
+                setPicking(null);
+              }}
+            />
+          )
+        }
+        footer={
+          q && (
+          <div className="swap-slip receipt paper-white" aria-label="Quote details">
+            <p className="px slip-title">SODAX QUOTE</p>
+            <p className="px slip-rate">
+              1 {q.sell.symbol} = {rate(q)} {q.buy.symbol}
+            </p>
+            <ul className="px">
+              <li>
+                <span>ROUTE</span>
+                <i />
+                <span>
+                  {chainOf(q.sell.chain).name.toUpperCase()} → {chainOf(q.buy.chain).name.toUpperCase()}
+                </span>
+              </li>
+              <li>
+                <span>AT LEAST</span>
+                <i />
+                <span>
+                  {fmt(q.minOut, q.buy.decimals)} {q.buy.symbol}
+                </span>
+              </li>
+              <li>
+                <span>KAGIBOY {PARTNER_FEE_BPS / 100}%</span>
+                <i />
+                <span>
+                  {fmt(q.partnerFee, q.sell.decimals)} {q.sell.symbol}
+                </span>
+              </li>
+              <li>
+                <span>SODAX 0.1%</span>
+                <i />
+                <span>
+                  {fmt(q.solverFee, q.sell.decimals)} {q.sell.symbol}
+                </span>
+              </li>
+              <li>
+                <span>SLIPPAGE</span>
+                <i />
+                <span>{SLIPPAGE_BPS / 100}%</span>
+              </li>
+            </ul>
+            <p className="px slip-foot">FEES ARE INCLUDED ABOVE</p>
+          </div>
+        )
+        }
+        cta={{
+          label: s.chip.hasPending ? "Waiting for your Game Boy…" : !sellUnits ? "Enter an amount" : quoting && !q ? "Getting a quote…" : "Review on Game Boy",
+          enabled: !!q && !quoting && !s.chip.hasPending,
+          glyph: (
+            <span className="a-glyph" aria-hidden>
+              A
+            </span>
+          ),
+          onClick: () => {
+            blip(s.muted);
+            void review();
+          },
+        }}
+      />
       <p className="fine">Live mainnet quotes. This demo signs on the cartridge but doesn't send the swap.</p>
 
-      <Sheet open={picking !== null} onClose={() => setPicking(null)} title={picking === "sell" ? "Pay with" : "Receive"}>
-        {tokens && (
-          <TokenList
-            tokens={tokens}
-            onPick={(t) => {
-              if (picking === "sell") setSell(t);
-              else setBuy(t);
-              setPicking(null);
-            }}
-          />
-        )}
-      </Sheet>
     </div>
   );
 }
 
-function TokenButton({ token, onClick }: { token: Token | null; onClick: () => void }) {
-  return (
-    <button className="tok-btn" onClick={onClick} disabled={!token}>
-      {token ? <TokenIcon token={token} /> : <span className="tok-icon shimmer" />}
-      <span className="tok-txt">
-        <b>{token?.symbol ?? "…"}</b>
-        <small>{token ? chainOf(token.chain).name : ""}</small>
-      </span>
-      <span className="tok-chev" aria-hidden>
-        ⌄
-      </span>
-    </button>
-  );
+function ticketToken(t: Token): TicketToken {
+  return { key: `${t.chain}:${t.address}`, symbol: t.symbol, sub: chainOf(t.chain).name, icon: <TokenIcon token={t} /> };
 }
 
 /** The token's real logo with its chain's logo in the corner (local files, see scripts/fetch_token_icons.py). */
@@ -683,16 +715,19 @@ function SwapResult({ result, onAgain }: { result: { state: "signed" | "rejected
   const ok = result.state === "signed";
   return (
     <div className="result">
-      <svg className={`result-mark ${ok ? "ok" : "no"}`} viewBox="0 0 64 64" aria-hidden>
-        <circle cx="32" cy="32" r="28" />
-        {ok ? <path d="M20 33l8 8 16-17" /> : <path d="M23 23l18 18M41 23 23 41" />}
-      </svg>
+      <div className={`result-lcd ${ok ? "ok" : "no"}`} aria-hidden>
+        <svg className="result-mark" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="26" />
+          {ok ? <path d="M20 33l8 8 16-17" /> : <path d="M23 23l18 18M41 23 23 41" />}
+        </svg>
+        <span className="px">{ok ? "SIGNED" : "NOT SIGNED"}</span>
+      </div>
       <h1>{ok ? "Signed on your Game Boy" : result.state === "rejected" ? "Not signed" : "Couldn't ask the cartridge"}</h1>
       <p>{result.text}</p>
       {ok && <p className="fine">Demo build: the signed swap isn't sent. Swaps go live with the cartridge.</p>}
-      <button className="pill-btn" onClick={onAgain}>
+      <ThreeDButton variant="solid" size="lg" className="kb-cta" onClick={onAgain}>
         {ok ? "New swap" : "Try again"}
-      </button>
+      </ThreeDButton>
     </div>
   );
 }
@@ -701,49 +736,49 @@ function SwapResult({ result, onAgain }: { result: { state: "signed" | "rejected
 
 function Activity({ swaps }: { swaps: SwapRecord[] }) {
   const s = useSession();
-  const sends = s.phone.activity;
+  const time = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const items: ActivityItem[] = [
+    ...swaps.map((w): ActivityItem => ({
+      id: w.id,
+      icon: <PixelIcon name="swap" size={20} />,
+      title: `${w.sell} → ${w.buy}`,
+      sub: w.route,
+      state: swapLabel(w.state),
+      tone: w.state === "signed" ? "ok" : w.state === "waiting" ? "wait" : w.state === "failed" ? "bad" : "plain",
+      details: [
+        ["Swap", w.route],
+        ["You pay", w.sell],
+        ["You get", w.buy],
+        ["Fees", w.fees],
+        ["Time", time(w.at)],
+        ["Sent", "No, demo build"],
+      ],
+    })),
+    ...s.phone.activity.map((a): ActivityItem => {
+      const url = a.hash ? explorer[a.chain](a.hash, a.net) : "";
+      return {
+        id: a.id,
+        icon: <PixelIcon name="send" size={20} />,
+        title: `Sent ${a.amount}`,
+        sub: `to ${short(a.to)}`,
+        state: label(a.state),
+        tone: a.state === "confirmed" ? "ok" : a.state === "waiting" || a.state === "broadcast" ? "wait" : a.state === "failed" ? "bad" : "plain",
+        details: [
+          ["To", short(a.to)],
+          ["Amount", a.amount],
+          ["Network", a.chain === "sol" ? "Solana devnet" : (EVM_NETWORKS.find((n) => n.id === a.net)?.name ?? "EVM") + " testnet"],
+          ...(a.hash ? ([["Hash", short(a.hash)]] as [string, string][]) : []),
+          ...(a.error ? ([["Note", a.error]] as [string, string][]) : []),
+        ],
+        link: url ? { href: url, label: "View on explorer" } : undefined,
+      };
+    }),
+  ];
   return (
     <div className="act-screen">
       <h1 className="screen-title">Activity</h1>
-      {sends.length === 0 && swaps.length === 0 && <p className="empty-line">Your sends and swaps will show up here.</p>}
-      <ul className="act-list">
-        {swaps.map((w) => (
-          <li key={w.id} className={`act act-${w.state}`}>
-            <span className="act-ico swap" aria-hidden>
-              ⇄
-            </span>
-            <span className="act-main">
-              <b>
-                {w.sell} → {w.buy}
-              </b>
-              <small>{w.route}</small>
-            </span>
-            <span className="act-state">{swapLabel(w.state)}</span>
-          </li>
-        ))}
-        {sends.map((a) => {
-          const url = a.hash ? explorer[a.chain](a.hash, a.net) : "";
-          return (
-            <li key={a.id} className={`act act-${a.state}`}>
-              <span className="act-ico" aria-hidden>
-                ↑
-              </span>
-              <span className="act-main">
-                <b>{a.amount}</b>
-                <small>to {short(a.to)}</small>
-              </span>
-              <span className="act-state">
-                {label(a.state)}
-                {url && (
-                  <a href={url} target="_blank" rel="noreferrer">
-                    View
-                  </a>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <p className="screen-sub">Tap one to see what the cartridge signed.</p>
+      <TransactionList items={items} empty={<p className="empty-line">Your sends and swaps will show up here.</p>} />
     </div>
   );
 }
@@ -754,10 +789,13 @@ function Cartridge({ onOpen }: { onOpen?: () => void }) {
     <div className="cartridge">
       <h1 className="screen-title">Cartridge</h1>
       <div className="cart-card">
-        <img src="/renders/front-ortho.webp" alt="" />
-        <div>
+        <img src="/renders/cart-hero.webp" alt="" />
+        <div className="cart-card-txt">
+          <span className="px">CARTRIDGE</span>
           <b>kagiboy</b>
-          <small>{s.chip.paired ? "Paired with this phone" : "Not paired"}</small>
+          <small>
+            <span className={`gb-led ${s.chip.paired ? "is-on" : ""}`} aria-hidden /> {s.chip.paired ? "Paired with this phone" : "Not paired"}
+          </small>
         </div>
       </div>
       <ul className="settings">
@@ -786,9 +824,9 @@ function Cartridge({ onOpen }: { onOpen?: () => void }) {
           </button>
         </li>
       </ul>
-      <button className="pill-btn ghost wide danger" onClick={() => s.phone.unpair()}>
+      <ThreeDButton variant="soft" size="lg" className="w-full !text-[#b2364e] kb-cta" onClick={() => s.phone.unpair()}>
         Unpair this phone
-      </button>
+      </ThreeDButton>
       <p className="fine">Keys are made and kept inside the cartridge. This phone only ever sees public addresses.</p>
     </div>
   );
@@ -831,9 +869,9 @@ function SendSheet({ onDone }: { onDone: () => void }) {
         <input value={amt} onChange={(e) => setAmt(e.target.value)} inputMode="decimal" placeholder="0.0" />
       </label>
       {err && <p className="err">{err}</p>}
-      <button className="pill-btn wide" disabled={s.phone.sending || s.chip.hasPending}>
+      <ThreeDButton type="submit" variant="solid" size="lg" className="w-full kb-cta" disabled={s.phone.sending || s.chip.hasPending}>
         Ask cartridge to sign
-      </button>
+      </ThreeDButton>
     </form>
   );
 }
@@ -861,8 +899,7 @@ function ReceiveSheet() {
       </div>
       <div className="qr-box" dangerouslySetInnerHTML={{ __html: svg }} />
       <p className="addr-full">{addr}</p>
-      <button
-        className="pill-btn wide"
+      <ThreeDButton variant="solid" size="lg" className="w-full kb-cta"
         onClick={() => {
           navigator.clipboard?.writeText(addr).then(() => {
             setCopied(true);
@@ -871,7 +908,7 @@ function ReceiveSheet() {
         }}
       >
         {copied ? "Copied" : "Copy address"}
-      </button>
+      </ThreeDButton>
       <p className="fine">{chain === "evm" ? "The same address on every EVM network." : "Solana devnet."} The Game Boy can show this as a QR code too.</p>
     </div>
   );
@@ -879,7 +916,11 @@ function ReceiveSheet() {
 
 /* ---------- pieces ---------- */
 
+/** Where the app's sheets mount: inside the app screen, so they keep its look and stay in its frame. */
+const SheetHost = createContext<{ el: HTMLElement | null; contained: boolean }>({ el: null, contained: false });
+
 function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const host = useContext(SheetHost);
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -887,18 +928,17 @@ function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () 
     return () => window.removeEventListener("keydown", esc);
   }, [open, onClose]);
   return (
-    <div className={`sheet ${open ? "is-open" : ""}`} aria-hidden={!open}>
-      <button className="sheet-scrim" onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1} />
-      <div className="sheet-body" role="dialog" aria-label={title}>
-        <div className="sheet-head">
-          <b>{title}</b>
-          <button onClick={onClose} aria-label="Close" tabIndex={open ? 0 : -1}>
-            ✕
-          </button>
-        </div>
-        {open && children}
-      </div>
-    </div>
+    <BottomSheet
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      title={title}
+      snapPoints={["auto"]}
+      container={host.el}
+      contained={host.contained}
+      className="kapp-sheet"
+    >
+      {children}
+    </BottomSheet>
   );
 }
 

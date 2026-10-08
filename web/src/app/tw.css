@@ -1,0 +1,50 @@
+/* Tailwind for the kagiboy app only: theme tokens and utilities, no global reset (preflight), and
+   classes are collected from src/app alone, so the landing page and demo styles are untouched. */
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "./";
+
+/* shadcn-style tokens the 21st components read, mapped onto the app's materials */
+@theme inline {
+  --color-background: var(--k-bg);
+  --color-foreground: var(--k-fg);
+  --color-card: var(--k-card);
+  --color-card-foreground: var(--k-fg);
+  --color-muted: var(--k-muted);
+  --color-muted-foreground: var(--k-fg-2);
+  --color-accent: var(--k-accent);
+  --color-accent-foreground: var(--k-fg);
+  --color-border: var(--k-line);
+  --color-primary: var(--k-ink);
+  --color-primary-foreground: #fff;
+  --color-lcd: var(--k-lcd);
+  --color-lcd-ink: var(--k-lcd-ink);
+  --font-px: "Pixel Operator", ui-monospace, monospace;
+  --font-sans: "Funnel Sans", system-ui, sans-serif;
+}
+
+.kapp {
+  --k-bg: #f7f6f2;
+  --k-fg: #1f2330;
+  --k-fg-2: #5b6274;
+  --k-card: #fdfcf9;
+  --k-muted: #eeece6;
+  --k-accent: #e9eef9;
+  --k-line: rgba(31, 35, 48, 0.1);
+  --k-ink: #1f2330;
+  --k-lcd: #dfe7cf;
+  --k-lcd-ink: #1e2826;
+  /* names some components read directly */
+  --background: var(--k-bg);
+  --foreground: var(--k-fg);
+  --card: var(--k-card);
+  --panel: var(--k-card);
+  --card-raised: var(--k-muted);
+  --muted: var(--k-muted);
+  --muted-foreground: var(--k-fg-2);
+  --border: var(--k-line);
+  --chart-1: #3b4fb8;
+  --chart-2: #2f9a5e;
+  --chart-down: #c2405d;
+}

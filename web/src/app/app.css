@@ -527,202 +527,6 @@ html.app-html body {
 
 /* ---------- wallet ---------- */
 
-.acct-cards {
-  display: grid;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.acct {
-  position: relative;
-  padding: 18px 20px 16px;
-  border-radius: var(--app-radius);
-  color: var(--kb-ink);
-  overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.8) inset,
-    0 18px 34px -24px rgba(60, 70, 120, 0.55);
-  animation: card-in 0.75s var(--app-spring) both;
-  animation-delay: calc(var(--n) * 90ms);
-}
-
-.acct::after {
-  /* a slow sheen, like light across a card */
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) -120% 0 / 220% 100% no-repeat;
-  animation: sheen 6s ease-in-out infinite;
-  animation-delay: calc(1.2s + var(--n) * 0.6s);
-  pointer-events: none;
-}
-
-@keyframes sheen {
-  0%,
-  70% {
-    background-position: -120% 0;
-  }
-  100% {
-    background-position: 140% 0;
-  }
-}
-
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.96);
-  }
-}
-
-.acct-sol {
-  background: linear-gradient(135deg, #d9e6ff, #e9e2ff 60%, #f4ecff);
-}
-
-.acct-evm {
-  background: linear-gradient(135deg, #ffe0ea, #ffeef3 55%, #f0ecff);
-}
-
-.acct header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.acct-net {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--kb-ink-3);
-}
-
-.acct-pick {
-  appearance: none;
-  border: 0;
-  padding: 3px 22px 3px 0;
-  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%231f2330' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") right center / 12px no-repeat;
-  font: 600 14px var(--kb-sans);
-  color: var(--kb-ink);
-  cursor: pointer;
-}
-
-.acct-amount {
-  margin: 14px 0 2px;
-  font-family: var(--kb-display);
-  font-size: 34px;
-  font-weight: 560;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-
-.acct-amount small {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--kb-ink-2);
-}
-
-.acct-addr {
-  font: 400 12px var(--kb-px);
-  letter-spacing: 0.04em;
-  color: var(--kb-ink-3);
-}
-
-.kapp .acct-fund,
-.kapp .fund {
-  color: #fff;
-}
-
-.acct-fund {
-  position: relative;
-  z-index: 1;
-  display: inline-block;
-  margin-top: 10px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--kb-ink);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.acct-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--kb-ink-2);
-}
-
-.wallet-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 18px 0;
-}
-
-.wallet-action {
-  display: grid;
-  justify-items: center;
-  gap: 7px;
-  padding: 0;
-  border: 0;
-  background: none;
-  font: 500 13px var(--kb-sans);
-  color: var(--kb-ink-2);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.wallet-action span {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow:
-    0 0 0 1px var(--kb-line),
-    0 10px 20px -14px rgba(60, 70, 120, 0.5);
-  transition: transform 0.25s var(--app-spring);
-}
-
-.wallet-action:active span {
-  transform: scale(0.9);
-}
-
-.wallet-action svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: var(--kb-ink);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.fund {
-  display: grid;
-  gap: 2px;
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--kb-ink);
-  color: #fff;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.fund b {
-  font-size: 15px;
-  color: #fff;
-}
-
-.fund span {
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .recent h2 {
   margin-bottom: 8px;
   font-size: 17px;
@@ -908,71 +712,6 @@ html.app-html body {
   border-radius: 50%;
   border: 2px solid #fff;
   background: #fff;
-}
-
-.swap-details {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  width: 100%;
-  margin-top: 12px;
-  padding: 13px 16px;
-  border: 0;
-  border-radius: 18px;
-  background: var(--app-card);
-  box-shadow: 0 0 0 1px var(--kb-line);
-  font: inherit;
-  text-align: left;
-  color: var(--kb-ink);
-  cursor: pointer;
-}
-
-.swap-rate {
-  font-size: 14px;
-}
-
-.swap-chev {
-  transition: rotate 0.4s var(--app-spring);
-  color: var(--kb-ink-3);
-}
-
-.swap-details.is-open .swap-chev {
-  rotate: 90deg;
-}
-
-.swap-details dl {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition:
-    max-height 0.5s var(--app-ease),
-    opacity 0.4s,
-    margin 0.5s var(--app-ease);
-}
-
-.swap-details.is-open dl {
-  max-height: 240px;
-  opacity: 1;
-  margin-top: 12px;
-}
-
-.swap-details dl div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-}
-
-.swap-details dt {
-  color: var(--kb-ink-3);
-}
-
-.swap-details dd {
-  margin: 0;
-  text-align: right;
 }
 
 .swap .pill-btn.wide {
@@ -1517,4 +1256,880 @@ html.app-html body {
 
 .pane-phone .app-status {
   padding-top: 12px;
+}
+
+/* =====================================================================================
+   Materials: console plastic, LCD glass, bezel, thermal paper. Everything the app draws is
+   one of these, so it feels like it came out of the same box as the Game Boy.
+   ===================================================================================== */
+
+.kapp {
+  --navy: #2b2f77;
+  --magenta: #b8366f;
+  --lcd-0: #e9efdd;
+  --lcd-1: #d9e2c7;
+  --lcd-ink: #1e2826;
+  --lcd-ink-2: #52665a;
+  --plastic-0: #fdfcf9;
+  --plastic-1: #eeece5;
+  --plastic-edge: rgba(60, 58, 50, 0.12);
+  --lift:
+    0 1px 1px rgba(40, 44, 70, 0.06),
+    0 2px 4px -1px rgba(40, 44, 70, 0.08),
+    0 12px 28px -14px rgba(40, 44, 70, 0.32);
+  --lift-hi:
+    0 1px 1px rgba(40, 44, 70, 0.07),
+    0 4px 8px -2px rgba(40, 44, 70, 0.1),
+    0 22px 44px -20px rgba(40, 44, 70, 0.42);
+  --plastic: linear-gradient(180deg, var(--plastic-0), var(--plastic-1));
+  /* film grain, so flat fills read as a material */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.2 0 0 0 0 0.25 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.kapp.app-screen {
+  background:
+    var(--grain),
+    radial-gradient(130% 55% at 0% 0%, rgba(207, 226, 255, 0.75), transparent 62%),
+    radial-gradient(120% 55% at 100% 100%, rgba(255, 220, 232, 0.7), transparent 60%),
+    linear-gradient(180deg, #fbfbf8, #f4f3ee);
+}
+
+.px-icon {
+  display: block;
+  flex: none;
+}
+
+/* ---------- status bar: the power LED ---------- */
+
+.gb-led {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d9d9de, #9fa2ad);
+  box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+  vertical-align: middle;
+}
+
+.gb-led.is-on {
+  background: radial-gradient(circle at 35% 30%, #c9ffd9, #2fbf6b 55%, #1d8a4b);
+  box-shadow:
+    0 0 6px 1px rgba(47, 191, 107, 0.55),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.gb-led.is-warn {
+  background: radial-gradient(circle at 35% 30%, #ffd2dc, #ef4a6e 55%, #b42d4c);
+  box-shadow:
+    0 0 6px 1px rgba(239, 74, 110, 0.5),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+  animation: led-breathe 2.2s ease-in-out infinite;
+}
+
+@keyframes led-breathe {
+  50% {
+    filter: brightness(0.75);
+  }
+}
+
+.kapp .app-link {
+  gap: 8px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 999px;
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kb-ink-2);
+}
+
+.kapp .app-link.is-on {
+  color: #1f6e43;
+}
+
+/* ---------- console buttons ---------- */
+
+.kapp .pill-btn {
+  position: relative;
+  background: linear-gradient(180deg, #33384a, #1f2330 55%, #181b26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+    0 1px 1px rgba(20, 22, 35, 0.3),
+    0 10px 22px -10px rgba(20, 22, 35, 0.55);
+  letter-spacing: -0.005em;
+}
+
+.kapp .pill-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 2px 6px rgba(0, 0, 0, 0.35),
+    0 1px 1px rgba(20, 22, 35, 0.3);
+}
+
+.kapp .pill-btn.ghost {
+  background: var(--plastic);
+  color: var(--kb-ink);
+  box-shadow: var(--lift), inset 0 1px 0 #fff, inset 0 0 0 1px var(--plastic-edge);
+}
+
+.kapp .pill-btn.danger {
+  color: #b2364e;
+}
+
+.a-btn {
+  gap: 12px;
+}
+
+.a-glyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #f07aa8, var(--magenta) 58%, #8c2453);
+  box-shadow:
+    inset 0 -2px 2px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  font: italic 800 13px var(--kb-sans);
+  color: #fff;
+}
+
+/* ---------- the wallet: an LCD in its bezel ---------- */
+
+.gb-panel {
+  position: relative;
+  padding: 10px 12px 14px;
+  border-radius: 18px 18px 46px 18px;
+  background: linear-gradient(165deg, #74768c, #5f6177 60%, #56586c);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    var(--lift-hi);
+  animation: card-rise 0.8s var(--app-ease) both;
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+
+.gb-bezel-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 9px;
+}
+
+.gb-bezel-top i {
+  flex: 1;
+  height: 5px;
+  background: linear-gradient(180deg, #c04a86 0 2px, transparent 2px 3px, #4b55b0 3px);
+  border-radius: 1px;
+}
+
+.gb-bezel-top span {
+  flex: none;
+  font: 700 7.5px var(--kb-sans);
+  letter-spacing: 0.16em;
+  color: rgba(235, 236, 245, 0.8);
+}
+
+.gb-bezel-body {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+}
+
+.gb-led-col {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-top: -40px;
+}
+
+.gb-led-col small {
+  font: 700 6px var(--kb-sans);
+  letter-spacing: 0.14em;
+  color: rgba(235, 236, 245, 0.7);
+}
+
+.lcd {
+  position: relative;
+  padding: 10px 12px 12px;
+  border-radius: 4px;
+  color: var(--lcd-ink);
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(90deg, rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 3px 100%,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 5px rgba(20, 28, 24, 0.35),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.25);
+}
+
+.lcd::after {
+  /* the glass: a soft sheen across the top left */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.35), transparent 38%);
+  pointer-events: none;
+}
+
+.lcd-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 7px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(30, 40, 38, 0.18);
+  font: 400 12px var(--kb-px);
+}
+
+.lcd-head span {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--lcd-ink-2);
+}
+
+.lcd-acct {
+  padding: 8px 2px 6px;
+}
+
+.lcd-acct + .lcd-acct {
+  border-top: 1px dashed rgba(30, 40, 38, 0.18);
+}
+
+.lcd-acct-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 400 12px var(--kb-px);
+}
+
+.lcd-acct-top img {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  filter: grayscale(1) contrast(1.15) brightness(0.9);
+  mix-blend-mode: multiply;
+}
+
+.lcd-acct-top em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--lcd-ink-2);
+}
+
+.lcd-pick {
+  appearance: none;
+  border: 0;
+  padding: 0 16px 0 0;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' shape-rendering='crispEdges'%3E%3Cpath d='M1 3h8v1H1zM2 4h6v1H2zM3 5h4v1H3zM4 6h2v1H4z' fill='%231e2826'/%3E%3C/svg%3E") right center / 10px no-repeat;
+  font: 400 12px var(--kb-px);
+  color: var(--lcd-ink);
+  cursor: pointer;
+}
+
+.lcd-amount {
+  margin: 6px 0 2px;
+  font: 400 30px/1 var(--kb-px);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--lcd-ink);
+}
+
+.lcd-amount small {
+  font-size: 13px;
+  color: var(--lcd-ink-2);
+}
+
+.lcd-dash {
+  color: var(--lcd-ink-2);
+  animation: lcd-blink 1.1s steps(2) infinite;
+}
+
+@keyframes lcd-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.lcd-addr {
+  font: 400 10px var(--kb-px);
+  letter-spacing: 0.06em;
+  color: var(--lcd-ink-2);
+}
+
+.fund-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 4px 0;
+}
+
+.fund-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kb-ink);
+  text-decoration: none;
+}
+
+.kapp .acct-hint {
+  max-width: 22rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--kb-ink-2);
+  text-align: right;
+}
+
+.wallet-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 20px 0 18px;
+}
+
+.wallet-action {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.console-btn {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  color: var(--navy);
+  background: radial-gradient(circle at 36% 28%, #ffffff 0%, #f1efe8 38%, #d9d6cc 100%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -3px 4px rgba(90, 84, 70, 0.22),
+    0 3px 0 #cbc7bc,
+    0 4px 1px rgba(60, 55, 45, 0.18),
+    0 14px 22px -12px rgba(40, 44, 70, 0.45);
+  transition:
+    transform 0.18s var(--app-ease),
+    box-shadow 0.18s var(--app-ease);
+}
+
+.wallet-action:active .console-btn {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 3px rgba(90, 84, 70, 0.3),
+    0 0 0 #cbc7bc,
+    0 1px 2px rgba(60, 55, 45, 0.25);
+}
+
+.wallet-action b {
+  font: italic 800 11px var(--kb-sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.kapp .recent h2 {
+  font: 400 11px var(--kb-px);
+  letter-spacing: 0.16em;
+  color: var(--kb-ink-3);
+}
+
+.kapp .recent li {
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+}
+
+/* ---------- tabs: a plastic dock ---------- */
+
+.kapp .app-tabs {
+  border-radius: 24px;
+  background: var(--plastic);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 0 0 1px var(--plastic-edge),
+    var(--lift-hi);
+}
+
+.kapp .app-tabs button {
+  gap: 4px;
+  font: 600 10.5px var(--kb-sans);
+  letter-spacing: 0.02em;
+}
+
+.kapp .app-tabs button.is-on {
+  color: var(--lcd-ink);
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.04) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 4px rgba(20, 28, 24, 0.22),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.12);
+}
+
+.kapp .app-tabs button.is-on .px-icon {
+  transform: translateY(-1px);
+}
+
+/* ---------- headings ---------- */
+
+.kapp h1.screen-title {
+  font-size: 30px;
+  letter-spacing: -0.035em;
+}
+
+.kapp .screen-sub {
+  color: var(--kb-ink-2);
+}
+
+/* ---------- swap: LCD readouts, plastic token pills, a thermal quote ---------- */
+
+.kapp .swap-side {
+  padding: 12px 12px 14px;
+  border-radius: 22px;
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff, inset 0 0 0 1px var(--plastic-edge);
+}
+
+.kapp .swap-side.is-get {
+  background: var(--plastic);
+}
+
+.kapp .swap-label {
+  display: block;
+  padding: 0 4px 8px;
+  font: 400 10px var(--kb-px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kb-ink-3);
+}
+
+.kapp .swap-row {
+  margin-top: 0;
+  padding: 8px 8px 8px 12px;
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 5px rgba(20, 28, 24, 0.28),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.18);
+}
+
+.kapp .swap-amt {
+  font: 400 28px/1.15 var(--kb-px);
+  letter-spacing: 0.02em;
+  color: var(--lcd-ink);
+}
+
+.kapp .swap-amt::placeholder {
+  color: rgba(30, 40, 38, 0.3);
+}
+
+.kapp .swap-flip {
+  width: 46px;
+  height: 46px;
+  border: 5px solid #f6f5f0;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(180deg, #33384a, #1b1e29);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 14px -6px rgba(20, 22, 35, 0.55);
+}
+
+.kapp .tok-btn {
+  background: var(--plastic);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 1px 1px rgba(40, 44, 70, 0.1),
+    0 6px 12px -8px rgba(40, 44, 70, 0.45);
+}
+
+.kapp .tok-txt b {
+  font-weight: 700;
+}
+
+.swap-slip {
+  margin: 16px 6px 0;
+  padding: 18px 18px 20px;
+  box-shadow: 0 16px 30px -22px rgba(40, 44, 70, 0.6);
+  color: var(--kb-print, #2b2f3a);
+  transform: rotate(-0.4deg);
+  animation: slip-print 0.7s var(--app-ease) both;
+  transform-origin: top center;
+}
+
+@keyframes slip-print {
+  from {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.slip-title {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+
+.slip-rate {
+  margin: 6px 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(43, 47, 58, 0.35);
+  text-align: center;
+  font-size: 15px;
+}
+
+.swap-slip ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.swap-slip li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.swap-slip li i {
+  flex: 1;
+  border-bottom: 1px dotted rgba(43, 47, 58, 0.45);
+  transform: translateY(-3px);
+}
+
+.slip-foot {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(43, 47, 58, 0.35);
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(43, 47, 58, 0.7);
+}
+
+.kapp .swap .pill-btn.wide {
+  margin-top: 20px;
+}
+
+/* ---------- result: the check on a little LCD ---------- */
+
+.result-lcd {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 16px 26px 12px;
+  border-radius: 10px;
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 6px rgba(20, 28, 24, 0.3),
+    0 0 0 8px #64667b,
+    0 0 0 9px rgba(0, 0, 0, 0.12),
+    var(--lift-hi);
+}
+
+.result-lcd .result-mark {
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  stroke: var(--lcd-ink);
+}
+
+.result-lcd span {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--lcd-ink);
+}
+
+.result-lcd.no .result-mark {
+  stroke: #8c2453;
+}
+
+/* ---------- activity ---------- */
+
+.kapp .act {
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+}
+
+.kapp .act-ico {
+  color: var(--lcd-ink);
+  background: linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow: inset 0 1px 3px rgba(20, 28, 24, 0.3);
+}
+
+.kapp .act-ico.swap {
+  background: linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+}
+
+/* ---------- cartridge tab ---------- */
+
+.kapp .cart-card {
+  position: relative;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--plastic);
+  box-shadow: var(--lift-hi), inset 0 1px 0 #fff;
+}
+
+.kapp .cart-card img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  filter: none;
+}
+
+.cart-card-txt {
+  display: grid;
+  gap: 2px;
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--plastic-edge);
+  /* cartridge grip ridges along the right edge */
+  background:
+    repeating-linear-gradient(90deg, transparent 0 6px, rgba(60, 58, 50, 0.08) 6px 8px) right / 70px 100% no-repeat,
+    var(--plastic);
+}
+
+.cart-card-txt .px {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--kb-ink-3);
+}
+
+.cart-card-txt b {
+  font-family: var(--kb-display);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.cart-card-txt small {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--kb-ink-2);
+}
+
+.kapp .settings {
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+}
+
+/* ---------- sheets: a plastic tray ---------- */
+
+.kapp .sheet-body {
+  background: var(--grain), linear-gradient(180deg, #fdfcf9, #f3f1eb);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 -24px 60px -30px rgba(40, 44, 70, 0.55);
+}
+
+.kapp .sheet-head b {
+  font: 400 13px var(--kb-px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.kapp .tok-find,
+.kapp .form input {
+  background: #fff;
+  box-shadow:
+    inset 0 1px 3px rgba(40, 44, 70, 0.12),
+    inset 0 0 0 1px var(--plastic-edge);
+}
+
+.kapp .chips button,
+.kapp .a-seg button {
+  background: var(--plastic);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(40, 44, 70, 0.12);
+}
+
+.kapp .chips button.is-on,
+.kapp .a-seg button.is-on {
+  background: linear-gradient(180deg, #33384a, #1f2330);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.kapp .a-seg {
+  background: rgba(40, 44, 70, 0.06);
+  box-shadow: inset 0 1px 3px rgba(40, 44, 70, 0.12);
+}
+
+.kapp .a-seg button:not(.is-on) {
+  background: transparent;
+  box-shadow: none;
+}
+
+.kapp .qr-box {
+  padding: 14px;
+  border-radius: 6px;
+  background:
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 6px rgba(20, 28, 24, 0.28),
+    0 0 0 10px #64667b,
+    0 0 0 11px rgba(0, 0, 0, 0.12),
+    var(--lift-hi);
+}
+
+.kapp .qr-box svg path,
+.kapp .qr-box svg rect[fill="#000000"] {
+  fill: var(--lcd-ink);
+}
+
+/* ---------- before the wallet ---------- */
+
+.kapp .steps b {
+  background: var(--plastic);
+  box-shadow: var(--lift), inset 0 1px 0 #fff;
+  font-family: var(--kb-px);
+  font-weight: 400;
+}
+
+.kapp .pair-digits span {
+  color: var(--lcd-ink);
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 4px rgba(20, 28, 24, 0.3),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.2),
+    0 6px 14px -10px rgba(40, 44, 70, 0.6);
+}
+
+.kapp .hero-note {
+  background: rgba(255, 220, 232, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(184, 54, 111, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-led.is-warn,
+  .lcd-dash,
+  .swap-slip,
+  .gb-panel {
+    animation: none;
+  }
+}
+
+/* ---------- 21st components, dressed in the app's materials ---------- */
+
+.lcd-well,
+.lcd-chip {
+  color: var(--lcd-ink);
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.045) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(90deg, rgba(30, 40, 38, 0.035) 1px, transparent 1px) 0 0 / 3px 100%,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 5px rgba(20, 28, 24, 0.28),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.16);
+}
+
+.lcd-chip {
+  box-shadow:
+    inset 0 1px 3px rgba(20, 28, 24, 0.3),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.12);
+}
+
+/* the 3D buttons, sized and set in the site's type */
+.kapp .kb-cta {
+  min-height: 52px;
+  padding-inline: 26px;
+  border-radius: 16px;
+  font: 600 15px var(--kb-sans);
+  letter-spacing: -0.005em;
+}
+
+.kapp .hero-screen .kb-cta {
+  min-width: 210px;
+  margin-top: 10px;
+}
+
+/* tab dock: the active tab sits on a small LCD that slides between them */
+.kapp .app-tabs button {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.tab-pill {
+  border-radius: 18px;
+  background:
+    linear-gradient(rgba(30, 40, 38, 0.04) 1px, transparent 1px) 0 0 / 100% 3px,
+    linear-gradient(170deg, var(--lcd-0), var(--lcd-1));
+  box-shadow:
+    inset 0 2px 4px rgba(20, 28, 24, 0.22),
+    inset 0 0 0 1px rgba(20, 28, 24, 0.12);
+}
+
+.tab-inner {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 8px 0 7px;
+}
+
+.kapp .app-tabs button.is-on {
+  color: var(--lcd-ink);
+}
+
+/* sheets: a plastic tray rising from the bottom */
+.kapp-sheet {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  background: var(--grain), linear-gradient(180deg, #fdfcf9, #f3f1eb) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 -24px 60px -30px rgba(40, 44, 70, 0.55) !important;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.kapp-sheet h2 {
+  font: 400 12px var(--kb-px) !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kb-ink-2) !important;
+}
+
+/* the quote slip sits under the ticket */
+.kapp .swap-slip {
+  margin: 14px 4px 0;
+}
+
+/* pixel icons are filled squares, never stroked (older line-icon rules must not reach them) */
+.kapp .px-icon,
+.kapp .px-icon rect {
+  fill: currentColor;
+  stroke: none !important;
 }
