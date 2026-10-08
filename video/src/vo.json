@@ -2,7 +2,7 @@
  {
   "id": "s1",
   "title": "1 \u00b7 The memory",
-  "seconds": 12.72,
+  "seconds": 13.84,
   "text": "My dad found it at a flea market. I was too young to even know what Nintendo was. I just knew it was mine. The game was Super Mario Land. I never beat it, and I didn't care, you know. I had the music. I had the whole world I could carry around.",
   "cues": [
    {
@@ -10,36 +10,36 @@
     "text": "My dad found it at a flea market."
    },
    {
-    "t": 1.79,
+    "t": 2.15,
     "text": "I was too young to even know what Nintendo was."
    },
    {
-    "t": 4.41,
+    "t": 4.65,
     "text": "I just knew it was mine."
    },
    {
-    "t": 5.73,
+    "t": 5.97,
     "text": "The game was Super Mario Land."
    },
    {
-    "t": 7.21,
+    "t": 8.01,
     "text": "I never beat it, and I didn't care, you know."
    },
    {
-    "t": 9.51,
+    "t": 10.33,
     "text": "I had the music."
    },
    {
-    "t": 10.41,
+    "t": 11.39,
     "text": "I had the whole world I could carry around."
    }
   ],
-  "end": 12.36
+  "end": 13.72
  },
  {
   "id": "s2",
   "title": "2 \u00b7 Now",
-  "seconds": 15.05,
+  "seconds": 19.36,
   "text": "Now the most important things I own are numbers on a phone. A phone that buzzes all day with offers, links, and people who want something from me. And when it asks me to approve something, it's the same phone telling me what I'm approving. I just have to trust it, every single time.",
   "cues": [
    {
@@ -47,24 +47,24 @@
     "text": "Now the most important things I own are numbers on a phone."
    },
    {
-    "t": 3.39,
+    "t": 4.47,
     "text": "A phone that buzzes all day with offers, links, and people who want something from me."
    },
    {
-    "t": 8.21,
+    "t": 10.61,
     "text": "And when it asks me to approve something, it's the same phone telling me what I'm approving."
    },
    {
-    "t": 12.79,
+    "t": 16.05,
     "text": "I just have to trust it, every single time."
    }
   ],
-  "end": 14.76
+  "end": 19.08
  },
  {
   "id": "s3",
   "title": "3 \u00b7 The drawer",
-  "seconds": 4.23,
+  "seconds": 5.84,
   "text": "The safe answer is a hardware wallet. But most of them usually end up in a drawer.",
   "cues": [
    {
@@ -72,16 +72,16 @@
     "text": "The safe answer is a hardware wallet."
    },
    {
-    "t": 2.01,
+    "t": 2.51,
     "text": "But most of them usually end up in a drawer."
    }
   ],
-  "end": 3.9
+  "end": 5.42
  },
  {
   "id": "s4",
   "title": "4 \u00b7 The idea",
-  "seconds": 17.23,
+  "seconds": 22.72,
   "text": "So I picked up my old Game Boy again, and while playing with it, it hit me. It's the most honest screen I ever owned. It doesn't go online. It doesn't run apps. It only does what my thumbs tell it to do. What if it guarded my keys? That's where I came up with kagiboy: a cartridge for the Game Boy you already have.",
   "cues": [
    {
@@ -89,40 +89,40 @@
     "text": "So I picked up my old Game Boy again, and while playing with it, it hit me."
    },
    {
-    "t": 4.29,
+    "t": 5.53,
     "text": "It's the most honest screen I ever owned."
    },
    {
-    "t": 6.77,
+    "t": 8.41,
     "text": "It doesn't go online."
    },
    {
-    "t": 7.85,
+    "t": 9.87,
     "text": "It doesn't run apps."
    },
    {
-    "t": 9.13,
+    "t": 11.57,
     "text": "It only does what my thumbs tell it to do."
    },
    {
-    "t": 11.81,
+    "t": 14.89,
     "text": "What if it guarded my keys?"
    },
    {
-    "t": 13.49,
+    "t": 18.39,
     "text": "That's where I came up with kagiboy:"
    },
    {
-    "t": 14.83,
+    "t": 20.31,
     "text": "a cartridge for the Game Boy you already have."
    }
   ],
-  "end": 16.88
+  "end": 22.66
  },
  {
   "id": "s5",
   "title": "5 \u00b7 How it feels",
-  "seconds": 22.01,
+  "seconds": 23.52,
   "text": "Turning it on feels like a new save file of a game. You mash the buttons and shake the Game Boy, which creates the randomness needed for your seed. After that, write down your 12 words, create a PIN, and pair the Game Boy with your phone. After this, all you've got to do is hold A to sign any transaction. The cartridge reads every request itself and puts the amount and the address on the tiny screen. Nothing moves until you hold A.",
   "cues": [
    {
@@ -130,32 +130,32 @@
     "text": "Turning it on feels like a new save file of a game."
    },
    {
-    "t": 2.53,
+    "t": 3.07,
     "text": "You mash the buttons and shake the Game Boy, which creates the randomness needed for your seed."
    },
    {
-    "t": 7.03,
+    "t": 7.67,
     "text": "After that, write down your 12 words, create a PIN, and pair the Game Boy with your phone."
    },
    {
-    "t": 11.45,
+    "t": 12.45,
     "text": "After this, all you've got to do is hold A to sign any transaction."
    },
    {
-    "t": 14.97,
+    "t": 16.47,
     "text": "The cartridge reads every request itself and puts the amount and the address on the tiny screen."
    },
    {
-    "t": 20.03,
+    "t": 21.59,
     "text": "Nothing moves until you hold A."
    }
   ],
-  "end": 21.72
+  "end": 23.4
  },
  {
   "id": "s6",
   "title": "6 \u00b7 Try it",
-  "seconds": 18.2,
+  "seconds": 17.92,
   "text": "You don't have to take my word for it. Open our website right now and test it out for yourself. The same Game Boy software runs in your browser, next to the phone app, which we are also developing right now. Currently you are able to do devnet transactions on six different networks, and we also have in-app swaps, which are powered by the SODAX SDK.",
   "cues": [
    {
@@ -163,24 +163,24 @@
     "text": "You don't have to take my word for it."
    },
    {
-    "t": 1.67,
+    "t": 1.65,
     "text": "Open our website right now and test it out for yourself."
    },
    {
-    "t": 4.79,
+    "t": 4.75,
     "text": "The same Game Boy software runs in your browser, next to the phone app, which we are also developing right now."
    },
    {
-    "t": 11.03,
+    "t": 10.57,
     "text": "Currently you are able to do devnet transactions on six different networks, and we also have in-app swaps, which are powered by the SODAX SDK."
    }
   ],
-  "end": 17.74
+  "end": 17.62
  },
  {
   "id": "s7",
   "title": "7 \u00b7 Inside",
-  "seconds": 16.95,
+  "seconds": 18.24,
   "text": "Inside your kagiboy is a security chip that never lets your keys out, a chip that talks to the Game Boy, and Bluetooth that only carries what's public. After five wrong PIN attempts, your cartridge gets fully wiped. But you don't have to worry: as long as you have your 12 words, you are completely safe and can restore your wallet.",
   "cues": [
    {
@@ -188,24 +188,24 @@
     "text": "Inside your kagiboy is a security chip that never lets your keys out, a chip that talks to the Game Boy, and Bluetooth that only carries what's public."
    },
    {
-    "t": 7.59,
+    "t": 7.73,
     "text": "After five wrong PIN attempts, your cartridge gets fully wiped."
    },
    {
-    "t": 10.97,
+    "t": 12.39,
     "text": "But you don't have to worry:"
    },
    {
-    "t": 12.31,
+    "t": 13.75,
     "text": "as long as you have your 12 words, you are completely safe and can restore your wallet."
    }
   ],
-  "end": 16.52
+  "end": 18.04
  },
  {
   "id": "s8",
   "title": "8 \u00b7 Who it's for",
-  "seconds": 12.82,
+  "seconds": 12.0,
   "text": "I'm making this for people like me, kids who grew up with a Game Boy and somehow ended up in crypto. This isn't something you just put away, or put in a drawer. You put it on your shelf, you put it next to your computer, or give it to someone you love.",
   "cues": [
    {
@@ -213,20 +213,20 @@
     "text": "I'm making this for people like me, kids who grew up with a Game Boy and somehow ended up in crypto."
    },
    {
-    "t": 5.55,
+    "t": 5.39,
     "text": "This isn't something you just put away, or put in a drawer."
    },
    {
-    "t": 8.29,
+    "t": 7.87,
     "text": "You put it on your shelf, you put it next to your computer, or give it to someone you love."
    }
   ],
-  "end": 12.46
+  "end": 11.9
  },
  {
   "id": "s9",
   "title": "9 \u00b7 Close",
-  "seconds": 24.2,
+  "seconds": 24.08,
   "text": "What comes next is that we want to go from a browser emulation to a real cartridge. After this, we want to expand the kagiboy brand with additional products that fit the whole vision. And alongside this, we want to do multiple security audits before anyone can buy one. Security is key for us. Crypto shouldn't feel like something you are scared of. It should feel like that one day at the flea market, where you got your first Game Boy.",
   "cues": [
    {
@@ -234,26 +234,26 @@
     "text": "What comes next is that we want to go from a browser emulation to a real cartridge."
    },
    {
-    "t": 4.93,
+    "t": 4.59,
     "text": "After this, we want to expand the kagiboy brand with additional products that fit the whole vision."
    },
    {
-    "t": 10.45,
+    "t": 10.15,
     "text": "And alongside this, we want to do multiple security audits before anyone can buy one."
    },
    {
-    "t": 14.67,
+    "t": 14.93,
     "text": "Security is key for us."
    },
    {
-    "t": 16.33,
+    "t": 16.79,
     "text": "Crypto shouldn't feel like something you are scared of."
    },
    {
-    "t": 18.99,
+    "t": 19.25,
     "text": "It should feel like that one day at the flea market, where you got your first Game Boy."
    }
   ],
-  "end": 23.78
+  "end": 23.92
  }
 ]
