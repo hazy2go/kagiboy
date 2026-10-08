@@ -1368,10 +1368,10 @@ static uint8_t pair_window(void) {
     chip_call(CMD_PHONE, 2, 0, 0);
     screen_begin();
     header(T_ICON_PHONE_0, "Pair new phone", "LISTENING");
-    icon(9, 7, T_ICON_PHONE_0);
-    txtc(11, "Ready to pair");
-    capc(13, "IN THE KAGIBOY APP,");
-    capc(14, "TAP PAIR CARTRIDGE");
+    icon(9, 6, T_ICON_PHONE_0);
+    txtc(10, "Ready to pair");
+    txtc(12, "In the kagiboy app,");
+    txtc(13, "tap Pair cartridge");
     hint(13, 17, BTN_B, "STOP");
     screen_end();
     flush_input();
@@ -1540,15 +1540,15 @@ static void pair_waves(uint8_t k) {
     k &= 3;
     for (i = 0; i < 3; i++) {
         if (i < k) {
+            txt(8 - i, 6, "(");
             txt(8 - i, 7, "(");
-            txt(8 - i, 8, "(");
+            txt(11 + i, 6, ")");
             txt(11 + i, 7, ")");
-            txt(11 + i, 8, ")");
         } else {
+            txt(8 - i, 6, " ");
             txt(8 - i, 7, " ");
-            txt(8 - i, 8, " ");
+            txt(11 + i, 6, " ");
             txt(11 + i, 7, " ");
-            txt(11 + i, 8, " ");
         }
     }
 }
@@ -1557,10 +1557,12 @@ static void pair_waves(uint8_t k) {
 static void pair_wait_draw(void) {
     screen_begin();
     header(T_ICON_KEY_0, "kagiboy", "ALMOST THERE");
-    icon(9, 7, T_ICON_PHONE_0);
-    txtc(11, "Pair your phone");
-    capc(13, "IN THE KAGIBOY APP,");
-    capc(14, "TAP PAIR CARTRIDGE");
+    icon(9, 6, T_ICON_PHONE_0);
+    txtc(10, "Pair your phone!");
+    rule(12);
+    txtc(13, "Open the kagiboy");
+    txtc(14, "app and tap");
+    txtc(15, "\"Pair cartridge\"");
     hint(11, 17, BTN_SEL, "MENU");
     screen_end();
 }

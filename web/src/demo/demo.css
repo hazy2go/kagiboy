@@ -972,8 +972,20 @@ html.demo-app-root body {
   touch-action: none;
 }
 
+.pane-gb .device-controls {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
 .pane-gb .device-controls .btn {
-  min-height: 46px;
+  min-height: 44px;
+  padding-inline: 18px;
+  font-size: 15px;
+}
+
+.pane-gb .device-controls .link {
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .pane-gb .keys {

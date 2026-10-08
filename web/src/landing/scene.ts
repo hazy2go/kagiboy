@@ -256,22 +256,35 @@ export class HeroScene {
     return { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
   }
 
-  /** A point on a part's world bounding box on screen: sx/sy pick the side (-1 min, 0 centre, 1 max). */
-  projectCorner(name: string, sx: number, sy: number): { x: number; y: number } | null {
+  /**
+   * Where a part's outline ends on screen: its projected vertices' extreme on one side (sx: -1 left,
+   * 1 right), at the part's vertical middle. Exact for a rotated console, unlike a bounding box.
+   */
+  projectCorner(name: string, sx: number, _sy = 0): { x: number; y: number } | null {
     const obj = this.gb.getObjectByName(name);
     if (!obj) return null;
-    const b = new THREE.Box3().setFromObject(obj);
-    const c = b.getCenter(new THREE.Vector3());
-    const pick = (s: number, lo: number, mid: number, hi: number) => (s > 0 ? hi : s < 0 ? lo : mid);
+    this.gb.updateMatrixWorld(true);
     const r = this.canvas.getBoundingClientRect();
-    // with perspective the front or the back edge can stick out further: take the outermost on screen
-    let best: { x: number; y: number } | null = null;
-    for (const z of [b.min.z, b.max.z]) {
-      const v = new THREE.Vector3(pick(sx, b.min.x, c.x, b.max.x), pick(sy, b.min.y, c.y, b.max.y), z).project(this.camera);
-      const p = { x: ((v.x + 1) / 2) * r.width, y: ((1 - v.y) / 2) * r.height };
-      if (!best || (sx > 0 ? p.x > best.x : sx < 0 ? p.x < best.x : false)) best = p;
-    }
-    return best;
+    const v = new THREE.Vector3();
+    let best = sx > 0 ? -Infinity : Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    obj.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const pos = m.geometry.attributes.position;
+      const step = Math.max(1, Math.floor(pos.count / 4000)); // a few thousand points is plenty
+      for (let i = 0; i < pos.count; i += step) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).project(this.camera);
+        const x = ((v.x + 1) / 2) * r.width;
+        const y = ((1 - v.y) / 2) * r.height;
+        best = sx > 0 ? Math.max(best, x) : Math.min(best, x);
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+      }
+    });
+    if (!Number.isFinite(best)) return null;
+    return { x: best, y: (top + bottom) / 2 };
   }
 
   get progress() {

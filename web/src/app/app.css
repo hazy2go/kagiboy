@@ -8,6 +8,10 @@
   --app-radius: 26px;
   --app-card: rgba(255, 255, 255, 0.78);
   --app-glass-line: rgba(255, 255, 255, 0.9);
+}
+
+/* the standalone page around the app */
+.app {
   min-height: 100svh;
   background:
     radial-gradient(60vw 50vh at 12% 8%, rgba(207, 226, 255, 0.7), transparent 70%),
@@ -172,6 +176,7 @@ html.app-html body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow-y: auto; /* short screens: the welcome and pairing screens scroll instead of clipping their button */
   animation: app-in 0.6s var(--app-ease) both;
 }
 
@@ -622,6 +627,11 @@ html.app-html body {
   font: 400 12px var(--kb-px);
   letter-spacing: 0.04em;
   color: var(--kb-ink-3);
+}
+
+.kapp .acct-fund,
+.kapp .fund {
+  color: #fff;
 }
 
 .acct-fund {
@@ -1456,7 +1466,7 @@ html.app-html body {
   overflow: hidden;
 }
 
-.kapp-phone .app-status {
+.kapp-phone .kapp .app-status {
   padding-top: 54px;
 }
 
@@ -1498,4 +1508,13 @@ html.app-html body {
 
 .pane-phone .hero-screen {
   padding-bottom: 24px;
+}
+
+/* the demo's own header already says kagiboy */
+.pane-phone .app-brand {
+  visibility: hidden;
+}
+
+.pane-phone .app-status {
+  padding-top: 12px;
 }

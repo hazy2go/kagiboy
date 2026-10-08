@@ -107,7 +107,8 @@ export function GameBoyShell({
       const { HeroScene } = await import("../landing/scene");
       if (disposed || !canvas.current) return;
       const scene = new HeroScene(canvas.current, {
-        fixed: { az: -0.16, el: 0.05, dist: 0.35, tx: 0.002, ty: 0.004, lift: 0, tilt: 0, apart: 0, shift: 0 },
+        // phones: the camera comes closer so the console (and its buttons) fill the pane
+        fixed: { az: -0.16, el: 0.05, dist: window.matchMedia("(max-width: 760px)").matches ? 0.305 : 0.35, tx: 0.002, ty: 0.004, lift: 0, tilt: 0, apart: 0, shift: 0 },
         plainFraming: true,
       });
       sceneRef.current = scene;
