@@ -11,8 +11,10 @@
     "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
+    "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
     "@scure/bip39": "^2.4.0",
+    "@sodax/sdk": "2.1.0",
     "@solana/web3.js": "^1.99.0",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",

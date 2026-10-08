@@ -1,6 +1,7 @@
 import { Message, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
 import { formatUnits, getAddress, keccak256, parseTransaction, serializeTransaction, type TransactionSerializableEIP1559 } from "viem";
 import { sha256 } from "@noble/hashes/sha2.js";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import qrcode from "qrcode-generator";
 import bs58 from "bs58";
 import { CHIP_MAGIC, CMD, CMD_NAME, MAILBOX, MB, RESP_MAX, type Bus, type Chain } from "./protocol";
@@ -33,17 +34,45 @@ export interface Storage {
   clear(): void;
 }
 
+/** Where a swap's coins leave from or arrive: Solana, or one of the cartridge's EVM networks. */
+export type SwapSide = { chain: "sol" } | { chain: "evm"; net: number };
+
+/**
+ * A cross-chain swap as the phone asks for it (quoted by SODAX). The cartridge shows exactly this
+ * on the Game Boy and signs a digest of it; the recipient is always this cartridge's own address.
+ */
+export interface SwapIntent {
+  src: SwapSide;
+  dst: SwapSide;
+  sellSymbol: string;
+  sellDecimals: number;
+  sellAmount: bigint;
+  buySymbol: string;
+  buyDecimals: number;
+  /** the least the user accepts: the quote minus slippage, after every fee */
+  minReceive: bigint;
+  /** partner + solver fee, in the sell token */
+  fees: bigint;
+  /** unix seconds */
+  deadline: number;
+}
+
 export type SignRequest =
   | { chain: "sol"; tx: Transaction }
-  | { chain: "evm"; tx: TransactionSerializableEIP1559 };
+  | { chain: "evm"; tx: TransactionSerializableEIP1559 }
+  | { chain: "swap"; swap: SwapIntent };
 
 export type SignResult =
   | { approved: true; chain: "sol"; signed: Transaction }
   | { approved: true; chain: "evm"; signed: `0x${string}` }
+  /** demo: the swap is signed on the cartridge but not broadcast */
+  | { approved: true; chain: "swap"; signature: string; digest: string }
   | { approved: false; reason: "rejected" | "power" | "locked" | "error" };
 
-export type TxState = "SIGNED" | "BROADCAST" | "CONFIRMED" | "FAILED" | "UNKNOWN";
-const TX_STATES = new Set<string>(["SIGNED", "BROADCAST", "CONFIRMED", "FAILED", "UNKNOWN"]);
+export type TxState = "SIGNED" | "BROADCAST" | "CONFIRMED" | "FAILED" | "UNKNOWN" | "DEMO";
+const TX_STATES = new Set<string>(["SIGNED", "BROADCAST", "CONFIRMED", "FAILED", "UNKNOWN", "DEMO"]);
+/** what the Game Boy says after a swap is signed in this demo build */
+const SWAP_DEMO_NOTE = "SWAPS GO LIVE WITH THE CARTRIDGE";
 
 /** Fixed texts the phone can pick from; it never sends free text to the screen. */
 export const FAIL_REASON = {
@@ -77,7 +106,8 @@ interface Shown {
 
 type Snapshot =
   | { chain: "sol"; message: Uint8Array; shown: Shown }
-  | { chain: "evm"; tx: TransactionSerializableEIP1559; shown: Shown };
+  | { chain: "evm"; tx: TransactionSerializableEIP1559; shown: Shown }
+  | { chain: "swap"; intent: SwapIntent; digest: Uint8Array; shown: Shown };
 
 interface Pending {
   id: number;
@@ -245,7 +275,7 @@ export class CartChip {
     const result = new Promise<SignResult>((resolve) => {
       this.pending = { id, snap, resolve };
     });
-    this.txStatus = { id, chain: snap.chain, state: "", detail: "" };
+    this.txStatus = { id, chain: snap.chain === "swap" ? snap.intent.src.chain : snap.chain, state: "", detail: "" };
     this.emit();
     return { id, result };
   }
@@ -500,10 +530,22 @@ export class CartChip {
         if (!bytesEqual(tx.serializeMessage(), p.snap.message)) throw new Error("message changed while signing");
         hash = bs58.encode(tx.signature!);
         p.resolve({ approved: true, chain: "sol", signed: tx });
-      } else {
+      } else if (p.snap.chain === "evm") {
         const signed = await wallet.evm.signTransaction(p.snap.tx);
         hash = keccak256(signed);
         p.resolve({ approved: true, chain: "evm", signed });
+      } else {
+        // signed with the key of the chain the coins leave from, over the exact intent shown
+        const d = p.snap.digest;
+        const signature =
+          p.snap.intent.src.chain === "sol"
+            ? bs58.encode(ed25519.sign(d, wallet.sol.secretKey.slice(0, 32)))
+            : await wallet.evm.signMessage({ message: { raw: d } });
+        p.resolve({ approved: true, chain: "swap", signature, digest: Array.from(d, (b) => b.toString(16).padStart(2, "0")).join("") });
+        // demo build: nothing is broadcast, and the Game Boy says so instead of waiting for a network
+        this.txStatus = { id: p.id, chain: p.snap.intent.src.chain, state: "DEMO", detail: SWAP_DEMO_NOTE };
+        this.emit();
+        return { status: 0 };
       }
     } catch (e) {
       console.error(e);
@@ -562,6 +604,7 @@ function snapshot(req: SignRequest, wallet: Wallet): Snapshot {
 }
 
 function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
+  if (req.chain === "swap") return decodeSwap(req.swap, wallet);
   if (req.chain === "sol") {
     const message = new Uint8Array(req.tx.serializeMessage());
     const tx = Transaction.populate(Message.from(message));
@@ -636,6 +679,71 @@ export function qrBits(text: string): Uint8Array {
 /** Exact decimal amount: nothing rounded away, trailing zeros trimmed. */
 export function exact(units: bigint, decimals: number) {
   return formatUnits(units, decimals);
+}
+
+const SWAP_SYMBOL = /^[A-Za-z0-9.]{1,8}$/;
+
+function sideName(side: SwapSide): string {
+  if (side.chain === "sol") return "SOLANA";
+  const net = evmNetwork(side.net);
+  if (!net) throw new Error("this cartridge doesn't swap on that network");
+  return net.name.toUpperCase();
+}
+
+/** Checks a swap field by field (the phone is untrusted) and lays it out for the sign screen. */
+function decodeSwap(input: SwapIntent, wallet: Wallet): Snapshot {
+  const i: SwapIntent = structuredClone(input);
+  if (!SWAP_SYMBOL.test(i.sellSymbol) || !SWAP_SYMBOL.test(i.buySymbol)) throw new Error("unknown token symbol");
+  for (const d of [i.sellDecimals, i.buyDecimals]) if (!Number.isInteger(d) || d < 0 || d > 36) throw new Error("bad decimals");
+  if (i.sellAmount <= 0n || i.minReceive <= 0n || i.fees < 0n || i.fees >= i.sellAmount) throw new Error("bad amounts");
+  const now = Date.now() / 1000;
+  if (!(i.deadline > now && i.deadline < now + 3600)) throw new Error("the quote has expired");
+  const from = sideName(i.src);
+  const to = sideName(i.dst);
+  const sym = i.sellSymbol.toUpperCase();
+  const buy = i.buySymbol.toUpperCase();
+  // three 16-column rows in the address box: the promise, the amount, where it lands
+  const line = (t: string) => t.padEnd(16, " ");
+  const min = fitFloor(i.minReceive, i.buyDecimals, 16 - buy.length - 1);
+  const fee = fitCeil(i.fees, i.sellDecimals, 16 - sym.length - 1);
+  // the coins arrive at this cartridge's own address on the destination chain
+  const recipient = i.dst.chain === "sol" ? wallet.sol.publicKey.toBase58() : wallet.evm.address;
+  const canonical = [
+    "kagiboy-swap-v1",
+    i.src.chain === "sol" ? "sol" : `evm:${i.src.net}`,
+    i.dst.chain === "sol" ? "sol" : `evm:${i.dst.net}`,
+    sym, i.sellDecimals, i.sellAmount, buy, i.buyDecimals, i.minReceive, i.fees, i.deadline, recipient,
+  ].join("|");
+  return {
+    chain: "swap",
+    intent: i,
+    digest: sha256(ascii(canonical)),
+    shown: {
+      network: `SWAP ${from}`,
+      amount: `${exact(i.sellAmount, i.sellDecimals)} ${sym}`,
+      fee: `${fee} ${sym}`,
+      to: line("GET AT LEAST") + line(`${min} ${buy}`) + line(`ON ${to}`),
+    },
+  };
+}
+
+/** The most decimals that fit `width` characters, rounded down (a minimum must never be overstated). */
+function fitFloor(units: bigint, decimals: number, width: number) {
+  for (let places = Math.min(decimals, 8); places >= 0; places--) {
+    const step = 10n ** BigInt(decimals - places);
+    const t = formatUnits((units / step) * step, decimals);
+    if (t.length <= width) return t;
+  }
+  throw new Error("this amount can't be shown on the Game Boy");
+}
+
+/** The most decimals that fit `width` characters, rounded up (a fee must never be understated). */
+function fitCeil(units: bigint, decimals: number, width: number) {
+  for (let places = Math.min(decimals, 8); places >= 0; places--) {
+    const t = ceilDecimals(units, decimals, places);
+    if (t.length <= width) return t;
+  }
+  throw new Error("this fee can't be shown on the Game Boy");
 }
 
 /** Rounded up to `places` decimals, for a fee ceiling. */

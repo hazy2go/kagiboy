@@ -1173,7 +1173,8 @@ static void tx_result(void) {
             capc(11, resp);
             /* on failure the chip sends a reason instead of a signature */
             if (*detail) wrap(1, 13, 18, detail, 2);
-            if (failed || !strcmp(resp, "CONFIRMED")) break;
+            /* DEMO: a swap signed by the demo build, which never broadcasts it */
+            if (failed || !strcmp(resp, "CONFIRMED") || !strcmp(resp, "DEMO")) break;
         }
         wait_frames(30);
         if (++ticks > 120) {

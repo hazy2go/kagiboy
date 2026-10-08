@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
 import bs58 from "bs58";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { Keypair, PublicKey, SystemInstruction, SystemProgram, Transaction } from "@solana/web3.js";
 import { keccak256, parseEther, parseTransaction, recoverTransactionAddress } from "viem";
 import { GameBoy, HEIGHT, WIDTH, type Key } from "../src/emu/gameboy";
@@ -309,6 +310,53 @@ try {
   console.log("arbitrum gas accepted: WRONG", (e as Error).message);
 }
 chip.setEvmNetwork(11155111);
+
+// a SODAX swap: shown in full on the Game Boy, signed over exactly that, never broadcast by the demo
+for (let i = 0; i < 5 && chip.hasPending; i++) {
+  await step("B");
+  await frames(30);
+}
+await frames(60);
+const swap = {
+  src: { chain: "sol" as const },
+  dst: { chain: "evm" as const, net: 84532 },
+  sellSymbol: "SOL",
+  sellDecimals: 9,
+  sellAmount: 1_000_000_000n,
+  buySymbol: "USDC",
+  buyDecimals: 6,
+  minReceive: 114_693_184n,
+  fees: 2_000_000n,
+  deadline: Math.floor(Date.now() / 1000) + 300,
+};
+refused("swap with an unknown network", { chain: "swap", swap: { ...swap, dst: { chain: "evm", net: 1 } } });
+refused("expired swap quote", { chain: "swap", swap: { ...swap, deadline: 1 } });
+const swapReq = chip.requestSignature({ chain: "swap", swap });
+let swapRes: SignResult | null = null;
+swapReq.result.then((r) => (swapRes = r));
+await frames(30);
+snap("swap-request");
+const swapShown = chip.pendingShown;
+console.log(
+  "swap shown on the Game Boy:",
+  swapShown?.network === "SWAP SOLANA" && swapShown.amount === "1 SOL" && swapShown.to.includes("114.693184 USDC") && swapShown.to.includes("ON BASE") ? "OK" : "WRONG",
+  swapShown,
+);
+gb.setKey("A", true);
+await frames(70);
+gb.setKey("A", false);
+await frames(40);
+snap("swap-signed");
+const sr = swapRes as SignResult | null;
+const swapKey = walletFromMnemonic(saved!.mnemonic).sol.publicKey.toBytes();
+console.log(
+  "swap signed by the Solana key:",
+  sr?.approved && sr.chain === "swap" && ed25519.verify(bs58.decode(sr.signature), Buffer.from(sr.digest, "hex"), swapKey) ? "OK" : "WRONG",
+);
+const swapStatus = chip.log.filter((e) => e.cmd === "TXSTATUS" && e.dir === "chip>gb").at(-1)?.hex ?? "";
+console.log("Game Boy told it's a demo:", swapStatus.includes("44 45 4d 4f") /* "DEMO" */ ? "OK" : "WRONG");
+await step("A");
+await frames(30);
 
 // the Game Boy picks the EVM network itself: RIGHT steps forward, LEFT back, and the phone is told
 let followed = 0;
