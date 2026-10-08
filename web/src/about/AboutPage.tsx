@@ -2,15 +2,16 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./about.css";
 
-// Photos of kagiboy on a Game Boy. Drop files in public/gallery/ and list them here; the section
-// hides itself when the list is empty. PLACEHOLDERS for now (AI scene, real ROM screen composited in,
-// see assets/gallery/*.webp.json); swap in real photos and set PLACEHOLDER_PHOTOS to false.
-const PLACEHOLDER_PHOTOS = true;
-const GALLERY: { src: string; caption: string; alt: string }[] = [
-  { src: "/gallery/desk.webp", caption: "HOME, 2.48 SOL", alt: "A Game Boy on a wooden desk beside a coffee mug and earphones, showing the kagiboy home screen" },
-  { src: "/gallery/hands.webp", caption: "APPROVE? 0.25 SOL", alt: "Hands holding a Game Boy that asks to approve sending 0.25 SOL" },
-  { src: "/gallery/shelf.webp", caption: "RECEIVE, SCAN ME", alt: "A Game Boy on a shelf of cartridges, showing a Solana address as a QR code" },
-  { src: "/gallery/couch.webp", caption: "SIGNED, CONFIRMED", alt: "A Game Boy on a couch showing a signed and confirmed transaction" },
+// Photos of kagiboy on hazy's own Game Boy (the real ROM from a flash cart). The section hides
+// itself when the list is empty.
+const PLACEHOLDER_PHOTOS = false;
+const GALLERY: { src: string; caption: string; alt: string; wide?: boolean; focus?: string }[] = [
+  { src: "/gallery/boot.webp", caption: "PRESS START", alt: "A grey Game Boy on a wooden desk next to a tablet, showing the kagiboy title screen", wide: true },
+  { src: "/gallery/welcome.webp", caption: "NO WALLET YET", alt: "Hands holding the Game Boy on the kagiboy welcome screen: new wallet or restore" },
+  { src: "/gallery/mash.webp", caption: "STEP 1, MASH 17/40", alt: "Thumbs mashing the buttons while the Game Boy counts to forty" },
+  { src: "/gallery/shake.webp", caption: "STEP 2, SHAKE IT", alt: "The Game Boy asking to be shaken for a few seconds" },
+  { src: "/gallery/pin.webp", caption: "WELCOME BACK, PIN", alt: "The Game Boy on a desk asking for the four-digit PIN" },
+  { src: "/gallery/home.webp", caption: "UNLOCKED, 2.48 SOL", alt: "Hands holding the Game Boy on the wallet home screen with Solana and Ethereum balances", wide: true, focus: "50% 30%" },
 ];
 
 const WHY = [
@@ -160,13 +161,13 @@ export function AboutPage() {
             <p>
               {PLACEHOLDER_PHOTOS
                 ? "Mockups for now: the scenes are generated, the screens are the real ROM. Photos of my own Game Boy running it are on the way."
-                : "The same ROM as the live demo, running on my own Game Boy from a flash cart."}
+                : "The same ROM as the live demo, on my own Game Boy, loaded from a flash cart. The keys in this test build live in the ROM's stand-in chip until the cartridge exists."}
             </p>
           </header>
           <div className="gallery-grid">
             {GALLERY.map((g) => (
-              <figure key={g.src}>
-                <img src={g.src} alt={g.alt} loading="lazy" />
+              <figure key={g.src} className={g.wide ? "wide" : undefined}>
+                <img src={g.src} alt={g.alt} loading="lazy" style={g.focus ? { objectPosition: g.focus } : undefined} />
                 <figcaption className="px">
                   {PLACEHOLDER_PHOTOS && <span className="mock">MOCKUP</span>}
                   {g.caption}

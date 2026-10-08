@@ -248,7 +248,7 @@ html.app-html body {
   text-align: center;
 }
 
-.app .hero-screen h1 {
+.kapp .hero-screen h1 {
   font-size: 30px;
   line-height: 1.05;
   letter-spacing: -0.035em;
@@ -474,7 +474,7 @@ html.app-html body {
   transform: translateY(-1px) scale(1.06);
 }
 
-.app h1.screen-title {
+.kapp h1.screen-title {
   margin: 8px 0 4px;
   font-size: 32px;
   line-height: 1.1;
@@ -1064,7 +1064,7 @@ html.app-html body {
   text-align: center;
 }
 
-.app .result h1 {
+.kapp .result h1 {
   font-size: 26px;
   letter-spacing: -0.03em;
 }
@@ -1464,6 +1464,10 @@ html.app-html body {
   height: 100%;
 }
 
+.gb-sheet .device {
+  width: 100%;
+}
+
 .gb-sheet .device-stage {
   width: min(100%, 400px, (100svh - 250px) * 0.8);
 }
@@ -1480,4 +1484,18 @@ html.app-html body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* the mobile demo's Wallet tab is shorter than a phone screen: a smaller illustration keeps the button in view */
+.pane-phone .radar {
+  width: 140px;
+  height: 150px;
+}
+
+.pane-phone .radar img {
+  width: 70px;
+}
+
+.pane-phone .hero-screen {
+  padding-bottom: 24px;
 }
