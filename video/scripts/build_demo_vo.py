@@ -29,5 +29,8 @@ for k, sid in enumerate(ids):
         cues.append({"t": round(max(0, W[i]["s"] - 0.05), 3), "text": sx})
         acc += c
     out.append({"id": sid, "start": paced["sections"][k]["start"], "end": paced["sections"][k]["end"], "cues": cues})
+# where each section hands over to the next: inside a pause verified in the audio (pace.py)
+for k, b in enumerate(paced.get("bounds", [])):
+    out[k + 1]["cut"] = b
 json.dump({"take": d, "seconds": paced["seconds"], "sections": out}, open("src/demo-vo2.json", "w"), indent=1)
 print("sections", [(s["id"], round(s["end"] - s["start"], 1)) for s in out], "voice", paced["seconds"], "s")

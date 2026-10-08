@@ -14,11 +14,13 @@ const TAIL = 1.0;
 const END = 3;
 
 export const demoTimeline = () => {
-  const secs = vo.sections;
+  const secs = vo.sections as { id: string; start: number; end: number; cut?: number; cues: { t: number; text: string }[] }[];
+  // where section i hands over: a point inside a pause verified in the audio (scripts/pace.py)
+  const handover = (i: number) => secs[i].cut ?? (secs[i - 1].end + secs[i].start) / 2;
   // each hold sits in the pause after its section
-  const holds = secs.flatMap((s, i) => (HOLDS[s.id] && secs[i + 1] ? [{ at: (s.end + secs[i + 1].start) / 2, len: HOLDS[s.id] }] : []));
+  const holds = secs.flatMap((s, i) => (HOLDS[s.id] && secs[i + 1] ? [{ at: handover(i + 1), len: HOLDS[s.id] }] : []));
   const v = (a: number) => LEAD + a + holds.reduce((sum, h) => sum + (a >= h.at ? h.len : 0), 0); // voice time → video seconds
-  const bounds = secs.map((s, i) => (i === 0 ? 0 : v((secs[i - 1].end + s.start) / 2)));
+  const bounds = secs.map((_, i) => (i === 0 ? 0 : v(handover(i))));
   const last = v(secs[secs.length - 1].end) + TAIL;
   const parts = secs.map((s, i) => {
     const from = Math.round(bounds[i] * FPS);

@@ -48,14 +48,15 @@ const lerp = (u: number, v: number, t: number) => u + (v - u) * t;
 type Tag = { anchor: ExplodeAnchor; eyebrow: string; line: string; side: "left" | "right"; y: number; at: number };
 // labels sit in two tidy columns, each with a leader line to its part
 const OPEN_TAGS: Tag[] = [
-  { anchor: "gb:Bezel", eyebrow: "LENS", line: "Bezel and glass", side: "left", y: 330, at: 0 },
-  { anchor: "gb:Screen", eyebrow: "SCREEN", line: "Shows every request", side: "left", y: 450, at: 0.25 },
-  { anchor: "gb:DPad", eyebrow: "BUTTONS", line: "You approve here", side: "left", y: 570, at: 0.5 },
-  { anchor: "gb:Body", eyebrow: "GAME BOY", line: "Runs the kagiboy ROM", side: "left", y: 690, at: 0.75 },
-  { anchor: "cart:SecureElement", eyebrow: "NXP SE050", line: "Holds the keys", side: "right", y: 300, at: 0.6 },
-  { anchor: "cart:MCU", eyebrow: "RP2350", line: "Talks to the Game Boy", side: "right", y: 420, at: 0.85 },
-  { anchor: "cart:BLE", eyebrow: "CYW43439", line: "Bluetooth, public data", side: "right", y: 540, at: 1.1 },
-  { anchor: "cart:Accel", eyebrow: "LIS3DH", line: "Shake for randomness", side: "right", y: 660, at: 1.35 },
+  { anchor: "gb:Bezel", eyebrow: "LENS", line: "Bezel and glass", side: "left", y: 250, at: 0 },
+  { anchor: "gb:DPad", eyebrow: "BUTTONS", line: "You approve here", side: "left", y: 365, at: 0.2 },
+  { anchor: "gb:Screen", eyebrow: "SCREEN", line: "Shows every request", side: "left", y: 480, at: 0.4 },
+  { anchor: "gb:CPU", eyebrow: "MAIN BOARD", line: "Runs the kagiboy ROM", side: "left", y: 595, at: 0.6 },
+  { anchor: "gb:Batteries", eyebrow: "4 × AA", line: "No network, no OS", side: "left", y: 710, at: 0.8 },
+  { anchor: "cart:SecureElement", eyebrow: "NXP SE050", line: "Holds the keys", side: "right", y: 280, at: 0.6 },
+  { anchor: "cart:MCU", eyebrow: "RP2350", line: "Talks to the Game Boy", side: "right", y: 400, at: 0.85 },
+  { anchor: "cart:BLE", eyebrow: "CYW43439", line: "Bluetooth, public data", side: "right", y: 520, at: 1.1 },
+  { anchor: "cart:Accel", eyebrow: "LIS3DH", line: "Shake for randomness", side: "right", y: 640, at: 1.35 },
 ];
 export function D0({ dur }: P) {
   const t = useT();
@@ -68,7 +69,7 @@ export function D0({ dur }: P) {
       <Glow shift={20} />
       <Explode
         p={apart}
-        view={(u) => ({ az: lerp(0.7, 0.86, u / sec), el: 0.58, zoom: lerp(0.26, 0.37, apart(u)), cx: 0.002, cy: lerp(0.015, 0.078, apart(u)), cz: 0 })}
+        view={(u) => ({ az: lerp(0.7, 0.86, u / sec), el: 0.58, zoom: lerp(0.26, 0.46, apart(u)), cx: 0.004, cy: lerp(0.015, 0.115, apart(u)), cz: 0 })}
         anchors={OPEN_TAGS.map((g) => g.anchor)}
         labels={(at) => (
           <>

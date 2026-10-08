@@ -1,6 +1,6 @@
 {
  "take": "rec/demo/v2/takeA",
- "seconds": 134.88,
+ "seconds": 134.24,
  "sections": [
   {
    "id": "d0",
@@ -12,7 +12,7 @@
      "text": "So, how does kagiboy actually work?"
     },
     {
-     "t": 3.496,
+     "t": 3.176,
      "text": "Let me take it apart for you."
     }
    ]
@@ -20,7 +20,7 @@
   {
    "id": "d1",
    "start": 5.865,
-   "end": 19.238,
+   "end": 18.918,
    "cues": [
     {
      "t": 5.815,
@@ -31,207 +31,215 @@
      "text": "On the left, the real Game Boy ROM, written in C."
     },
     {
-     "t": 11.666,
+     "t": 11.346,
      "text": "In the middle, the cartridge chip."
     },
     {
-     "t": 14.026,
+     "t": 13.386,
      "text": "And on the right, the phone app."
     },
     {
-     "t": 16.104,
+     "t": 15.784,
      "text": "Three parts."
     },
     {
-     "t": 17.098,
+     "t": 16.458,
      "text": "And only one of them ever touches a key."
     }
-   ]
+   ],
+   "cut": 5.22
   },
   {
    "id": "d2",
-   "start": 20.168,
-   "end": 40.637,
+   "start": 19.848,
+   "end": 40.317,
    "cues": [
     {
-     "t": 20.118,
+     "t": 19.798,
      "text": "A Game Boy has no network."
     },
     {
-     "t": 22.098,
+     "t": 21.458,
      "text": "No operating system."
     },
     {
-     "t": 23.618,
+     "t": 22.978,
      "text": "Just the cartridge slot."
     },
     {
-     "t": 25.331,
+     "t": 25.011,
      "text": "So that's our wire!"
     },
     {
-     "t": 26.734,
+     "t": 26.094,
      "text": "The ROM drops a command into a tiny mailbox in cartridge memory, and the chip writes its answer back."
     },
     {
-     "t": 32.704,
+     "t": 32.064,
      "text": "The phone only ever talks to the chip, and only with public data."
     },
     {
-     "t": 36.649,
+     "t": 36.329,
      "text": "Requests in, signatures out."
     },
     {
-     "t": 38.867,
+     "t": 38.227,
      "text": "The phone is never trusted."
     }
-   ]
+   ],
+   "cut": 19.448
   },
   {
    "id": "d3",
-   "start": 41.499,
-   "end": 58.827,
+   "start": 41.179,
+   "end": 58.507,
    "cues": [
     {
-     "t": 41.449,
+     "t": 41.129,
      "text": "Your button mashing, and every shake, become entropy, mixed with the chip's own random generator."
     },
     {
-     "t": 47.457,
+     "t": 47.137,
      "text": "Out come twelve standard words."
     },
     {
-     "t": 49.497,
+     "t": 48.857,
      "text": "Solana keys on Phantom's path, EVM keys on MetaMask's, so they restore in any wallet you like."
     },
     {
-     "t": 55.497,
+     "t": 55.177,
      "text": "Then you pick a PIN, and five wrong tries wipe the chip."
     }
-   ]
+   ],
+   "cut": 40.777
   },
   {
    "id": "d4",
-   "start": 59.817,
-   "end": 66.537,
+   "start": 59.497,
+   "end": 66.217,
    "cues": [
     {
-     "t": 59.767,
+     "t": 59.447,
      "text": "Pairing only happens while the Game Boy is listening."
     },
     {
-     "t": 62.557,
+     "t": 61.917,
      "text": "The same six digits on both screens, press A, and you're paired."
     }
-   ]
+   ],
+   "cut": 59.072
   },
   {
    "id": "d5",
-   "start": 67.719,
-   "end": 95.127,
+   "start": 67.399,
+   "end": 94.487,
    "cues": [
     {
-     "t": 67.669,
+     "t": 67.349,
      "text": "Okay, now my favorite part."
     },
     {
-     "t": 69.297,
+     "t": 68.657,
      "text": "The phone builds a normal Solana transfer and sends over the raw bytes."
     },
     {
-     "t": 73.707,
+     "t": 73.067,
      "text": "The chip decodes them itself."
     },
     {
-     "t": 75.865,
+     "t": 75.545,
      "text": "The fee payer has to be this wallet."
     },
     {
-     "t": 77.957,
+     "t": 77.317,
      "text": "Exactly one instruction."
     },
     {
-     "t": 79.877,
+     "t": 79.237,
      "text": "A plain System Program transfer."
     },
     {
-     "t": 82.261,
+     "t": 81.301,
      "text": "Then the exact amount and the full address go on the screen."
     },
     {
-     "t": 85.787,
+     "t": 84.827,
      "text": "You hold A for one second, the chip signs, and the phone just broadcasts."
     },
     {
-     "t": 90.662,
+     "t": 90.022,
      "text": "And the phone can't fake a confirmation, either."
     },
     {
-     "t": 93.302,
+     "t": 92.662,
      "text": "And here it is, live on devnet!"
     }
-   ]
+   ],
+   "cut": 66.767
   },
   {
    "id": "d6",
-   "start": 96.037,
-   "end": 106.037,
+   "start": 95.397,
+   "end": 105.397,
    "cues": [
     {
-     "t": 95.987,
+     "t": 95.347,
      "text": "If the chip can't show something in full, it simply won't sign it."
     },
     {
-     "t": 99.631,
+     "t": 98.991,
      "text": "No blind signing."
     },
     {
-     "t": 101.18,
+     "t": 100.54,
      "text": "Token instructions, extra transfers, someone else paying the fee:"
     },
     {
-     "t": 105.147,
+     "t": 104.507,
      "text": "all refused."
     }
-   ]
+   ],
+   "cut": 95.002
   },
   {
    "id": "d7",
-   "start": 106.907,
-   "end": 121.907,
+   "start": 106.267,
+   "end": 121.267,
    "cues": [
     {
-     "t": 106.857,
+     "t": 106.217,
      "text": "The same key covers five EVM testnets, with a hard cap on fees."
     },
     {
-     "t": 111.324,
+     "t": 110.364,
      "text": "Swaps come live from the SODAX SDK, but the cartridge checks every token against its own list and shows you the least you'll get."
     },
     {
-     "t": 119.279,
+     "t": 118.639,
      "text": "In the demo, swaps are signed but never sent."
     }
-   ]
+   ],
+   "cut": 105.867
   },
   {
    "id": "d8",
-   "start": 122.847,
-   "end": 134.901,
+   "start": 122.207,
+   "end": 134.261,
    "cues": [
     {
-     "t": 122.797,
+     "t": 122.157,
      "text": "On the real cartridge, the keys move into an NXP secure element, and the ROM doesn't change at all."
     },
     {
-     "t": 129.708,
+     "t": 129.068,
      "text": "It's all open source."
     },
     {
-     "t": 131.651,
+     "t": 131.011,
      "text": "Go try it yourself at kagiboy.xyz/demo!"
     }
-   ]
+   ],
+   "cut": 121.762
   }
  ]
 }
