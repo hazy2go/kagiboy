@@ -27,7 +27,7 @@ For each one we state the problem and the mitigation below. The plan has five ph
  │                PIO bus server, CONFIRM button + LED (Secure GPIO)   │
  │  Non-secure:   BLE host stack, phone protocol parser                │
  │    │ I²C + SCP03 (encrypted, MCU-bound)                             │
- │    ├── SE050E2: Ed25519 + secp256k1 keys, PIN auth object (max 5)   │
+ │    ├── SE050E2: Ed25519 + secp256k1 keys, PIN auth object (5, wipe) │
  │    ├── LIS3DH: extra entropy, tilt                                  │
  │    └── Raspberry Pi RM2 module (CYW43439, pre-certified) ── BLE     │
  └─────────────────────────────────────────────────────────────────────┘
@@ -126,7 +126,7 @@ Trust boundary in one sentence: **the SE050 protects key extraction, the RP2350 
 | BLE stack RCE | Attacker in radio range | TrustZone split; fuzzed parser; only a bonded phone may send requests; rate limits | 2–3 |
 | BLE MITM / eavesdrop | Radio range | LE Secure Connections, Numeric Comparison shown on the Game Boy (Just Works has no MITM protection, [NIST SP 800-121 via Bluetooth SIG](https://bluetooth.com/blog/bluetooth-pairing-part-4)) | 2 |
 | MCU↔SE bus sniffing | Thief with an FPGA | SE050 SCP03 encrypted, MCU-bound channel. This is exactly how Unciphered extracted OneKey seeds ([The Block](https://www.theblock.co/amp/post/210665/security-firm-unciphered-hacked-into-popular-hardware-wallet-onekey)) | 2 |
-| PIN brute force | Thief | SE050 auth object with hardware max-attempts (0–0x7FFF, enforced in the applet) ([AN12413](https://www.nxp.com/docs/en/application-note/AN12413.pdf)); PIN-derived AES auth key so the PIN is never stored; 6+ digits | 2 |
+| PIN brute force | Thief | Five wrong PINs, then wipe (like Ledger): firmware deletes the key objects on the fifth failure; backstop is the SE050 auth object with hardware max-attempts set to 5 (0–0x7FFF, enforced in the applet) ([AN12413](https://www.nxp.com/docs/en/application-note/AN12413.pdf)), and the keys can only sign inside a session opened with it, so they are unusable even if the delete is skipped; PIN-derived AES auth key so the PIN is never stored | 2 |
 | Key extraction from SE | Lab attacker | EAL6+ SE; keys created non-readable; still assume a lab can win (EUCLEAK precedent) and say so | 2 |
 | Fault injection on MCU | Lab attacker | A4 stepping, BOOTSEL disabled, OTP chaffing, potting; no keys in MCU; key use bound to SE050 PCR measurement of firmware (to evaluate) | 2–3 |
 | Malicious firmware update | Supply chain / phone | RP2350 secure boot with our key hash in OTP; anti-rollback; update needs PIN + cartridge button + on-screen version | 2 |

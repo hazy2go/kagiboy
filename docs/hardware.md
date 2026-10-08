@@ -52,9 +52,12 @@ compromises the phone, and someone who sniffs Bluetooth.
   the SE050 as sign-only, non-readable keys and erases the seed from RAM (see
   [ROADMAP.md](ROADMAP.md)). After that every signature happens inside the SE050,
   and there's nothing to copy by plugging the cartridge into a reader.
-- **PIN with a hardware retry counter.** Five wrong PINs and the SE050 erases the
-  seed. The counter lives in the secure element, so it can't be reset by
-  reflashing the MCU.
+- **Five wrong PINs, then wipe (like a Ledger).** The try counter lives in the
+  secure element, so reflashing the MCU can't reset it. On the fifth wrong PIN the
+  firmware deletes the key objects in the SE050. As a backstop, the keys' policy
+  only lets them sign inside a session opened with the PIN auth object, which the
+  applet itself caps at five attempts: even firmware that skipped the delete
+  could never use the keys again. Your 12 words restore the wallet.
 - **What you see is what you sign.** The phone sends a transaction. The cartridge
   freezes its bytes, decodes them itself and shows the exact amount, fee,
   network and destination on the Game Boy screen. The phone can't draw on that

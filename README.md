@@ -156,7 +156,8 @@ Two internal audits are in `docs/` ([audit-security.md](docs/audit-security.md),
   same-major fixes are pinned in `web/pnpm-workspace.yaml`. The SDK only loads
   when you open the swap screen, and none of these are meaningfully reachable
   in the browser.
-- The waitlist API still tells a caller whether an email is already on the list.
+- The waitlist API tells a caller whether an email is already on the list. That is
+  the price of the numbered ticket, kept on purpose; it is rate-limited per IP.
 
 **The hardware design**
 
