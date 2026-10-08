@@ -2,7 +2,7 @@
 
 Draft of 2026-10-08, written for the Colosseum Crypto World's Fair submission (deadline 2026-10-12). It should take about 10 minutes to read.
 
-**Status, honestly.** The software is real today. The GBDK ROM runs on a real Game Boy (DMG) from a flash cart. The browser demo at [kagiboy.xyz/demo](https://kagiboy.xyz/demo) runs the same ROM against a simulated key chip, and the kagiboy app at [kagiboy.xyz/app](https://kagiboy.xyz/app) signs real testnet transactions and quotes live SODAX swaps. **The cartridge hardware has not been built yet.** Nothing has had an external security review, and nobody should keep real funds on kagiboy until both of those have happened. Every cost, price and volume below is an assumption, and each one is labelled. Unless a source link is given, a number is our estimate.
+**Status, honestly.** The software is real today. The GBDK ROM runs on a real Game Boy (DMG) from a flash cart. The browser demo at [kagiboy.xyz/demo](https://kagiboy.xyz/demo) runs the same ROM against a simulated key chip, next to the kagiboy phone app, which signs real testnet transactions and quotes live SODAX swaps. **The cartridge hardware has not been built yet.** Nothing has had an external security review, and nobody should keep real funds on kagiboy until both of those have happened. Every cost, price and volume below is an assumption, and each one is labelled. Unless a source link is given, a number is our estimate.
 
 ## 1. What it is
 
