@@ -323,6 +323,8 @@ static uint8_t demo_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
     case CMD_LOCK:
         if (demo_state == STATE_UNLOCKED) demo_state = STATE_LOCKED;
         demo_pending = 0;
+        demo_pairing = 0;
+        demo_window = 0;
         return 0;
     case CMD_WIPE:
         demo_wipe();
@@ -1228,7 +1230,7 @@ static uint8_t receive(void) {
 
 static void tx_result(void) {
     char *detail;
-    uint8_t ticks = 0, failed;
+    uint8_t ticks = 0, failed, k;
     message(T_ICON_CHECK_0, "Signed", "SENT TO YOUR PHONE", 0);
     screen_end();
     jingle_ok();
@@ -1250,9 +1252,21 @@ static void tx_result(void) {
             /* DEMO: a swap signed by the demo build, which never broadcasts it */
             if (failed || !strcmp(resp, "CONFIRMED") || !strcmp(resp, "DEMO")) break;
         }
-        wait_frames(30);
+        /* after 3 s the owner may leave; the phone keeps tracking it either way */
+        if (ticks == 6) {
+            flush_input();
+            hint(7, 17, BTN_A, "DONE");
+        }
+        for (k = 0; k < 30; k++) {
+            vsync();
+            anim_tick(++frame);
+            if (ticks >= 6 && (pressed() & J_A)) {
+                beep(0xC0);
+                return;
+            }
+        }
         if (++ticks > 120) {
-            capc(15, "STILL CONFIRMING,");
+            capc(15, "NO NEWS YET,");
             capc(16, "CHECK YOUR PHONE");
             break;
         }
@@ -1463,8 +1477,9 @@ static uint8_t phone_screen(void) {
             if (since < RESP_END && *since) txt(12, 8, since);
             capc(12, "ONLY THIS PHONE CAN");
             capc(13, "ASK YOU TO SIGN");
-            hint(0, 17, BTN_A, "NEW");
-            hint(5, 17, BTN_SEL, "FORGET");
+            /* two rows, so the three hints don't run into each other */
+            hint(0, 15, BTN_SEL, "FORGET THIS PHONE");
+            hint(0, 17, BTN_A, "NEW PHONE");
             hint(14, 17, BTN_B, "BACK");
         } else {
             header(T_ICON_PHONE_0, "Phone", "NONE PAIRED");
