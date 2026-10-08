@@ -6,8 +6,8 @@ import { Next, Proof, Who } from "./scenes";
 import { Apart, Drawer, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
 
 export const FPS = 30;
-const LEAD = 0.3; // seconds of picture before each voice line
-const TAIL = 0.45; // and after
+const LEAD = 0.45; // seconds of picture before each voice line
+const TAIL = 0.9; // and after
 const END = 4;
 const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
 // a shot needs a minimum length to play out, however short its line (seconds)
