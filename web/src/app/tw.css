@@ -25,26 +25,54 @@
 }
 
 .kapp {
-  --k-bg: #f7f6f2;
-  --k-fg: #1f2330;
-  --k-fg-2: #5b6274;
-  --k-card: #fdfcf9;
-  --k-muted: #eeece6;
-  --k-accent: #e9eef9;
-  --k-line: rgba(31, 35, 48, 0.1);
-  --k-ink: #1f2330;
+  --k-bg: #fbfbfd;
+  --k-fg: #16181f;
+  --k-fg-2: #6b7180;
+  --k-card: #ffffff;
+  --k-muted: #f2f3f6;
+  --k-accent: #eef2ff;
+  --k-line: rgba(22, 24, 31, 0.08);
+  --k-ink: #16181f;
   --k-lcd: #dfe7cf;
   --k-lcd-ink: #1e2826;
-  /* names some components read directly */
   --background: var(--k-bg);
   --foreground: var(--k-fg);
   --card: var(--k-card);
-  --panel: var(--k-card);
-  --card-raised: var(--k-muted);
   --muted: var(--k-muted);
   --muted-foreground: var(--k-fg-2);
   --border: var(--k-line);
-  --chart-1: #3b4fb8;
-  --chart-2: #2f9a5e;
-  --chart-down: #c2405d;
+}
+
+/* the app inside the demo's drawn phone, and as the phone layout's Wallet tab */
+.kapp-phone > .kapp {
+  height: 100%;
+  border-radius: 34px;
+}
+
+.kapp-phone > .kapp .kapp-head {
+  padding-top: 52px;
+}
+
+.pane-phone > .kapp {
+  height: 100%;
+}
+
+.pane-phone > .kapp .kapp-head > span:first-child {
+  visibility: hidden; /* the demo header already says kagiboy */
+}
+
+/* inside the app, the site's heading and paragraph rules step aside so the utilities apply as written */
+.kb .kapp :is(h1, h2, h3, p) {
+  margin: revert-layer;
+  font-family: revert-layer;
+  font-size: revert-layer;
+  font-weight: revert-layer;
+  line-height: revert-layer;
+  letter-spacing: revert-layer;
+  color: revert-layer;
+}
+
+.kapp .kapp-sheet h2 {
+  font-size: 17px;
+  letter-spacing: -0.01em;
 }

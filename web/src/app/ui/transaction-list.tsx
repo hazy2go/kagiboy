@@ -1,7 +1,7 @@
 // Based on "Transaction List" by hari on 21st.dev (component id 2943). Kept: the list whose row
 // morphs into a detail view (shared layoutIds for icon, title, subtitle, amount) and back. Changed
 // for kagiboy: it fills its column, takes the wallet's own records, and the detail is a short
-// receipt of what the cartridge signed.
+// summary of what the cartridge signed.
 
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
@@ -34,7 +34,7 @@ export function TransactionList({ items, empty }: { items: ActivityItem[]; empty
 
   return (
     <LayoutGroup>
-      <motion.div layout className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_1px_1px_rgba(40,44,70,0.06),0_14px_30px_-18px_rgba(40,44,70,0.4),inset_0_1px_0_#fff]" transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
+      <motion.div layout className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_1px_2px_rgba(20,22,35,0.04),0_10px_24px_-18px_rgba(20,22,35,0.3)]" transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
         <AnimatePresence mode="wait" initial={false}>
           {!open ? (
             <motion.ul key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="m-0 list-none divide-y divide-border p-1.5">
@@ -46,7 +46,7 @@ export function TransactionList({ items, empty }: { items: ActivityItem[]; empty
                     onClick={() => setOpenId(t.id)}
                     className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-colors hover:bg-muted/60"
                   >
-                    <motion.span layoutId={`act-icon-${t.id}`} className="lcd-chip grid size-10 shrink-0 place-items-center rounded-xl">
+                    <motion.span layoutId={`act-icon-${t.id}`} className="grid size-10 shrink-0 place-items-center rounded-full bg-muted text-foreground">
                       {t.icon}
                     </motion.span>
                     <span className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export function TransactionList({ items, empty }: { items: ActivityItem[]; empty
           ) : (
             <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="p-4">
               <motion.div layoutId={`act-${open.id}`} className="mb-4 flex items-start justify-between">
-                <motion.span layoutId={`act-icon-${open.id}`} className="lcd-chip grid size-12 place-items-center rounded-2xl">
+                <motion.span layoutId={`act-icon-${open.id}`} className="grid size-12 place-items-center rounded-full bg-muted text-foreground">
                   {open.icon}
                 </motion.span>
                 <button type="button" onClick={() => setOpenId(null)} className="grid size-8 place-items-center rounded-full bg-muted text-muted-foreground" aria-label="Back to the list">
@@ -87,11 +87,11 @@ export function TransactionList({ items, empty }: { items: ActivityItem[]; empty
                   {open.state}
                 </motion.p>
               </div>
-              <motion.dl initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="m-0 mt-4 grid gap-2.5 font-px text-[11px] uppercase tracking-[0.08em]">
+              <motion.dl initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="m-0 mt-4 grid gap-2.5 text-[13px]">
                 {open.details.map(([k, v]) => (
                   <div key={k} className="flex items-baseline gap-2">
                     <dt className="text-muted-foreground">{k}</dt>
-                    <i className="flex-1 -translate-y-[3px] border-b border-dotted border-muted-foreground/50" />
+                    <i className="flex-1" />
                     <dd className="m-0 max-w-[60%] truncate text-right text-foreground">{v}</dd>
                   </div>
                 ))}

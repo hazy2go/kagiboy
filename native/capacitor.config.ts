@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     // defaults, set explicitly: real path-based routing needs http(s) on Android
     androidScheme: "https",
     iosScheme: "capacitor",
-    appStartPath: "/app", // Capacitor >= 7.3
+    appStartPath: "/demo", // Capacitor >= 7.3
   },
   ios: {
     contentInset: "never",

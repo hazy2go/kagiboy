@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, 
 import { Link } from "react-router-dom";
 import { BusMonitor } from "./BusMonitor";
 import { GameBoyShell } from "./GameBoyShell";
-import { KagiApp } from "../app/AppPage";
+import { KagiApp } from "../app/KagiApp";
 import { useSession } from "./session";
 import "./demo.css";
 

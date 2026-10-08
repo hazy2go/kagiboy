@@ -6,7 +6,6 @@ import { NotFound } from "./NotFound";
 
 // the emulator and both chain SDKs only load on /demo
 const DemoPage = lazy(() => import("./demo/DemoPage").then((m) => ({ default: m.DemoPage })));
-const AppPage = lazy(() => import("./app/AppPage").then((m) => ({ default: m.AppPage })));
 
 export default function App() {
   return (
@@ -19,14 +18,6 @@ export default function App() {
           element={
             <Suspense fallback={<p className="loading">Inserting the cartridge…</p>}>
               <DemoPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/app"
-          element={
-            <Suspense fallback={<p className="loading">Opening the app…</p>}>
-              <AppPage />
             </Suspense>
           }
         />

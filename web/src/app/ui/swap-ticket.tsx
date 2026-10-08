@@ -2,7 +2,7 @@
 // flip button on the seam whose cards really trade places (layout animation), the rate footer and
 // the CTA whose label animates between states. Changed for kagiboy: it is controlled by the host
 // (live SODAX quotes, real token logos with chain badges, the cartridge's states) and the amounts
-// sit on Game Boy LCD wells.
+// sit in quiet neutral wells.
 
 import type { ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -37,12 +37,12 @@ function AmountCard({
   busy?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-[22px] border border-border bg-card p-3 shadow-[0_1px_1px_rgba(40,44,70,0.06),0_12px_28px_-16px_rgba(40,44,70,0.35),inset_0_1px_0_#fff]">
-      <div className="flex items-center justify-between px-1 font-px text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+    <div className="flex flex-col gap-2.5 rounded-[22px] border border-border bg-card p-4 shadow-[0_1px_2px_rgba(20,22,35,0.04),0_10px_24px_-18px_rgba(20,22,35,0.3)]">
+      <div className="flex items-center justify-between text-[13px] font-medium text-muted-foreground">
         <span>You {side}</span>
         {note}
       </div>
-      <div className="lcd-well flex items-center gap-2 rounded-2xl py-2 pl-3 pr-2">
+      <div className="flex items-center gap-3">
         <input
           value={value}
           onChange={(e) => {
@@ -54,7 +54,7 @@ function AmountCard({
           inputMode="decimal"
           aria-label={side === "pay" ? "Amount to pay" : "Amount you get"}
           className={cn(
-            "w-full min-w-0 border-0 bg-transparent p-0 font-px text-[28px] leading-tight tabular-nums text-lcd-ink outline-none placeholder:text-lcd-ink/30",
+            "w-full min-w-0 border-0 bg-transparent p-0 font-display text-[32px] font-medium leading-tight tracking-[-0.02em] tabular-nums text-foreground outline-none placeholder:text-muted-foreground/40",
             busy && "animate-pulse",
           )}
         />
@@ -62,7 +62,7 @@ function AmountCard({
           type="button"
           onClick={onPick}
           disabled={!token}
-          className="flex shrink-0 items-center gap-2 rounded-full bg-card py-1.5 pl-1.5 pr-2.5 shadow-[0_1px_1px_rgba(40,44,70,0.1),0_6px_12px_-8px_rgba(40,44,70,0.5),inset_0_1px_0_#fff] transition-transform active:scale-95"
+          className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-muted py-1.5 pl-1.5 pr-3 transition-[transform,background-color] hover:bg-muted/70 active:scale-95"
           aria-haspopup="listbox"
         >
           {token?.icon ?? <span className="size-8 animate-pulse rounded-full bg-muted" />}
@@ -108,7 +108,7 @@ export function SwapTicket({ pay, get, amount, onAmount, out, quoting, onFlip, o
           type="button"
           onClick={onFlip}
           whileTap={reduced ? undefined : { scale: 0.9, rotate: 180 }}
-          className="absolute left-1/2 top-1/2 z-10 grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl border-[5px] border-background text-white shadow-[0_6px_14px_-6px_rgba(20,22,35,0.6),inset_0_1px_0_rgba(255,255,255,0.18)] [background:linear-gradient(180deg,#33384a,#1b1e29)]"
+          className="absolute left-1/2 top-1/2 z-10 grid size-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-xl border-4 border-background bg-card text-foreground shadow-[0_2px_8px_-2px_rgba(20,22,35,0.2)]"
           aria-label="Flip pair"
         >
           <ArrowUpDown size={16} />
@@ -127,7 +127,7 @@ export function SwapTicket({ pay, get, amount, onAmount, out, quoting, onFlip, o
         whileHover={cta.enabled && !reduced ? { y: -1 } : undefined}
         whileTap={cta.enabled && !reduced ? { scale: 0.97, y: 0 } : undefined}
         transition={{ duration: 0.2, ease: EASE }}
-        className="relative mt-4 flex h-14 items-center justify-center gap-3 rounded-2xl text-[16px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16),inset_0_-2px_0_rgba(0,0,0,0.25),0_12px_24px_-12px_rgba(20,22,35,0.6)] [background:linear-gradient(180deg,#33384a,#1f2330_55%,#181b26)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="relative mt-4 flex h-[54px] items-center justify-center gap-2.5 rounded-2xl bg-foreground text-[16px] font-semibold text-white shadow-[0_1px_1px_rgba(0,0,0,0.3),0_8px_20px_-10px_rgba(20,22,35,0.55),inset_0_1px_1px_rgba(255,255,255,0.14)] disabled:cursor-not-allowed disabled:opacity-35"
       >
         {cta.glyph}
         <AnimatePresence mode="wait" initial={false}>
@@ -152,12 +152,12 @@ export function SwapTicket({ pay, get, amount, onAmount, out, quoting, onFlip, o
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.22, ease: EASE }}
-            className="absolute -inset-1 z-20 flex flex-col rounded-[24px] border border-border bg-card p-3 shadow-[0_24px_48px_-24px_rgba(40,44,70,0.55)]"
+            className="absolute -inset-1 z-20 flex flex-col rounded-[24px] border border-border bg-card p-3 shadow-[0_24px_48px_-24px_rgba(20,22,35,0.4)]"
             role="dialog"
             aria-label={picking === "pay" ? "Choose what you pay with" : "Choose what you get"}
           >
             <div className="mb-2 flex items-center justify-between px-1">
-              <span className="font-px text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{picking === "pay" ? "You pay" : "You get"}</span>
+              <span className="text-[15px] font-semibold text-foreground">{picking === "pay" ? "You pay with" : "You get"}</span>
               <button type="button" onClick={onClosePicker} className="grid size-8 place-items-center rounded-full bg-muted text-muted-foreground" aria-label="Close">
                 <X size={14} />
               </button>
