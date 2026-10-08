@@ -1,0 +1,50 @@
+[
+ {
+  "id": "s1",
+  "title": "0:00\u20130:14 \u00b7 The flea market (hook)",
+  "seconds": 8.91,
+  "text": "My first console came from a flea market. My dad bought it for me before I even knew what Nintendo was. All I knew was that I was holding something magical."
+ },
+ {
+  "id": "s2",
+  "title": "0:14\u20130:34 \u00b7 The problem",
+  "seconds": 18.22,
+  "text": "Years later, I'm in crypto, and the most important thing I own lives on my phone. The same phone full of ads, pop-ups and links I shouldn't tap. When it asks me to sign, the screen that's asking is the same screen telling me what I'm signing. Hardware wallets fix that. But nobody loves them. They live in a drawer."
+ },
+ {
+  "id": "s3",
+  "title": "0:34\u20130:52 \u00b7 The idea",
+  "seconds": 15.7,
+  "text": "So I asked: what if the safest screen I own is the one from 1989? A Game Boy has no Wi-Fi, no browser, no app store. Just a screen and a few buttons. kagiboy is a hardware wallet that's a Game Boy cartridge. You plug it into the Game Boy you already own."
+ },
+ {
+  "id": "s4",
+  "title": "0:52\u20131:22 \u00b7 How it feels (three beats)",
+  "seconds": 21.12,
+  "text": "Setting it up feels like starting a new game. Mash the buttons and shake the console: that's your randomness. Write down twelve words. Pick a PIN. Pair your phone with a code that shows up on both screens. From then on, your phone can only ask. The cartridge reads every request itself and shows the real amount and address on the Game Boy. Nothing gets signed until you hold A."
+ },
+ {
+  "id": "s5",
+  "title": "1:22\u20131:48 \u00b7 It works today (validation)",
+  "seconds": 21.8,
+  "text": "And this isn't a mockup. The software runs today, on my own Game Boy, and in your browser at kagiboy.xyz/demo: the real Game Boy software, right next to the phone app. It signs real testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. And it gets live swap quotes from SODAX, checked and signed on the Game Boy."
+ },
+ {
+  "id": "s6",
+  "title": "1:48\u20132:08 \u00b7 What's inside",
+  "seconds": 13.74,
+  "text": "Inside the cartridge: a secure element that keeps your keys, a chip that talks to the Game Boy, and Bluetooth that only carries public data. Five wrong PINs and it wipes itself. Your twelve words bring everything back, in any standard wallet."
+ },
+ {
+  "id": "s7",
+  "title": "2:08\u20132:30 \u00b7 Who it's for",
+  "seconds": 22.72,
+  "text": "It's for people like me, who grew up with a Game Boy and ended up holding crypto. A hundred and eighteen million Game Boys were sold. This is a wallet you'd actually keep on a shelf, or give as a gift. A cartridge for a hundred and twenty-nine dollars, numbered limited editions, and a bundle with a restored Game Boy. I live in Japan, where the old Game Boys are, and the factories are a short flight away."
+ },
+ {
+  "id": "s8",
+  "title": "2:30\u20132:47 \u00b7 What's next, and the close",
+  "seconds": 13.21,
+  "text": "Next: a dev-board cartridge on a real Game Boy, then our own board, and two outside security audits before a single one is sold. Crypto should feel like something you own, not something you're afraid of. kagiboy. Press start."
+ }
+]

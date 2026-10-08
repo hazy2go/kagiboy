@@ -1,0 +1,19 @@
+{
+  "name": "kagiboy-pitch-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Pitch out/kagiboy-pitch.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.533",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.533"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

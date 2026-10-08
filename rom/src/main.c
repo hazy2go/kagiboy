@@ -1264,6 +1264,7 @@ static void tx_result(void) {
                 beep(0xC0);
                 return;
             }
+            if (request_waiting()) return; /* a new request: home picks it up straight away */
         }
         if (++ticks > 120) {
             capc(15, "NO NEWS YET,");
@@ -1272,7 +1273,11 @@ static void tx_result(void) {
         }
     }
     hint(7, 17, BTN_A, "DONE");
-    wait_a();
+    /* A leaves; so does a new request, which must never wait behind this screen */
+    flush_input();
+    while (!(wait_press_or_request() & J_A)) {
+        if (request_waiting()) return;
+    }
 }
 
 /* A phone asks to pair. Both screens show the same code (Bluetooth numeric comparison); only the

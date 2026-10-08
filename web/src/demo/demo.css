@@ -928,7 +928,8 @@ html.demo-app-root body {
 
 .panes {
   position: relative;
-  overflow: hidden;
+  /* clip, not hidden: a hidden box can still be scrolled by code and leave the panes half-shifted */
+  overflow: clip;
 }
 
 .pane {

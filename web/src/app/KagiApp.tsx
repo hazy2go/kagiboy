@@ -517,7 +517,7 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
       const r = await req.result;
       if (r.approved) {
         onRecord({ ...rec, state: "signed" });
-        setResult({ state: "signed", text: `${rec.sell} for at least ${rec.buy}` });
+        setResult({ state: "signed", text: `${rec.sell} for at least ${fmt(q.minOut, q.buy.decimals)} ${q.buy.symbol}` });
       } else {
         onRecord({ ...rec, state: "rejected" });
         setResult({ state: "rejected", text: r.reason === "rejected" ? "You pressed B on the Game Boy. Nothing was signed." : "The cartridge stopped before signing." });
@@ -547,6 +547,8 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
         quoting={quoting}
         onFlip={() => {
           blip(s.muted, 784);
+          // the amount follows the flip: what you'd get becomes what you pay
+          if (outText) setAmount(String(Number(outText)));
           setSell(buy);
           setBuy(sell);
         }}

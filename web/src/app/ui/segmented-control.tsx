@@ -138,7 +138,7 @@ export function SegmentedControl({
                 ? "text-muted-foreground/40"
                 : hovered === i && i !== index
                   ? "text-foreground"
-                  : "text-foreground0"
+                  : "text-muted-foreground"
             }`}
           >
             {option.label}

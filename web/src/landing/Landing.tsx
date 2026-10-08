@@ -243,6 +243,8 @@ export function Landing() {
         end: "bottom bottom",
         onUpdate: (s) => scene.setProgress(s.progress),
       });
+      // arriving mid-page (Back from another page) starts at the right pose, not at the top
+      scene.setProgress(st.progress);
 
       // the real ROM, loaded after first paint so the page opens fast
       let attract: import("./attract").Attract | null = null;

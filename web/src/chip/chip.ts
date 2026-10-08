@@ -216,7 +216,7 @@ export class CartChip {
       this.emit();
       // nobody answered: the request lapses, so it can't sit there blocking the owner's own requests
       setTimeout(() => {
-        if (this.pairing?.code === code && this.generation === gen) this.dropPairing();
+        if (this.pairing?.code === code && this.generation === gen) this.dropPairing("lapsed");
       }, PAIR_TIMEOUT_MS);
     });
   }
@@ -234,8 +234,12 @@ export class CartChip {
     this.emit();
   }
 
-  private dropPairing() {
+  /** How the last pairing that didn't go through ended: turned down on the Game Boy, or nobody answered. */
+  lastPairingEnd: "refused" | "lapsed" = "refused";
+
+  private dropPairing(why: "refused" | "lapsed" = "refused") {
     if (!this.pairing) return;
+    this.lastPairingEnd = why;
     this.pairing.resolve(false);
     this.pairing = null;
     this.emit();

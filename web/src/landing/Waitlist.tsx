@@ -29,7 +29,7 @@ export function Waitlist() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      setState({ kind: "error", message: "That email doesn't look right." });
+      setState({ kind: "error", message: email.trim() ? "That email doesn't look right." : "Enter your email first." });
       return;
     }
     setState({ kind: "sending" });

@@ -101,11 +101,23 @@ export class Phone {
     this.pairError = "";
     this.emit();
     let ok = false;
-    try {
-      ok = await this.chip.requestPairing(deviceName());
-    } catch (e) {
-      ok = false;
-      this.pairError = (e as Error).message;
+    // the Game Boy may still be on its way back to the "Pair your phone!" screen (it listens again a
+    // moment after B); give it a few seconds before saying no
+    const until = Date.now() + 3000;
+    for (;;) {
+      try {
+        ok = await this.chip.requestPairing(deviceName());
+        if (!ok && this.chip.lastPairingEnd === "lapsed") this.pairError = "The Game Boy didn't answer in time. Try again.";
+        break;
+      } catch (e) {
+        if (!this.chip.pairWindowOpen && this.chip.state === "unlocked" && Date.now() < until) {
+          await new Promise((r) => setTimeout(r, 250));
+          continue;
+        }
+        ok = false;
+        this.pairError = (e as Error).message;
+        break;
+      }
     }
     this.pairState = ok ? "idle" : "refused";
     this.emit();
