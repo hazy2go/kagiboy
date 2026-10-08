@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, Sequence, continueRender, delayRender, staticFile } from "remotion";
+import { AbsoluteFill, Audio, Sequence, continueRender, delayRender, interpolate, staticFile } from "remotion";
 import { useEffect, useState } from "react";
 import vo from "./vo.json";
 import { Captions } from "./ui";
@@ -39,7 +39,7 @@ function useFonts() {
 
 export function Pitch() {
   useFonts();
-  const { parts, end } = timeline();
+  const { parts, end, total } = timeline();
   return (
     <AbsoluteFill style={{ background: "#fff" }}>
       {parts.map(({ id, Scene, from, dur, seconds, text }) => (
@@ -51,6 +51,14 @@ export function Pitch() {
           <Captions text={text} from={Math.round(LEAD * FPS)} seconds={seconds} />
         </Sequence>
       ))}
+      {/* a dry, low hum from the present to the end, looped */}
+      <Sequence from={parts[1].from} name="bed">
+        <Audio
+          src={staticFile("sfx/wind-hum.mp3")}
+          loop
+          volume={(fr) => 0.22 * interpolate(fr, [0, 45, total - parts[1].from - 60, total - parts[1].from], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
+        />
+      </Sequence>
       <Sequence from={end.from} durationInFrames={end.dur} name="end">
         <Finale />
       </Sequence>

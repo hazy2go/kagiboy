@@ -1,4 +1,4 @@
-import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { Console } from "./Three";
 import { poseAt as poseAtP } from "../../web/src/landing/scene";
 import { C, Card, DISPLAY, Eyebrow, Glow, PX, Pop, SANS, Title, a } from "./ui";
@@ -13,31 +13,36 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export function Memory({ dur }: P) {
   const f = useCurrentFrame();
   const flash = interpolate(f, [dur - 14, dur - 4, dur], [0, 1, 1], clamp);
-  const c1 = Math.round(dur * 0.32);
-  const c2 = Math.round(dur * 0.56);
+  const open = 26; // a beat of black while the deck clunks and the tape spins up
+  const c1 = Math.round(dur * 0.36);
+  const c2 = Math.round(dur * 0.62);
+  const snow = interpolate(f, [open - 10, open, open + 6], [0, 1, 0], clamp);
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
-      <Sequence durationInFrames={44}>
-        <Vhs osd="▶ PLAY">
-          <Clip name="vhs-eject" from={1} dur={44} />
-        </Vhs>
+      <Audio src={staticFile("sfx/tape-switch.mp3")} volume={0.9} />
+      <Sequence from={8}>
+        <Audio src={staticFile("sfx/static.mp3")} volume={0.35} />
       </Sequence>
-      <Sequence from={44} durationInFrames={c1 - 44}>
+      <Sequence from={open}>
+        <Audio src={staticFile("sfx/crt-hum.mp3")} volume={0.1} />
+      </Sequence>
+      <Sequence from={open} durationInFrames={c1 - open}>
         <Vhs osd="▶ PLAY">
-          <Clip name="car-window-retro" from={2} dur={c1 - 44} />
+          <Photo src={staticFile("gen/g1.png")} dur={c1 - open} zoom={1.3} origin="18% 6%" pos="0% 0%" push={0.07} />
         </Vhs>
       </Sequence>
       <Sequence from={c1} durationInFrames={c2 - c1}>
         <Vhs osd="▶ PLAY">
-          <Clip name="boy-window" from={6} dur={c2 - c1} push={0.1} />
+          <Clip name="car-window-retro" from={2} dur={c2 - c1} />
         </Vhs>
       </Sequence>
       <Sequence from={c2}>
-        <Vhs osd="▶ PLAY" stamp="SP">
-          <Photo src={a("02-real-photos/photo-home.jpg")} dur={dur - c2} pos="50% 0%" zoom={1.45} origin="50% 5%" push={0.06} />
+        <Vhs osd="▶ PLAY">
+          <Photo src={staticFile("gen/g3.png")} dur={dur - c2} zoom={1.3} origin="30% 10%" pos="0% 0%" push={0.08} />
         </Vhs>
       </Sequence>
-      {/* the tape snaps to the present */}
+      {/* tape snow as the picture comes up, and the snap to the present */}
+      <AbsoluteFill style={{ background: "#d8d8d8", opacity: snow * 0.5, mixBlendMode: "screen" }} />
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
   );
@@ -118,6 +123,7 @@ export function Reveal({ dur }: P) {
   return (
     <AbsoluteFill>
       <Glow shift={80} />
+      <Audio src={staticFile("sfx/whoosh-impact.mp3")} volume={0.6} />
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: q }}>
         <Title size={112} style={{ textAlign: "center", width: 1500, transform: `scale(${1 + f / mid / 30})` }}>
           The most honest screen
@@ -176,6 +182,18 @@ const SHOTS: StepShot[] = [
   { from: 0.94, eyebrow: "", title: "Signed", screen: "12-signed-confirmed", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.25, 0.235, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
 ];
 
+/** the frames where a button goes down, for a click each */
+function clicks(held: (t: number) => string[], len: number) {
+  const out: number[] = [];
+  let was = 0;
+  for (let fr = 0; fr < len; fr++) {
+    const n = held(fr / 30).length;
+    if (n > was) out.push(fr);
+    was = n;
+  }
+  return out;
+}
+
 export function Feel({ dur }: P) {
   return (
     <AbsoluteFill style={{ background: "#fff" }}>
@@ -186,22 +204,16 @@ export function Feel({ dur }: P) {
         return (
           <Sequence key={sh.title} from={a0} durationInFrames={len}>
             <Glow shift={120 + i * 20} />
+            {sh.held && clicks(sh.held, len).map((fr) => (
+              <Sequence key={fr} from={fr} durationInFrames={10}>
+                <Audio src={staticFile("sfx/button-click.mp3")} volume={0.55} />
+              </Sequence>
+            ))}
             <Console
               screens={[sh.screen]}
               shot={{ p: () => 0, plain: true, screen: () => sh.screen, held: sh.held, pose: (t) => sh.pose(Math.min(1, t / (len / 30)), t) as never }}
             />
-            {sh.title === "Pair your phone" && (
-              <div style={{ position: "absolute", left: 120, top: 640 }}>
-                <Pop start={6}>
-                  <Card style={{ padding: "34px 40px", display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
-                    <span style={{ fontFamily: SANS, fontSize: 26, color: C.ink2 }}>On your phone</span>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 84, letterSpacing: 8, color: C.ink }}>636073</span>
-                    <span style={{ fontFamily: SANS, fontSize: 24, color: C.ink3 }}>the same code as the Game Boy</span>
-                  </Card>
-                </Pop>
-              </div>
-            )}
-            <div style={{ position: "absolute", left: 120, top: 400 }}>
+            <div style={{ position: "absolute", left: 110, top: 770 }}>
               <Pop start={3}>
                 <Card style={{ padding: "28px 36px", display: "flex", flexDirection: "column", gap: 12, background: "rgba(255,255,255,0.94)" }}>
                   {sh.eyebrow && <Eyebrow>{sh.eyebrow}</Eyebrow>}
@@ -216,40 +228,21 @@ export function Feel({ dur }: P) {
   );
 }
 
-/* 2b · inside the drawer: we look up at the room as the drawer slides shut */
+/* 2b · the drawer: the line in white on black, and a drawer slamming shut cuts it off */
 export function Drawer({ dur }: P) {
   const f = useCurrentFrame();
-  const shut0 = Math.round(dur * 0.45);
-  const open = interpolate(f, [shut0, dur - 8], [1, 0], { ...clamp, easing: (t) => t * t * (3 - 2 * t) });
-  const H = 1080 * 0.62 * open;
-  const glow = 0.25 + 0.75 * open;
+  const shut = dur - 16;
+  const a1 = interpolate(f, [4, 22], [0, 1], clamp);
+  const a2 = interpolate(f, [Math.round(dur * 0.36), Math.round(dur * 0.36) + 18], [0, 1], clamp);
+  const on = f < shut ? 1 : 0;
   return (
-    <AbsoluteFill style={{ background: "#0d0b0a" }}>
-      {/* the room, seen through the drawer's opening */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: H, overflow: "hidden", background: "#fbfbfd" }}>
-        <Glow shift={40} />
-        <div style={{ position: "absolute", left: 140, top: 150, width: 1500 }}>
-          <Pop start={6}>
-            <Title size={92}>The safe answer: a hardware wallet.</Title>
-          </Pop>
-          <Pop start={Math.round(dur * 0.3)}>
-            <Title size={92} style={{ color: C.ink2, marginTop: 18 }}>
-              Most of them end up in a drawer.
-            </Title>
-          </Pop>
-        </div>
-      </div>
-      {/* the drawer's front edge and its shadow */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: H - 2, height: 26, background: "linear-gradient(#2a221d, #120f0d)", boxShadow: "0 18px 40px rgba(0,0,0,0.6)" }} />
-      {/* inside the drawer: its floor and side walls, lit by what's left of the room */}
-      <div style={{ position: "absolute", left: 0, right: 0, top: H + 24, bottom: 0, background: `linear-gradient(180deg, rgba(92,70,56,${0.95 * glow}), rgba(40,30,24,${0.9 * glow}) 45%, #0d0b0a 95%)` }} />
-      <div style={{ position: "absolute", left: 0, top: H + 24, bottom: 0, width: 260, background: "linear-gradient(90deg, rgba(0,0,0,0.75), transparent)", clipPath: "polygon(0 0, 100% 18%, 100% 100%, 0 100%)" }} />
-      <div style={{ position: "absolute", right: 0, top: H + 24, bottom: 0, width: 260, background: "linear-gradient(270deg, rgba(0,0,0,0.75), transparent)", clipPath: "polygon(0 18%, 100% 0, 100% 100%, 0 100%)" }} />
-      {/* a plain hardware wallet, forgotten on the drawer floor */}
-      <div style={{ position: "absolute", left: 960 - 330, bottom: 150, width: 660, height: 200, transform: "perspective(1100px) rotateX(58deg) rotateZ(-6deg)", filter: `brightness(${0.3 + 0.7 * glow})` }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: 36, background: "linear-gradient(160deg, #4a4d55, #2c2e34)", boxShadow: "0 40px 60px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.12)" }} />
-        <div style={{ position: "absolute", left: 60, top: 50, width: 330, height: 100, borderRadius: 12, background: "#14151a", boxShadow: "inset 0 0 0 3px #3a3c43" }} />
-        <div style={{ position: "absolute", right: 70, top: 64, width: 72, height: 72, borderRadius: 36, background: "#5a5d65", boxShadow: "inset 0 -4px 0 rgba(0,0,0,0.3)" }} />
+    <AbsoluteFill style={{ background: "#08090c", alignItems: "center", justifyContent: "center" }}>
+      <Sequence from={shut - 2}>
+        <Audio src={staticFile("sfx/drawer-close.mp3")} volume={1} />
+      </Sequence>
+      <div style={{ opacity: on, textAlign: "center", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div style={{ opacity: a1, fontFamily: DISPLAY, fontWeight: 600, fontSize: 64, letterSpacing: -2, color: "#9aa0b2" }}>The safe answer is a hardware wallet.</div>
+        <div style={{ opacity: a2, fontFamily: DISPLAY, fontWeight: 700, fontSize: 96, letterSpacing: -3.5, color: "#f4f6fb", transform: `translateY(${(1 - a2) * 14}px)` }}>Most of them end up in a drawer.</div>
       </div>
     </AbsoluteFill>
   );
