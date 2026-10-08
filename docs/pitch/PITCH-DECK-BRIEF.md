@@ -129,7 +129,7 @@ All off-the-shelf parts. Estimated landed cost: about **$31 a unit at 500, $24 a
 - **Roadmap:** NOW software works · Q4 2026 dev-board cartridge on a real Game Boy · Q1 2027 custom board, Bluetooth pairing, deposits · then two external audits (published) · then certification and the first 500 numbered units.
 - **Prior art (be upfront):** Keyp's 2023 Game Wallet was an offline Game Boy cartridge wallet with no secure element, no Solana and no phone link.
 
-Full business plan: `docs/BUSINESS-PLAN.md` in the repo (but again: **no funding ask in the deck**).
+Full business plan: `docs/pitch/BUSINESS-PLAN.md` in the repo (but again: **no funding ask in the deck**).
 
 ---
 

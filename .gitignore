@@ -11,3 +11,4 @@ assets/3d/raw
 assets/renders/drafts
 .impeccable/direction.json
 __pycache__/
+.impeccable/

@@ -1,186 +1,165 @@
-# kagiboy
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/logo-white.png">
+    <img src="docs/media/logo.png" alt="kagiboy" width="360">
+  </picture>
+</p>
 
-A hardware wallet for the original Game Boy. A secure chip inside the cartridge
-holds your Solana and EVM keys, and you approve every transaction on the Game
-Boy's own screen and buttons, which your phone can't touch.
+<p align="center">
+  A hardware wallet that lives in a Game Boy cartridge.<br>
+  <a href="https://kagiboy.xyz/demo"><b>Try the live demo</b></a> &nbsp;·&nbsp;
+  <a href="https://kagiboy.xyz">Website</a> &nbsp;·&nbsp;
+  <a href="https://kagiboy.xyz/about">The story</a> &nbsp;·&nbsp;
+  <a href="docs/protocol.md">Protocol</a>
+</p>
 
-**Status, honestly:** the software is real and runs today on testnets. The Game
-Boy ROM is written in C with GBDK-2020 and runs on a real Game Boy (DMG) from a
-flash cart, and in the browser through an emulator. The cartridge's key chip is
-simulated in the browser (`web/src/chip/`), and together with the phone app it
-signs and broadcasts real testnet transactions. The cartridge hardware itself
-is a work in progress: the parts, security model and build plan are in
-[docs/hardware.md](docs/hardware.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
-Testnets only. Never put a real recovery phrase into the demo.
+<p align="center">
+  <img src="docs/media/exploded.gif" alt="An exploded view of the Game Boy and the kagiboy cartridge: lens, front shell, buttons, screen, main board, batteries and back shell on the left; the cartridge's label, its four chips, the board and the back shell on the right" width="100%">
+</p>
 
-## Live
+My dad found my first Game Boy at a flea market. These days the things I care most about are numbers on a phone, and the phone that asks me to approve a transaction is the same phone that tells me what I'm approving. If it lies, I sign the lie.
 
-- https://kagiboy.xyz: what it is and why
-- https://kagiboy.xyz/demo: the real ROM, the simulated chip and a phone app, side by side
-- https://kagiboy.xyz/about: the story behind it
+A Game Boy can't lie to you like that. It has no network, no apps and no operating system. It's a screen and some buttons. So kagiboy puts the keys in a cartridge and uses the Game Boy as the one screen you trust: the cartridge reads every request itself, puts the amount and the full address on that little LCD, and signs only after you hold A. The phone just builds transactions and broadcasts them. It never sees a key.
 
-## How the demo works
+This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for now), the phone app, the website, the 3D model and the videos.
 
-The demo has six networks: Solana devnet plus five EVM testnets (Ethereum
-Sepolia, Base Sepolia, Arbitrum Sepolia, HyperEVM testnet and Robinhood Chain
-testnet). One recovery phrase gives one Solana address and one EVM address; the
-EVM address is the same on all five networks, and the phone app has a picker to
-switch between them.
+> **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge's key chip is simulated in the browser until the hardware exists; the parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
 
-Keys: arrows, `A` or `X` = A, `B` or `Z` = B, `Enter` = Start, `Shift` = Select.
-On a phone, tap the on-screen buttons.
+## See it work
 
-1. Switch on, press START, choose **New wallet** (or **Restore**,
-   with test words only).
-2. Mash buttons, hold **shake**, write down the 12 words, pick a 4-digit PIN.
-3. Fund the wallet: press A on the Game Boy to show your address as a QR code,
-   or use **Get test SOL** / **Get test {coin}** in the phone app (ETH or HYPE,
-   depending on the network). These open the network's public faucet and copy
-   your address. For SOL there is also "or try a quick airdrop", which is often
-   rate limited.
-4. Send from the phone. The Game Boy shows the amount, fee, network and address
-   that the chip decoded from the transaction itself. Hold A to sign, B to
-   reject. The bus monitor under the Game Boy shows every mailbox command (PIN
-   and words are hidden).
+<table>
+  <tr>
+    <td width="62%"><img src="docs/media/demo-send.gif" alt="The /demo page: the phone app sends 0.05 SOL and the Game Boy shows the request"></td>
+    <td width="38%"><img src="docs/media/sign-on-gameboy.gif" alt="The Game Boy screen: approve, hold A, signed, confirmed with the signature"></td>
+  </tr>
+  <tr>
+    <td>The phone asks for 0.05 SOL. The Game Boy shows what the chip decoded.</td>
+    <td>Hold A for a second. Signed, then confirmed on devnet.</td>
+  </tr>
+</table>
 
-Known demo rough edge: HyperEVM testnet has no working EVM block explorer that
-we could find, so the app hides explorer links on that network. There's no direct faucet
-for HyperEVM HYPE either: claim testnet HYPE in Hyperliquid's testnet app and move it to HyperEVM.
+That transfer is a real devnet transaction: [GeVGY7kn…wEM7BDtK on the Solana explorer](https://explorer.solana.com/tx/GeVGY7kn36SS1aoRXbDQo8WiwukHD4XpPiuzs3X6jpgkfGJWR1dPgesg2B4Dwk2wuS7ngjqYkWEWH11wEM7BDtK?cluster=devnet). Same signature the Game Boy printed.
 
-## Repo layout
+## Try it
 
-| Path | What's in it |
-|---|---|
-| `rom/` | The Game Boy ROM (C, GBDK-2020): setup, button and shake entropy, 12 words, PIN, restore with word suggestions, receive QR codes, hold-A-to-sign |
-| `web/` | Website and demo (Vite + React + TypeScript): landing `/`, `/demo`, `/about`, the simulated chip (`src/chip/`), the phone app (`src/phone/`), the waitlist function (`api/waitlist.ts`). See [web/README.md](web/README.md) |
-| `assets/3d/` | Blender model and scripts for the 3D Game Boy and cartridge label |
-| `assets/og/` | Social preview image generator |
-| `docs/` | Protocol, hardware, roadmap and audits |
+Open **[kagiboy.xyz/demo](https://kagiboy.xyz/demo)**, on a laptop or a phone. It takes about two minutes.
 
-## Build and run
+1. Switch on, press Start, pick **New wallet**.
+2. Mash buttons, then hold **shake**. Write down the 12 words (they're test words, but play along) and pick a PIN.
+3. In the phone app, tap **Pair cartridge**. The same six digits show up on both screens. Press A.
+4. Get some devnet SOL with **Get test SOL**, then **Send**. Read what the Game Boy says, hold A.
 
-ROM (needs [GBDK-2020](https://github.com/gbdk-2020/gbdk-2020); the Makefile
-looks in `~/gbdk`, override with `make GBDK=/path/to/gbdk`):
+Keys on a laptop: arrows, `X` = A, `Z` = B, `Enter` = Start, `Shift` = Select. On a phone, tap the console. The bus monitor under the Game Boy shows every message between the console and the chip, with the PIN and the words blanked out.
+
+## How it works
+
+<img src="docs/media/architecture.jpg" alt="The architecture: the Game Boy talks to a mailbox at 0xD800 in cartridge memory, the chip answers; the phone talks to the chip over Bluetooth with public data only" width="100%">
+
+There are three parts, and only the cartridge ever holds a key.
+
+The Game Boy ROM (`rom/`, C with GBDK-2020) is the screen and the buttons. It never touches a key. A Game Boy has exactly one wire to the outside world, the cartridge slot, so that's what we use: the ROM writes a command into a 256-byte mailbox in cartridge memory, and the chip writes its answer back into the same window. Each side owns its own bytes, and the sequence number is written last, so a half-written reply is never read. The commands are in [docs/protocol.md](docs/protocol.md).
+
+The cartridge chip (`web/src/chip/`) holds the keys, counts PIN tries, keeps a network allowlist and its own token list, and decodes and signs. In the demo it's TypeScript running in your browser. On the real cartridge it's an RP2350 with the keys in an NXP SE050 secure element.
+
+The phone app (`web/src/phone/`, `web/src/app/`) talks to the networks: balances, building transactions, broadcasting them. It reaches the chip over Bluetooth on hardware (a function call in the demo) and only ever gets public data back. It's never trusted.
+
+### Signing on Solana
+
+<img src="docs/media/chip-checks.jpg" alt="The chip's checks before it shows a Solana request: fee payer, one instruction, a System Program transfer" width="100%">
+
+This is the part I care about most. The phone builds a normal `SystemProgram.transfer` and hands over the serialized message bytes, nothing else. The chip copies those bytes, so nothing can change them later, and decodes them itself: the fee payer has to be this cartridge, there has to be exactly one instruction, it has to be a plain transfer from this wallet, and the amount and full address have to fit on the Game Boy screen. If any of that fails, there's no prompt at all. You hold A, the chip signs those exact bytes with ed25519, and the phone broadcasts.
+
+The phone can't fake the result either. It reports a status, but the Game Boy only shows "confirmed" next to the signature the chip itself produced (`setTxStatus` in [chip.ts](web/src/chip/chip.ts)).
+
+<img src="docs/media/explorer.jpg" alt="The transaction on the Solana explorer: System Program transfer, 0.05 SOL" width="100%">
+
+### Keys
+
+<img src="docs/media/keys.jpg" alt="Wallet setup on the Game Boy next to the live cartridge bus and the key derivation" width="100%">
+
+Every button press and every shake goes to the chip as entropy and gets folded into a SHA-256 pool, which is mixed with the chip's own random generator when the wallet is created. Out come 12 standard BIP-39 words. Solana keys use SLIP-10 ed25519 on Phantom's path (`m/44'/501'/0'/0'`), EVM keys use MetaMask's (`m/44'/60'/0'/0/0`), so the words restore in any normal wallet. The PIN is entered twice and stored salted and hashed. Five wrong tries and the cartridge wipes itself, like a Ledger.
+
+### What it refuses
+
+<img src="docs/media/refusals.jpg" alt="Requests the chip refuses, with its real error messages" width="100%">
+
+If the chip can't show something in full, it won't sign it. Those are the chip's real error messages, captured by sending it those requests.
+
+### EVM and swaps
+
+<img src="docs/media/swap-screen.jpg" alt="A SODAX swap on the Game Boy: send 1 SOL, get at least 111.990495 USDC on Base" width="100%">
+
+The same 12 words cover Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, HyperEVM testnet and Robinhood Chain testnet, and LEFT/RIGHT on the Game Boy switches between them. The chip checks the chain id against its allowlist and refuses any fee above 0.01 of the network's coin.
+
+Swaps come from the [SODAX](https://sodax.com) SDK with live quotes. The phone only names tokens by address; symbols, decimals and fees come from the cartridge's own list ([tokens.ts](web/src/chip/tokens.ts)), and the Game Boy shows the least you'll get, after every fee. In the demo, swaps are signed but never sent.
+
+## It runs on a real Game Boy
+
+<img src="docs/media/real-game-boy.jpg" alt="The kagiboy ROM running on an original Game Boy from a flash cart" width="100%">
+
+These are photos of my own DMG running the ROM from an EverDrive. There's no key chip in a flash cart, so `make demo` builds a version with a small stand-in chip inside the ROM: it has canned replies taken from the real chip code, saves the wallet and PIN to the cartridge's battery RAM, and plays a little chiptune of mine on the menus. It can't hold real keys and it doesn't sign anything. It's there so the whole flow can be walked through on real hardware while the cartridge gets built.
+
+## Build it
+
+The ROM needs [GBDK-2020](https://github.com/gbdk-2020/gbdk-2020). The Makefile looks in `~/gbdk`; override it with `make GBDK=/path/to/gbdk`.
 
 ```sh
 cd rom
-make        # build/wallet.gb, copied to web/public/wallet.gb
-make demo   # build/wallet-demo.gb: flash-cart build with an in-ROM mock chip and battery save,
-            # for a real Game Boy with no key chip; copied to ~/Desktop/kagiboy-demo.gb
+make          # build/wallet.gb, also copied to web/public/wallet.gb
+make demo     # build/wallet-demo.gb, the flash-cart build with the stand-in chip
 ```
 
-Web:
+The website and demo are Vite + React + TypeScript.
 
 ```sh
 cd web
 pnpm i
-pnpm dev               # open /demo
+pnpm dev               # then open /demo
 pnpm build
-pnpm smoke smoke-out   # runs the real ROM against the chip headlessly
+pnpm smoke smoke-out   # the real ROM against the chip, headless
 ```
 
-The smoke test walks setup, decodes the Game Boy's QR codes, signs a Solana
-transfer and an ETH transfer (checking the signatures), rejects one, checks that
-the phone can't put its own text on the screen, signs on HyperEVM and with
-Arbitrum-sized gas, cuts the power mid-request, wipes after five wrong PINs, and
-restores a BIP-39 test vector letter by letter. It saves a PNG of every screen
-and exits non-zero if any check fails.
+The smoke test is the thing I trust most in this repo. It boots the real ROM in the emulator and drives it like a person would: setup, reading the Game Boy's QR codes back, signing a SOL transfer and an ETH transfer and checking both signatures, rejecting one, making sure the phone can't put its own words on the screen, signing on HyperEVM, pulling the power mid-request, wiping after five wrong PINs, and restoring a BIP-39 test vector letter by letter. It saves a PNG of every screen and fails loudly.
 
-## Architecture
+Everything runs without API keys. The only one is the waitlist on the website, which needs Upstash credentials (`vercel env pull`).
 
-```
-Game Boy ROM (rom/)            screen + buttons only, never sees a key
-      │  256-byte mailbox: cartridge RAM window 0xA000 on hardware,
-      │  work RAM 0xD800 in the demo (docs/protocol.md)
-Cartridge chip (web/src/chip)  keys, PIN counter, network allowlist,
-      │                        decodes + signs transactions
-      │  Bluetooth LE on hardware, a JavaScript call in the demo
-Phone app (web/src/phone)      balances, builds and broadcasts transactions
-```
+## What's where
 
-- The Game Boy writes a command into the mailbox, the chip answers in the same
-  256 bytes. One writer per byte, sequence numbers on both sides.
-- **Chip:** BIP-39 seed; Solana at `m/44'/501'/0'/0'`, EVM at `m/44'/60'/0'/0/0`.
-  It snapshots each request, decodes it itself and refuses anything it can't
-  show in full on the Game Boy (no blind signing). Today that means one plain
-  SOL transfer, or one plain native-coin transfer on an allowed EVM network
-  (chain id allowlist, gas limit 21000 to 600000, fee cap 0.01 of the coin),
-  or a SODAX swap intent shown in full (amount, least you get, fees, chains).
-  The demo signs swaps but never sends them.
-- **Phone:** talks to public RPCs for Solana devnet and the five EVM testnets.
-  It can send balances as numbers and transaction status as fixed codes; the
-  chip writes every word that appears on the Game Boy.
+| Path | What |
+|---|---|
+| [`rom/`](rom) | The Game Boy ROM, in C. Setup, entropy, words, PIN, restore with word suggestions, QR codes, hold-to-sign, network switching, pairing. |
+| [`web/`](web) | The website and the demo. The chip lives in `src/chip/`, the phone side in `src/phone/` and `src/app/`. |
+| [`native/`](native) | A Capacitor shell that packages the demo as an iOS and Android app. No native Bluetooth yet. |
+| [`assets/`](assets) | The Blender model and scripts, product renders, the logo and the social card. |
+| [`video/`](video) | Both submission videos, built in Remotion, plus the scripts that recorded the demo footage. |
+| [`docs/`](docs) | Protocol, hardware, roadmap, four rounds of audits, the pitch material. |
 
-More detail: [docs/protocol.md](docs/protocol.md) (mailbox and commands),
-[docs/hardware.md](docs/hardware.md) (parts, cost, security model, build plan),
-[docs/ROADMAP.md](docs/ROADMAP.md) (path to a shippable, audited cartridge).
+## Security model, and what isn't solved yet
 
-## Security model and known limits
+kagiboy is built to hold up against three things: someone who steals the cartridge, a compromised phone asking for something you didn't mean, and someone listening to the Bluetooth link. What you approve is what the chip decoded and drew on the Game Boy, and only the A button on the Game Boy approves it.
 
-What the design protects against: someone who steals the cartridge, a
-compromised phone asking for a send you didn't mean, and someone sniffing
-Bluetooth. Swaps are a preview for now: the cartridge decodes and signs them
-with its own token list, but the signature isn't what SODAX executes yet. What you approve is what the
-chip decoded and showed on the Game Boy, and only the A button on the Game Boy
-approves it. On real hardware the keys sit in an NXP SE050 secure element with
-a hardware PIN retry counter.
+What isn't solved, in the demo:
 
-Two internal audits are in `docs/` ([audit-security.md](docs/audit-security.md),
-[audit-2-software.md](docs/audit-2-software.md)). These items are still open:
+- The browser demo keeps the recovery phrase in `localStorage`, in plain text. It uses the same derivation paths as Phantom and MetaMask, so a real phrase typed in here maps to your real accounts. Test words only. The ROM says so before a restore.
+- A Solana transaction doesn't say which cluster it's for, so the chip can't prove a malicious phone didn't use a mainnet blockhash. EVM is different: there the chip enforces the chain id.
+- There's no auto-lock. The chip stays unlocked while it has power.
+- Approving signs whatever request is pending. That's safe today because the phone can't replace or cancel a pending request, but it should be bound to a digest of what was shown before any queueing is added.
+- On OP-stack chains like Base, the L1 data fee is charged outside gas times max fee, so "MAX" isn't a strict cap there. It's around 2×10⁻¹⁶ ETH on Base Sepolia.
+- Balances come from the phone. The chip formats them but can't verify them.
+- Swaps are a preview. The cartridge decodes them against its own token list and signs, but that signature isn't what SODAX executes yet.
+- `pnpm audit --prod` reports 8 advisories, all deep inside the `@sodax/sdk` dependency tree. Same-major fixes are pinned; the rest need an SDK update. The SDK only loads on the swap screen.
 
-**The demo**
+And in the hardware design:
 
-- **Test words only.** The browser demo keeps the recovery phrase in plain text
-  in `localStorage`, and the PIN is a salted hash of 4 digits, so anyone with
-  access to the browser (or an XSS bug) gets the keys. It uses the same
-  derivation paths as Phantom and MetaMask, so a real phrase typed in here maps
-  to your real mainnet accounts. Never restore a real seed into it. The ROM
-  shows a "Test words only" screen before restore.
-- **The Solana cluster can't be bound.** A Solana transaction doesn't say which
-  cluster it is for; the recent blockhash decides. The screen says `SOLANA`, and
-  the phone uses devnet, but the chip can't prove a malicious phone didn't use a
-  mainnet blockhash. EVM is different: the chip enforces the chain id.
-- **No auto-lock.** The chip stays unlocked as long as it has power.
-- **SIGN isn't tied to a digest.** Approving signs whatever is pending. It
-  can't be exploited today because the phone can't replace or cancel a pending
-  request, but it must be bound to a digest of what was shown before any
-  cancel or queue logic is added.
-- **Fee cap on Base.** On OP-stack chains the L1 data fee is charged outside
-  gas × max fee per gas, so "MAX" on the screen is not a strict cap there.
-  Negligible today (about 2×10⁻¹⁶ ETH on Base Sepolia).
-- **Balances come from the phone.** The chip formats them, but it can't verify
-  them.
-- `pnpm audit --prod` reports 8 advisories (3 high), all deep inside the
-  `@sodax/sdk` tree: `bigint-buffer`, `toml`, `ws` 7, `stream-json`, `uuid`.
-  Patched releases need a major-version bump the SDK doesn't support yet;
-  same-major fixes are pinned in `web/pnpm-workspace.yaml`. The SDK only loads
-  when you open the swap screen, and none of these are meaningfully reachable
-  in the browser.
-- The waitlist API tells a caller whether an email is already on the list. That is
-  the price of the numbered ticket, kept on purpose; it is rate-limited per IP.
+- Transaction decoding, the fee cap and the PIN session run on the RP2350, not inside the secure element. The SE050 stops keys being extracted, not misuse by compromised firmware. The plan is signed firmware, the Bluetooth stack in TrustZone's non-secure world, and a potted board.
+- The SE050 can't derive BIP-32 or SLIP-10 keys, so the seed lives on the MCU during setup. The plan is to derive once, import the keys into the secure element and erase the seed.
+- The PIN and the words cross the cartridge bus in plain text, and a modified console could fake button presses. Use your own, unmodified Game Boy.
+- No cartridge has been built yet, and nothing has had an outside security review. Nobody should store real money on this until both have happened.
 
-**The hardware design**
+The four audit rounds are in [docs/audits](docs/audits). The path to a cartridge you can actually buy is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- Transaction decoding, the fee cap and the PIN session run on the RP2350 MCU,
-  not inside the secure element. The SE050 protects keys from extraction, not
-  from misuse by compromised MCU firmware. The plan isolates the Bluetooth stack
-  in TrustZone's non-secure world, signs the firmware and pots the board.
-- The SE050 can't derive BIP-32/SLIP-10 keys, so the seed exists on the MCU
-  during setup; the plan is to derive once, import the keys into the SE and
-  erase the seed.
-- The PIN and the words cross the Game Boy's cartridge bus in plain text, and a
-  modified console could fake button presses. The console is trusted as a
-  screen and buttons: use your own, unmodified Game Boy.
-- Bluetooth pairing is not specified yet (LE Secure Connections with numeric
-  comparison on the Game Boy screen is the plan).
-- No cartridge has been built, and nothing has had an external security review.
-  Nobody should store real funds on this until both have happened.
+## Thanks, and licenses
 
-## License
+kagiboy is [MIT licensed](LICENSE). The `/demo` page bundles the [serverboy](https://gitlab.com/piglet-plays/serverboy.js) emulator (built on Grant Galitz's GameBoy-Online), which is GPL-2.0, so that one bundle is distributed under GPL-2.0. [NOTICE](NOTICE) has the details and the other third-party licenses. The ROM is built with GBDK-2020, the pixel font is Pixel Operator (CC0), and swaps run on SODAX.
 
-kagiboy is released under the [MIT License](LICENSE). The `/demo` page bundles
-the `serverboy` Game Boy emulator, which is GPL-2.0; that bundle is distributed
-under GPL-2.0 terms. See [NOTICE](NOTICE) for this and the other third-party
-licenses.
-
-Game Boy is a trademark of Nintendo. kagiboy is not affiliated with Nintendo.
+Game Boy is a trademark of Nintendo. kagiboy isn't affiliated with Nintendo, and it's a hackathon project for the Colosseum Crypto World's Fair, not a product you can buy yet.

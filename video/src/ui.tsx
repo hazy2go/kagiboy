@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
-// the website's world: white, soft pastel light, ink type (docs/PITCH-DECK-BRIEF.md)
+// the website's world: white, soft pastel light, ink type (docs/pitch/PITCH-DECK-BRIEF.md)
 export const C = {
   ink: "#1F2330",
   ink2: "#535A6D",

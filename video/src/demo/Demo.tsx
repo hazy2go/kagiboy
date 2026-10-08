@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, Sequence, interpolate, staticFile } from "remotion";
+import { AbsoluteFill, Audio, Sequence, getInputProps, interpolate, staticFile } from "remotion";
 import vo from "../demo-vo2.json";
 import { Captions } from "../ui";
 import { FPS, useFonts } from "../Pitch";
@@ -41,6 +41,8 @@ export const demoTimeline = () => {
 
 export function Demo() {
   useFonts();
+  // stills for the README are rendered without subtitles: --props='{"captions":false}'
+  const captions = (getInputProps() as { captions?: boolean }).captions !== false;
   const { parts, holds, v, end, total } = demoTimeline();
   // the voice in pieces, one per stretch between holds, each starting where the video has got to
   const cuts = [0, ...holds.map((h) => h.at), vo.seconds];
@@ -49,7 +51,7 @@ export function Demo() {
       {parts.map(({ id, Scene, from, dur, cues, end: spoken }) => (
         <Sequence key={id} from={from} durationInFrames={dur} name={id}>
           <Scene dur={dur} marks={cues.map((c) => ({ at: Math.round(c.t * FPS), text: c.text }))} />
-          <Captions cues={cues} from={0} end={spoken} />
+          {captions && <Captions cues={cues} from={0} end={spoken} />}
         </Sequence>
       ))}
       {/* the voice: one take, parted only at the holds */}
