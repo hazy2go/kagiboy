@@ -411,3 +411,9 @@ html.kb-root .print-in.is-in {
   gap: 12px;
   margin-top: 8px;
 }
+
+.kb-foot .foot-links a {
+  color: var(--kb-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

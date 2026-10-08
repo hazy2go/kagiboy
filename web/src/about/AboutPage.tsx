@@ -72,6 +72,7 @@ export function AboutPage() {
         </Link>
         <div className="about-links">
           <Link to="/">Home</Link>
+          <Link to="/app">App</Link>
           <Link to="/demo" className="btn btn-ink btn-sm">
             Live demo
           </Link>

@@ -271,6 +271,7 @@ export function Landing() {
           <a href="#security">Security</a>
           <a href="#inside">Inside</a>
           <Link to="/about">About</Link>
+          <Link to="/app">App</Link>
           <Link to="/demo" className="btn btn-ink btn-sm">
             Live demo
           </Link>
@@ -297,6 +298,7 @@ export function Landing() {
           <a href="#inside">Inside</a>
           <a href="#waitlist">Waitlist</a>
           <Link to="/about">About</Link>
+          <Link to="/app">The app</Link>
         </nav>
         <div className="menu-actions">
           <Link to="/demo" className="btn btn-ink">
@@ -560,9 +562,14 @@ export function Landing() {
             The real Game Boy software runs right in your browser, with the cartridge's chip simulated next to it. It
             signs real transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain.
           </p>
-          <Link to="/demo" className="btn btn-ink">
-            Open the live demo
-          </Link>
+          <div className="demo-cta-actions">
+            <Link to="/demo" className="btn btn-ink">
+              Open the live demo
+            </Link>
+            <Link to="/app" className="btn btn-paper">
+              See the app
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -578,6 +585,9 @@ export function Landing() {
           work in progress.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
+        <p className="foot-links">
+          <Link to="/demo">Live demo</Link> · <Link to="/app">App</Link> · <Link to="/about">About</Link>
+        </p>
       </footer>
     </div>
   );
