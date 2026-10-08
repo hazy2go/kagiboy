@@ -3,19 +3,21 @@ import { useEffect, useState } from "react";
 import vo from "./vo.json";
 import { Captions } from "./ui";
 import { Next, Proof, Who } from "./scenes";
-import { Apart, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
+import { Apart, Drawer, Feel, Finale, Memory, Present, Reveal } from "./scenes2";
 
 export const FPS = 30;
 const LEAD = 0.5; // seconds of picture before each voice line
 const TAIL = 0.9; // and after
 const END = 5;
-const SCENES = [Memory, Present, Reveal, Feel, Proof, Apart, Who, Next];
+const SCENES = [Memory, Present, Drawer, Reveal, Feel, Proof, Apart, Who, Next];
+// a shot needs a minimum length to play out, however short its line (seconds)
+const MIN: Record<string, number> = { s3: 6.5 };
 
 /** Scene lengths follow the voiceover (src/vo.json, re-measured when the real recording lands). */
 export const timeline = () => {
   let at = 0;
   const parts = vo.map((v, i) => {
-    const dur = Math.round((LEAD + v.seconds + TAIL) * FPS);
+    const dur = Math.round(Math.max(LEAD + v.seconds + TAIL, MIN[v.id] ?? 0) * FPS);
     const p = { ...v, Scene: SCENES[i], from: at, dur };
     at += dur;
     return p;

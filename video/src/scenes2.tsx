@@ -13,6 +13,8 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export function Memory({ dur }: P) {
   const f = useCurrentFrame();
   const flash = interpolate(f, [dur - 14, dur - 4, dur], [0, 1, 1], clamp);
+  const c1 = Math.round(dur * 0.32);
+  const c2 = Math.round(dur * 0.56);
   return (
     <AbsoluteFill style={{ background: "#050505" }}>
       <Sequence durationInFrames={44}>
@@ -20,19 +22,19 @@ export function Memory({ dur }: P) {
           <Clip name="vhs-eject" from={1} dur={44} />
         </Vhs>
       </Sequence>
-      <Sequence from={44} durationInFrames={92}>
+      <Sequence from={44} durationInFrames={c1 - 44}>
         <Vhs osd="▶ PLAY">
-          <Clip name="car-window-retro" from={2} dur={92} />
+          <Clip name="car-window-retro" from={2} dur={c1 - 44} />
         </Vhs>
       </Sequence>
-      <Sequence from={136} durationInFrames={96}>
+      <Sequence from={c1} durationInFrames={c2 - c1}>
         <Vhs osd="▶ PLAY">
-          <Clip name="boy-window" from={6} dur={96} push={0.1} />
+          <Clip name="boy-window" from={6} dur={c2 - c1} push={0.1} />
         </Vhs>
       </Sequence>
-      <Sequence from={232}>
+      <Sequence from={c2}>
         <Vhs osd="▶ PLAY" stamp="SP">
-          <Photo src={a("02-real-photos/photo-home.jpg")} dur={dur - 232} pos="50% 0%" zoom={1.45} origin="50% 5%" push={0.06} />
+          <Photo src={a("02-real-photos/photo-home.jpg")} dur={dur - c2} pos="50% 0%" zoom={1.45} origin="50% 5%" push={0.06} />
         </Vhs>
       </Sequence>
       {/* the tape snaps to the present */}
@@ -69,7 +71,6 @@ function Phone({ f, prompt }: { f: number; prompt: number }) {
 export function Present({ dur }: P) {
   const f = useCurrentFrame();
   const cut1 = 150;
-  const cut2 = Math.round(dur * 0.6);
   const cold = { filter: "saturate(0.55) contrast(1.05) brightness(0.8) hue-rotate(-8deg)" };
   return (
     <AbsoluteFill style={{ background: "#0b0d12" }}>
@@ -80,32 +81,29 @@ export function Present({ dur }: P) {
         <AbsoluteFill style={{ background: "linear-gradient(90deg, rgba(10,12,18,0.75), transparent 60%)" }} />
         <div style={{ position: "absolute", left: 140, top: 420 }}>
           <Pop start={10}>
-            <div style={{ fontFamily: PX, fontSize: 30, letterSpacing: 6, color: "#cfe2ff" }}>YEARS LATER</div>
+            <div style={{ fontFamily: PX, fontSize: 30, letterSpacing: 6, color: "#cfe2ff" }}>NOW</div>
           </Pop>
           <Pop start={24}>
-            <Title size={92} style={{ color: "#fff", width: 900, marginTop: 20 }}>Everything I own lives on my phone.</Title>
+            <Title size={92} style={{ color: "#fff", width: 900, marginTop: 20 }}>Now it all lives on a phone.</Title>
           </Pop>
         </div>
       </Sequence>
-      <Sequence from={cut1} durationInFrames={cut2 - cut1}>
+      <Sequence from={cut1}>
         <AbsoluteFill style={cold}>
-          <Clip name="train-night" from={2} dur={cut2 - cut1} push={0.04} />
+          <Clip name="train-night" from={2} dur={dur - cut1} push={0.04} />
         </AbsoluteFill>
         <AbsoluteFill style={{ background: "rgba(8,10,16,0.45)" }} />
         <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 120 }}>
           <Phone f={f - cut1} prompt={interpolate(f - cut1, [80, 100], [0, 1], clamp)} />
           <div style={{ width: 760, display: "flex", flexDirection: "column", gap: 18 }}>
             <Pop start={40}>
-              <Title size={80} style={{ color: "#fff" }}>The screen that asks you to sign</Title>
+              <Title size={80} style={{ color: "#fff" }}>The phone that asks me to approve</Title>
             </Pop>
             <Pop start={100}>
-              <Title size={80} style={{ color: "#cfd6e6" }}>is the screen that tells you what you're signing.</Title>
+              <Title size={80} style={{ color: "#cfd6e6" }}>is the phone telling me what I'm approving.</Title>
             </Pop>
           </div>
         </AbsoluteFill>
-      </Sequence>
-      <Sequence from={cut2}>
-        <Drawer dur={dur - cut2} />
       </Sequence>
     </AbsoluteFill>
   );
@@ -122,9 +120,9 @@ export function Reveal({ dur }: P) {
       <Glow shift={80} />
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: q }}>
         <Title size={112} style={{ textAlign: "center", width: 1500, transform: `scale(${1 + f / mid / 30})` }}>
-          What if the safest screen
+          The most honest screen
           <br />
-          you own is from <span style={{ fontFamily: PX, fontWeight: 400, letterSpacing: 0 }}>1989</span>?
+          I've ever owned.
         </Title>
       </AbsoluteFill>
       <Sequence from={mid}>
@@ -144,14 +142,14 @@ export function Reveal({ dur }: P) {
         <div style={{ position: "absolute", left: 140, top: 340, width: 760, display: "flex", flexDirection: "column", gap: 26 }}>
           <Pop start={30}>
             <div style={{ whiteSpace: "nowrap" }}>
-              <Eyebrow>No Wi-Fi · no apps · no browser</Eyebrow>
+              <Eyebrow>Never online · no apps · just my thumbs</Eyebrow>
             </div>
           </Pop>
           <Pop start={46}>
             <Title size={156}>kagiboy</Title>
           </Pop>
           <Pop start={64}>
-            <div style={{ fontFamily: SANS, fontSize: 48, lineHeight: 1.25, color: C.ink }}>Your keys, in a Game Boy cartridge.</div>
+            <div style={{ fontFamily: SANS, fontSize: 44, lineHeight: 1.25, color: C.ink, width: 900 }}>A cartridge for the Game Boy you already have.</div>
           </Pop>
         </div>
       </Sequence>
@@ -164,7 +162,7 @@ export function Reveal({ dur }: P) {
 type StepShot = { from: number; eyebrow: string; title: string; screen: string; pose: (u: number, t: number) => Record<string, number>; held?: (t: number) => string[] };
 const SCREEN = (u: number) => ({ az: lerp(-0.08, -0.02, u), el: 0.02, dist: lerp(0.26, 0.23, u), tx: 0, ty: 0.03, lift: 0, shift: 0.26 });
 const SHOTS: StepShot[] = [
-  { from: 0, eyebrow: "A new game", title: "Setting it up", screen: "02-new-or-restore", pose: (u) => ({ az: lerp(-0.62, -0.38, u), el: 0.12, dist: lerp(0.5, 0.44, u), tx: 0.004, ty: 0.03, lift: 0, shift: 0.18 }) },
+  { from: 0, eyebrow: "A new save file", title: "Turn it on", screen: "02-new-or-restore", pose: (u) => ({ az: lerp(-0.62, -0.38, u), el: 0.12, dist: lerp(0.5, 0.44, u), tx: 0.004, ty: 0.03, lift: 0, shift: 0.18 }) },
   { from: 0.12, eyebrow: "01", title: "Mash the buttons", screen: "03-mash-buttons",
     pose: (u) => ({ az: lerp(0.18, 0.05, u), el: 0.18, dist: lerp(0.21, 0.19, u), tx: 0.004, ty: -0.032, lift: 0, shift: 0.26 }),
     held: (t) => { const k = Math.floor(t * 30); return k % 6 < 3 ? [["ButtonA", "DPad", "ButtonB", "DPad"][Math.floor(k / 6) % 4]] : []; } },
@@ -173,7 +171,7 @@ const SHOTS: StepShot[] = [
   { from: 0.27, eyebrow: "03", title: "Write down 12 words", screen: "05-recovery-words", pose: SCREEN },
   { from: 0.35, eyebrow: "04", title: "Pick a PIN", screen: "06-choose-pin", pose: SCREEN, held: (t) => (Math.floor(t * 30) % 16 < 5 ? ["DPad"] : []) },
   { from: 0.41, eyebrow: "05", title: "Pair your phone", screen: "08-pair-code", pose: (u) => ({ ...SCREEN(u), shift: 0.27, dist: lerp(0.3, 0.27, u) }) },
-  { from: 0.57, eyebrow: "Every request", title: "The phone only asks", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
+  { from: 0.57, eyebrow: "Every request", title: "Your phone can't decide.", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
   { from: 0.84, eyebrow: "", title: "Hold A to sign", screen: "11-approve-send", pose: (u) => ({ az: lerp(0.32, 0.26, u), el: 0.16, dist: lerp(0.13, 0.115, u), tx: 0.031, ty: -0.021, lift: 0, shift: 0.18 }), held: () => ["ButtonA"] },
   { from: 0.94, eyebrow: "", title: "Signed", screen: "12-signed-confirmed", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.25, 0.235, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
 ];
@@ -232,11 +230,11 @@ export function Drawer({ dur }: P) {
         <Glow shift={40} />
         <div style={{ position: "absolute", left: 140, top: 150, width: 1500 }}>
           <Pop start={6}>
-            <Title size={92}>Hardware wallets fix that.</Title>
+            <Title size={92}>The safe answer: a hardware wallet.</Title>
           </Pop>
           <Pop start={Math.round(dur * 0.3)}>
             <Title size={92} style={{ color: C.ink2, marginTop: 18 }}>
-              But they live in a drawer.
+              Most of them end up in a drawer.
             </Title>
           </Pop>
         </div>

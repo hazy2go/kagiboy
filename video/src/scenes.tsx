@@ -230,7 +230,7 @@ export function Proof({ dur }: P) {
             <Eyebrow>Live demo · six chains</Eyebrow>
           </Pop>
           <Pop start={b1 + 16}>
-            <Title size={80}>Six chains. Live swap quotes. Signed on the Game Boy.</Title>
+            <Title size={80}>Six chains. Every swap checked on the Game Boy first.</Title>
           </Pop>
           <Pop start={b1 + 34}>
             <div style={{ display: "flex", gap: 22, alignItems: "center" }}>
@@ -309,7 +309,7 @@ export function Who({ dur }: P) {
           />
           <div style={{ position: "absolute", left: 140, top: 420, width: 760 }}>
             <Pop start={14}>
-              <Title size={92}>A wallet you'd keep on a shelf.</Title>
+              <Title size={92}>Something you put on a shelf.</Title>
             </Pop>
           </div>
         </AbsoluteFill>
@@ -329,7 +329,7 @@ export function Who({ dur }: P) {
           ))}
         </div>
         <Pop start={b2 + 60}>
-          <div style={{ fontFamily: SANS, fontSize: 32, color: C.ink2 }}>From Japan, where the old Game Boys are.</div>
+          <div style={{ fontFamily: SANS, fontSize: 32, color: C.ink2 }}>From Japan, where these consoles still turn up at flea markets.</div>
         </Pop>
       </AbsoluteFill>
     </AbsoluteFill>
@@ -365,9 +365,9 @@ export function Next({ dur }: P) {
       </AbsoluteFill>
       <AbsoluteFill style={{ opacity: s2, alignItems: "center", justifyContent: "center" }}>
         <Title size={96} style={{ textAlign: "center", width: 1500 }}>
-          Crypto should feel like something you own,
+          Crypto shouldn't feel scary.
           <br />
-          <span style={{ color: C.ink2 }}>not something you're afraid of.</span>
+          <span style={{ color: C.ink2 }}>It should feel like that day at the flea market.</span>
         </Title>
       </AbsoluteFill>
     </AbsoluteFill>
