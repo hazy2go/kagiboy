@@ -33,7 +33,8 @@ import {
   type P,
   type Seg,
 } from "./kit";
-import refusals from "../../public/demo/refusals.json";
+// the chip's real errors, captured by running these requests against web/src/chip/chip.ts
+import refusals from "./refusals.json";
 
 const useT = () => {
   const f = useCurrentFrame();

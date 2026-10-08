@@ -1,0 +1,26 @@
+[
+ {
+  "name": "SPL token instruction",
+  "error": "only plain SOL transfers can be shown on the Game Boy yet"
+ },
+ {
+  "name": "two transfers in one",
+  "error": "only plain SOL transfers can be shown on the Game Boy yet"
+ },
+ {
+  "name": "someone else pays the fee",
+  "error": "the fee payer must be this cartridge's wallet"
+ },
+ {
+  "name": "contract call on Base",
+  "error": "only plain transfers can be shown on the Game Boy yet"
+ },
+ {
+  "name": "fee above the cap",
+  "error": "the fee is above the cartridge's 0.01 ETH limit"
+ },
+ {
+  "name": "unknown network",
+  "error": "this cartridge doesn't sign on that network"
+ }
+]
