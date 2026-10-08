@@ -1,4 +1,6 @@
 // "Masonry Lightbox" by ayushmxxn on 21st.dev (component id 26223), adapted for kagiboy: plain <img>,
+// an even grid of 4:5 tiles instead of masonry columns (symmetric, and nothing re-flows while a photo
+// zooms back into its tile),
 // the site's colours and type, photos tagged with what the screen shows.
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -14,6 +16,8 @@ export interface ImageType {
    * proportions instead of cropping it. Defaults to DEFAULT_WIDTH/HEIGHT below. */
   width?: number;
   height?: number;
+  /** kagiboy: where a tile's crop is anchored (CSS object-position) */
+  position?: string;
 }
 
 export interface MasonryLightboxProps {
@@ -33,13 +37,13 @@ const DEFAULT_HEIGHT = 750;
 // grid layout
 const GRID_MAX_WIDTH = "max-w-none";
 const GRID_PADDING = "p-0";
-const GRID_COLUMNS = "columns-2 md:columns-3"; // columns per breakpoint
+const GRID_COLUMNS = "grid grid-cols-2 md:grid-cols-3"; // kagiboy: an even grid, every tile 4:5
 const GRID_GAP = "gap-3 sm:gap-4 lg:gap-5";
 
 // tile appearance
 const TILE_RADIUS = "rounded-[22px]";
 const TILE_BG = "bg-muted";
-const TILE_MARGIN_BOTTOM = "mb-3 sm:mb-4 lg:mb-5";
+const TILE_MARGIN_BOTTOM = "";
 const TILE_HOVER_SCALE = "group-hover:scale-[1.06]";
 
 // modal (lightbox) appearance
@@ -167,7 +171,7 @@ export const MasonryLightbox = ({
       className={`relative w-full flex flex-col items-center justify-center my-auto ${GRID_PADDING} overflow-x-hidden select-none ${className}`}
     >
       <div
-        className={`w-full ${GRID_MAX_WIDTH} mx-auto ${GRID_COLUMNS} ${GRID_GAP} [column-fill:balance]`}
+        className={`w-full ${GRID_MAX_WIDTH} mx-auto ${GRID_COLUMNS} ${GRID_GAP}`}
       >
         {images.map((image, i) => {
           const w = image.width ?? DEFAULT_WIDTH;
@@ -179,7 +183,7 @@ export const MasonryLightbox = ({
               layoutId={`photo-${image.id}`}
               onClick={() => setSelected(image)}
               className={`group relative ${TILE_MARGIN_BOTTOM} block w-full border-0 p-0 min-w-0 overflow-hidden ${TILE_RADIUS} ${TILE_BG} text-left cursor-pointer focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-neutral-900 dark:focus-visible:outline-white`}
-              style={{ breakInside: "avoid" }}
+              style={{ aspectRatio: "4 / 5" }}
               initial={
                 prefersReducedMotion
                   ? false
@@ -198,7 +202,8 @@ export const MasonryLightbox = ({
                 alt={image.alt}
                 width={w}
                 height={h}
-                className={`block w-full h-auto transition-transform duration-700 ease-out ${TILE_HOVER_SCALE}`}
+                className={`block h-full w-full object-cover transition-transform duration-700 ease-out ${TILE_HOVER_SCALE}`}
+                style={{ objectPosition: image.position ?? "50% 50%" }}
               />
 
               <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

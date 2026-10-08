@@ -8,12 +8,12 @@ import "../site/tw.css";
 // itself when the list is empty.
 const PLACEHOLDER_PHOTOS = false;
 const GALLERY: { src: string; w: number; h: number; caption: string; alt: string; wide?: boolean; focus?: string }[] = [
-  { src: "/gallery/boot.webp", w: 1400, h: 1317, caption: "PRESS START", alt: "A grey Game Boy on a wooden desk next to a tablet, showing the kagiboy title screen", wide: true },
+  { src: "/gallery/boot.webp", w: 1400, h: 1317, caption: "PRESS START", alt: "A grey Game Boy on a wooden desk next to a tablet, showing the kagiboy title screen", wide: true, focus: "88% 50%" },
   { src: "/gallery/welcome.webp", w: 1120, h: 1400, caption: "NO WALLET YET", alt: "Hands holding the Game Boy on the kagiboy welcome screen: new wallet or restore" },
   { src: "/gallery/mash.webp", w: 1120, h: 1400, caption: "STEP 1, MASH 17/40", alt: "Thumbs mashing the buttons while the Game Boy counts to forty" },
   { src: "/gallery/shake.webp", w: 1120, h: 1400, caption: "STEP 2, SHAKE IT", alt: "The Game Boy asking to be shaken for a few seconds" },
   { src: "/gallery/pin.webp", w: 1120, h: 1400, caption: "WELCOME BACK, PIN", alt: "The Game Boy on a desk asking for the four-digit PIN" },
-  { src: "/gallery/home.webp", w: 1120, h: 1400, caption: "UNLOCKED, 2.48 SOL", alt: "Hands holding the Game Boy on the wallet home screen with Solana and Ethereum balances", wide: true, focus: "50% 30%" },
+  { src: "/gallery/home.webp", w: 1120, h: 1400, caption: "UNLOCKED, 2.48 SOL", alt: "Hands holding the Game Boy on the wallet home screen with Solana and Ethereum balances", wide: true },
 ];
 
 const WHY = [
@@ -167,7 +167,7 @@ export function AboutPage() {
             </p>
           </header>
           <MasonryLightbox
-            images={GALLERY.map((g, i) => ({ id: i + 1, src: g.src, alt: g.alt, description: g.caption, width: g.w, height: g.h }))}
+            images={GALLERY.map((g, i) => ({ id: i + 1, src: g.src, alt: g.alt, description: g.caption, width: g.w, height: g.h, position: g.focus }))}
           />
         </section>
       )}
