@@ -1,0 +1,8 @@
+# ios/ and android/ carry their own Capacitor-generated .gitignore files
+# (Pods, build/, DerivedData, copied web assets, generated config). Only the
+# shell-level extras live here.
+node_modules/
+ios/App/CapApp-SPM/.build/
+ios/App/CapApp-SPM/.swiftpm/
+android/.idea/
+.DS_Store

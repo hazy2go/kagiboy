@@ -1,0 +1,27 @@
+{
+  "name": "kagiboy-native",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Capacitor iOS + Android shell for the kagiboy web app (opens straight to /app)",
+  "scripts": {
+    "build:web": "pnpm --dir ../web build",
+    "sync": "cap sync",
+    "build": "pnpm build:web && cap sync",
+    "ios": "cap open ios",
+    "android": "cap open android",
+    "run:ios": "cap run ios",
+    "run:android": "cap run android",
+    "assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#cfe2ff' --splashBackgroundColor '#cfe2ff'",
+    "capacitor:copy:after": "node scripts/ios-start-path.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "typescript": "^5.9.0"
+  }
+}
