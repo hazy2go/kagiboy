@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, DISPLAY, EASE, Glow, PX, SANS, a } from "../ui";
 import { Console } from "../Three";
 import { poseAt as poseAtP } from "../../../web/src/landing/scene";
@@ -44,11 +44,68 @@ const useT = () => {
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const lerp = (u: number, v: number, t: number) => u + (v - u) * t;
 
+/* 0 · how kagiboy works: the console and the cartridge come apart */
+const OPEN_LABELS: [string, string, number, number, "left" | "right"][] = [
+  // eyebrow, line, x, y (frame px, measured on the final pose), anchor
+  ["GAME BOY", "Screen and buttons only", 1085, 690, "right"],
+  ["CARTRIDGE", "Chip, keys, Bluetooth", 1515, 352, "left"],
+];
+export function D0({ dur, marks }: P) {
+  const M = markSec(marks);
+  const t = useT();
+  const sec = dur / 30;
+  const go = 0.7; // the parts start moving
+  const apart = ease(interpolate(t, [go, go + 2.6], [0, 1], clamp));
+  const orbit = interpolate(t, [0, sec], [0, 1], clamp);
+  return (
+    <SceneFade>
+      <Glow shift={20} />
+      <Console
+        screens={["01-boot"]}
+        shot={{
+          p: () => 0,
+          screen: () => "01-boot",
+          pose: () => ({
+            az: lerp(0.36, 0.56, orbit),
+            el: lerp(0.12, 0.17, apart),
+            dist: lerp(0.52, 0.9, apart),
+            tx: lerp(0.004, 0.0, apart),
+            ty: lerp(0.035, 0.115, apart),
+            lift: 0.012 + 0.11 * apart,
+            tilt: 0,
+            apart,
+            gbApart: apart,
+            shift: 0.2,
+          }),
+        }}
+      />
+      <div style={{ position: "absolute", left: 120, top: 330, width: 680 }}>
+        <Show from={0.3}>
+          <span style={{ fontFamily: PX, fontSize: 22, letterSpacing: 6, color: C.accent }}>TECHNICAL WALKTHROUGH</span>
+        </Show>
+        <Show from={0.55}>
+          <Big size={104} style={{ marginTop: 18 }}>How kagiboy works</Big>
+        </Show>
+        <Show from={M(1, 2.6) + 0.2}>
+          <div style={{ fontFamily: SANS, fontSize: 28, color: C.ink2, marginTop: 22, lineHeight: 1.4 }}>Recorded live at kagiboy.xyz/demo, on testnets.</div>
+        </Show>
+      </div>
+      {OPEN_LABELS.map(([e, line, x, y, anchor], i) => (
+        <Show key={e} from={go + 2.4 + i * 0.5}>
+          <Callout x={x} y={y} eyebrow={e} anchor={anchor}>
+            {line}
+          </Callout>
+        </Show>
+      ))}
+    </SceneFade>
+  );
+}
+
 /* 1 · the system: the live demo, and its three parts named */
 export function D1({ dur, marks }: P) {
   const M = markSec(marks);
   const t = useT();
-  const push = M(1, 4.8) - 0.5;
+  const push = Math.max(1.6, M(1, 4.8) - 0.5);
   const cams = [
     { t: 0, ...CAM.top },
     { t: push, ...CAM.top },
@@ -56,7 +113,7 @@ export function D1({ dur, marks }: P) {
   ];
   const cam = useCamera(cams, { w: 1920, h: 1080 });
   const at = (x: number, y: number) => cam.to(x, y);
-  const key = t >= M(4, 14);
+  const key = t >= M(5, 14);
   const dim = key ? 0.38 : 1;
   const gbL = at(600, 470);
   const phR = at(1549, 470);
@@ -65,13 +122,6 @@ export function D1({ dur, marks }: P) {
     <SceneFade>
       <Rec src="demo/create.mp4" segs={[{ at: 0, from: 0.6 }]} cams={cams} />
       <SectionTag n="01">The system</SectionTag>
-      <Show from={0.35} to={push} style={{ position: "absolute", left: 96, bottom: 150 }}>
-        <div style={{ padding: "26px 34px 30px", borderRadius: 28, background: "rgba(255,255,255,0.94)", border: `1px solid ${C.line}`, boxShadow: "0 30px 60px -34px rgba(40,44,90,0.5)" }}>
-          <div style={{ fontFamily: PX, fontSize: 20, letterSpacing: 5, color: C.accent }}>TECHNICAL WALKTHROUGH</div>
-          <Big size={76} style={{ marginTop: 10 }}>How kagiboy works</Big>
-          <div style={{ fontFamily: SANS, fontSize: 26, color: C.ink2, marginTop: 10 }}>Recorded live at kagiboy.xyz/demo · testnets</div>
-        </div>
-      </Show>
       <Show from={M(1, 5)} style={{ position: "absolute", inset: 0, opacity: dim }}>
         <Callout x={gbL.x - 22} y={gbL.y} eyebrow="GAME BOY" anchor="right">
           The real ROM · C, GBDK
@@ -141,12 +191,12 @@ function Wire({ x1, y1, x2, y2, from, dashed = false, label, pulse }: { x1: numb
   );
 }
 
-function Mailbox({ from, write, reply }: { from: number; write: number; reply: number }) {
+function Mailbox({ from, write, reply, x, y }: { from: number; write: number; reply: number; x: number; y: number }) {
   const t = useT();
   return (
-    <Show from={from} style={{ position: "absolute", left: 600, top: 236, width: 420 }}>
-      <Panel title="MAILBOX · 0xD800" style={{ width: 420 }}>
-        <div style={{ padding: "12px 18px 18px", fontFamily: MONO, fontSize: 21 }}>
+    <Show from={from} style={{ position: "absolute", left: x, top: y, width: 400 }}>
+      <Panel title="MAILBOX · 0xD800" style={{ width: 400 }}>
+        <div style={{ padding: "12px 16px 16px", fontFamily: MONO, fontSize: 20 }}>
           {MB_ROWS.map(([addr, name, val, kind], i) => {
             if (kind === "gap") return <div key={i} style={{ height: 10 }} />;
             // the request is written first (the sequence number last), then the reply (its sequence number last)
@@ -155,7 +205,7 @@ function Mailbox({ from, write, reply }: { from: number; write: number; reply: n
             const lit = interpolate(t, [on, on + 0.25], [0, 1], clamp);
             const fade = kind === "req" ? interpolate(t, [reply - 0.4, reply], [1, 0.45], clamp) : 1;
             return (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 1fr auto", gap: 12, alignItems: "center", padding: "6px 10px", borderRadius: 10, background: lit > 0 ? `rgba(${kind === "req" ? "207,226,255" : "255,220,232"},${0.85 * lit * fade})` : "transparent" }}>
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "66px 1fr auto", gap: 12, alignItems: "center", padding: "5px 10px", borderRadius: 10, background: lit > 0 ? `rgba(${kind === "req" ? "207,226,255" : "255,220,232"},${0.85 * lit * fade})` : "transparent" }}>
                 <span style={{ color: C.ink3 }}>{addr}</span>
                 <span style={{ color: C.ink }}>{name}</span>
                 <span style={{ color: kind === "req" ? C.accent : PINK, opacity: lit }}>{val}</span>
@@ -168,84 +218,102 @@ function Mailbox({ from, write, reply }: { from: number; write: number; reply: n
   );
 }
 
+/** a short label on a line: one word above it, a few below, never on top of the line itself */
+function LineLabel({ x, y, above, below, from }: { x: number; y: number; above?: string; below?: string; from: number }) {
+  const st = { position: "absolute" as const, left: x, transform: "translateX(-50%)", fontFamily: PX, fontSize: 14, letterSpacing: 2, color: C.ink3, whiteSpace: "pre" as const, textAlign: "center" as const, lineHeight: 1.5 };
+  return (
+    <Show from={from} style={{ position: "absolute", inset: 0 }}>
+      {above && <div style={{ ...st, top: y - 34 }}>{above}</div>}
+      {below && <div style={{ ...st, top: y + 16 }}>{below}</div>}
+    </Show>
+  );
+}
+
+// the diagram's grid: one row of parts on y = ROW
+const ROW = 500;
 export function D2({ marks }: P) {
   const M = markSec(marks);
   const t = useT();
-  const trust = interpolate(t, [M(6, 18), M(6, 18) + 0.8], [0, 1], { ...clamp, easing: EASE });
+  const slot = M(2, 3.8);
+  const rom = M(4, 6.4);
+  const phone = M(5, 12.3);
+  const trust = interpolate(t, [M(7, 18), M(7, 18) + 0.8], [0, 1], { ...clamp, easing: EASE });
   return (
     <SceneFade>
       <Glow shift={60} />
       <SectionTag n="02">Architecture</SectionTag>
-      {/* the trust boundary: everything the keys depend on is in your hands */}
+      {/* the trust boundary: everything the keys depend on is in your hands; the phone is outside */}
       {trust > 0 && (
         <>
           <svg style={{ position: "absolute", inset: 0 }} width={1920} height={1080}>
-            <rect x={96} y={170} width={1290} height={720} rx={40} fill="rgba(207,226,255,0.16)" stroke={C.accent} strokeWidth={3} strokeDasharray="14 12" opacity={trust} pathLength={1} strokeDashoffset={0} />
+            <rect x={96} y={190} width={1250} height={640} rx={40} fill="rgba(207,226,255,0.16)" stroke={C.accent} strokeWidth={3} strokeDasharray="14 12" opacity={trust} />
           </svg>
-          <div style={{ position: "absolute", left: 130, top: 150, opacity: trust }}>
+          <div style={{ position: "absolute", left: 128, top: 172, opacity: trust }}>
             <Pill color="#fff" bg={C.accent}>
               IN YOUR HANDS
             </Pill>
           </div>
-          <div style={{ position: "absolute", left: 1640, top: 270, transform: "translateX(-50%)", opacity: trust }}>
+          <div style={{ position: "absolute", left: 1680, top: 258, transform: "translateX(-50%)", opacity: trust }}>
             <Pill color="#fff" bg={PINK}>
               NEVER TRUSTED
             </Pill>
           </div>
         </>
       )}
-      <Show from={0.3} style={{ position: "absolute", left: 170, top: 240 }}>
-        <img src={a("01-renders/gameboy-front.png")} style={{ height: 480, filter: "drop-shadow(0 30px 40px rgba(60,70,120,0.25))" }} />
+      <Show from={0.3} style={{ position: "absolute", left: 156, top: ROW - 230 }}>
+        <img src={a("01-renders/gameboy-front.png")} style={{ height: 440, filter: "drop-shadow(0 30px 40px rgba(60,70,120,0.25))" }} />
       </Show>
-      <Show from={0.3} style={{ position: "absolute", left: 160, top: 740, display: "flex", flexDirection: "column", gap: 10 }}>
-        <span style={{ fontFamily: PX, fontSize: 17, letterSpacing: 3, color: C.accent }}>GAME BOY · ROM IN C</span>
+      <Show from={0.3} style={{ position: "absolute", left: 150, top: ROW + 236, display: "flex", flexDirection: "column", gap: 10 }}>
+        <span style={{ fontFamily: PX, fontSize: 16, letterSpacing: 3, color: C.accent }}>GAME BOY · ROM IN C</span>
         <div style={{ display: "flex", gap: 10 }}>
-          <Show from={M(0, 0.5) + 1.2}>
+          <Show from={M(0, 0.5) + 0.8}>
             <Pill color={C.ink2} bg="#F1F2F6">
               NO NETWORK
             </Pill>
           </Show>
-          <Show from={M(0, 0.5) + 1.9}>
+          <Show from={M(1, 1.5) + 0.1}>
             <Pill color={C.ink2} bg="#F1F2F6">
               NO OS
             </Pill>
           </Show>
         </div>
       </Show>
-      <Wire x1={442} y1={480} x2={598} y2={480} from={M(1, 3.8)} label={"CARTRIDGE\nSLOT"} pulse={M(2, 5.2)} />
-      <Mailbox from={M(3, 6.4)} write={M(3, 6.4) + 0.9} reply={M(3, 6.4) + 3.4} />
-      <Wire x1={1022} y1={480} x2={1110} y2={480} from={M(3, 6.4) + 2.2} />
-      <Node x={1110} y={380} w={250} h={200} title="CHIP" sub="Keys never leave it" from={M(3, 6.4) + 2.2} accent={PINK}>
+      <Wire x1={418} y1={ROW} x2={556} y2={ROW} from={slot} pulse={M(3, 5.2)} />
+      <LineLabel x={487} y={ROW} above="SLOT" below="THE WIRE" from={slot} />
+      <Mailbox x={556} y={ROW - 250} from={rom} write={rom + 0.9} reply={rom + 3.2} />
+      <Wire x1={956} y1={ROW} x2={1040} y2={ROW} from={rom + 2.2} />
+      <Node x={1040} y={ROW - 100} w={262} h={200} title="CHIP" sub="Keys never leave it" from={rom + 2.2} accent={PINK}>
         <span style={{ fontFamily: SANS, fontSize: 19, color: C.ink3, lineHeight: 1.3 }}>secure element · signs</span>
       </Node>
-      <Wire x1={1362} y1={480} x2={1508} y2={480} from={M(4, 12.3)} dashed label={"BLUETOOTH\nPUBLIC DATA\nONLY"} />
-      <Node x={1508} y={330} w={300} h={300} title="PHONE APP" sub="Builds requests, broadcasts" from={M(4, 12.3)}>
+      <Show from={M(6, 16)} style={{ position: "absolute", left: 1040, top: ROW + 130, display: "flex", flexDirection: "column", gap: 12 }}>
+        <Pill color="#fff" bg={C.ink}>
+          ← REQUESTS IN
+        </Pill>
+        <Show from={M(6, 16) + 0.6}>
+          <Pill color="#fff" bg={C.accent}>
+            SIGNATURES OUT →
+          </Pill>
+        </Show>
+      </Show>
+      <Wire x1={1302} y1={ROW} x2={1540} y2={ROW} from={phone} dashed />
+      <LineLabel x={1443} y={ROW} above="BLUETOOTH" below={"PUBLIC DATA\nONLY"} from={phone} />
+      <Node x={1540} y={ROW - 150} w={290} h={300} title="PHONE APP" sub="Builds requests, broadcasts" from={phone}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, fontFamily: MONO, fontSize: 19, color: C.ink2 }}>
           <span>@solana/web3.js</span>
           <span>viem</span>
           <span>SODAX SDK</span>
         </div>
       </Node>
-      <Show from={M(4, 12.3) + 0.6} style={{ position: "absolute", left: 1508, top: 660, width: 300, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+      <Show from={phone + 0.6} style={{ position: "absolute", left: 1540, top: ROW + 180, width: 290, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
         <span style={{ fontFamily: PX, fontSize: 15, letterSpacing: 2, color: C.ink3 }}>TALKS TO</span>
         <Pill color={C.ink} bg="#fff" style={{ border: `1px solid ${C.line}` }}>
-          SOLANA DEVNET RPC
+          SOLANA DEVNET
         </Pill>
         <Pill color={C.ink} bg="#fff" style={{ border: `1px solid ${C.line}` }}>
           EVM TESTNETS
         </Pill>
         <Pill color={C.ink} bg="#fff" style={{ border: `1px solid ${C.line}` }}>
           SODAX API
-        </Pill>
-      </Show>
-      <Show from={M(5, 16)} style={{ position: "absolute", left: 1110, top: 600 }}>
-        <Pill color="#fff" bg={C.ink}>
-          ← REQUESTS IN
-        </Pill>
-      </Show>
-      <Show from={M(5, 16) + 0.8} style={{ position: "absolute", left: 1110, top: 650 }}>
-        <Pill color="#fff" bg={C.accent}>
-          SIGNATURES OUT →
         </Pill>
       </Show>
     </SceneFade>
@@ -263,6 +331,7 @@ export function D3({ marks }: P) {
     { at: 21.5, from: 26.2, rate: 0.85 },
   ];
   const paths = M(2, 12.4);
+  // the code card comes in with the first line it explains
   return (
     <SceneFade>
       <Glow shift={120} />
@@ -278,12 +347,12 @@ export function D3({ marks }: P) {
           <Rec src="demo/create.mp4" segs={segs} cams={[{ t: 0, ...AT.busLog, x: AT.busLog.x - 6, w: AT.busLog.w + 12 }]} box={{ w: 1060, h: 449 }} />
         </Panel>
       </Show>
-      <Show from={paths - 0.2} style={{ position: "absolute", left: 720, top: 640 }}>
+      <Show from={M(0, 0.5) + 0.8} style={{ position: "absolute", left: 720, top: 640 }}>
         <Panel title="KEYS · chip/keys.ts" style={{ width: 1060 }}>
           <Code
             size={23}
-            at={[paths, paths + 0.5, paths + 2.2, paths + 3.6, M(4, 23.5)]}
-            hi={{ from: M(3, 20.6), line: [2, 3] }}
+            at={[M(0, 0.5) + 1.0, M(1, 6) - 0.2, paths, paths + 1.6, M(3, 23.5)]}
+            hi={{ from: paths + 3.2, line: [2, 3] }}
             lines={[
               [c("entropy  "), p("SHA-256( button + shake pool ‖ chip TRNG )")],
               [c("phrase   "), p("BIP-39 · 12 words · 128 bits")],
@@ -305,19 +374,17 @@ export function D4({ marks }: P) {
     { t: 0, ...CAM.duo },
     { t: M(1, 3.3) - 0.6, ...CAM.duo },
     { t: M(1, 3.3) + 0.6, ...CAM.codes },
-    { t: M(2, 7.7) - 0.4, ...CAM.codes },
-    { t: M(2, 7.7) + 0.9, ...CAM.duo },
   ];
   return (
     <SceneFade>
       <Rec src="demo/create.mp4" segs={[{ at: 0, from: 33.3, rate: 0.96 }]} cams={cams} />
       <SectionTag n="04">Pairing</SectionTag>
-      <Show from={M(1, 3.3) + 0.5} to={M(2, 7.7) - 0.2} style={{ position: "absolute", left: 800, top: 360 }}>
+      <Show from={M(1, 3.3) + 0.6} style={{ position: "absolute", left: 800, top: 360 }}>
         <Callout x={0} y={0} eyebrow="SAME SIX DIGITS">
           on the Game Boy and on the phone
         </Callout>
       </Show>
-      <Show from={M(2, 7.7) + 0.3} style={{ position: "absolute", left: 960, top: 60 }}>
+      <Show from={M(0, 0.5) + 0.4} to={M(1, 3.3) - 0.2} style={{ position: "absolute", left: 960, top: 60 }}>
         <Callout x={0} y={0} eyebrow="PAIR WINDOW" accent={PINK}>
           Only while the Game Boy is listening
         </Callout>
@@ -332,10 +399,10 @@ export function D5({ dur, marks }: P) {
   const t = useT();
   const sec = dur / 30;
   const chipAt = M(2, 6.3);
-  const screenAt = M(4, 16.1);
-  const holdAt = M(5, 19.5);
-  const fakeAt = M(6, 25);
-  const devnet = M(8, 31.6);
+  const screenAt = M(6, 16.1);
+  const holdAt = M(7, 19.5);
+  const fakeAt = M(8, 25);
+  const devnet = M(9, 31.6);
   // the take: typing on the phone, the request arriving, the sign screen, A held, confirmed
   const phoneSegs: Seg[] = [{ at: 0, from: 17.0 }];
   const lcdSegs: Seg[] = [
@@ -386,9 +453,9 @@ export function D5({ dur, marks }: P) {
               <div style={{ padding: "26px 30px 30px", display: "flex", flexDirection: "column", gap: 20 }}>
                 <Check at={chipAt + 0.9}>Copies the message bytes, decodes them itself</Check>
                 <Check at={M(3, 9.5) + 0.3}>Fee payer is this cartridge</Check>
-                <Check at={M(3, 9.5) + 1.6}>Exactly one instruction</Check>
-                <Check at={M(3, 9.5) + 3.0}>System Program · Transfer</Check>
-                <Check at={M(3, 9.5) + 4.4}>From this cartridge, fits the screen in full</Check>
+                <Check at={M(4, 11) + 0.2}>Exactly one instruction</Check>
+                <Check at={M(5, 12.5) + 0.2}>System Program · Transfer</Check>
+                <Check at={M(5, 12.5) + 1.5}>From this cartridge, fits the screen in full</Check>
               </div>
             </Panel>
           </Show>
@@ -422,7 +489,7 @@ export function D5({ dur, marks }: P) {
               <Code
                 size={23}
                 at={[fakeAt + 0.2, fakeAt + 0.5, fakeAt + 1.0, fakeAt + 1.4]}
-                hi={{ from: M(7, 27) + 0.2, line: [2] }}
+                hi={{ from: fakeAt + 1.6, line: [2] }}
                 lines={[
                   [c("// the chip knows the hash of what it signed;")],
                   [c("// the phone can't put any other on the screen")],
@@ -439,36 +506,41 @@ export function D5({ dur, marks }: P) {
   );
 }
 
+// the explorer page, captured whole (scripts/record/explorer-page.mjs), in CSS px
+const EXPLORER_PAGE = { w: 1920, h: 1901 };
 function Explorer({ from, end }: { from: number; end: number }) {
   const t = useT();
-  const cut = from + (end - from) * 0.5;
-  const top = { x: 380, y: 60, w: 1160 };
-  const low = { x: 0, y: 150, w: 1600 };
-  const second = t >= cut;
+  const glide = from + Math.min(2.2, (end - from) * 0.35);
+  const settle = glide + 2.4;
+  const top = { x: 420, y: 70, w: 1100 };
+  const low = { x: 0, y: 830, w: 1920 };
+  const cams = [
+    { t: from, ...top },
+    { t: glide, ...top },
+    { t: settle, ...low },
+  ];
+  const cam = useCamera(cams, { w: 1920, h: 1080 });
   const o = interpolate(t, [from, from + 0.4], [0, 1], clamp);
+  const sigRow = cam.to(1460, 366);
+  const amount = cam.to(940, 1680);
   return (
-    <AbsoluteFill style={{ opacity: o }}>
-      {!second ? (
-        <Rec src="demo/explorer.mp4" page={EXPLORER} segs={[{ at: from, from: 0.9 }]} cams={[{ t: 0, ...top }, { t: from + 0.3, ...top }, { t: cut, ...top, x: 400, y: 80, w: 1100 }]} />
-      ) : (
-        <Rec src="demo/explorer.mp4" page={EXPLORER} segs={[{ at: cut, from: 12.7, rate: 0.45 }]} cams={[{ t: 0, ...low }]} />
-      )}
+    <AbsoluteFill style={{ opacity: o, background: "#1b1d1e" }}>
+      <div style={{ position: "absolute", left: 0, top: 0, width: EXPLORER_PAGE.w, height: EXPLORER_PAGE.h, transform: `translate(${cam.ox}px, ${cam.oy}px) scale(${cam.s})`, transformOrigin: "0 0" }}>
+        <Img src={staticFile("demo/explorer-page.png")} style={{ width: EXPLORER_PAGE.w, height: EXPLORER_PAGE.h, display: "block" }} />
+      </div>
       <SectionTag n="05" dark>
         On Solana devnet
       </SectionTag>
-      {!second ? (
-        <Show from={from + 0.5} style={{ position: "absolute", right: 70, top: 150 }}>
-          <Callout x={0} y={0} eyebrow="SAME SIGNATURE" anchor="right">
-            as on the Game Boy
-          </Callout>
-        </Show>
-      ) : (
-        <Show from={cut + 0.3} style={{ position: "absolute", right: 70, top: 800 }}>
-          <Callout x={0} y={0} eyebrow="SYSTEM PROGRAM · TRANSFER" anchor="right">
-            0.05 SOL, as decoded on the chip
-          </Callout>
-        </Show>
-      )}
+      <Show from={from + 0.5} to={glide + 0.2} style={{ position: "absolute", inset: 0 }}>
+        <Callout x={sigRow.x - 20} y={sigRow.y + 40} eyebrow="SAME SIGNATURE" anchor="right">
+          as on the Game Boy
+        </Callout>
+      </Show>
+      <Show from={settle - 0.2} style={{ position: "absolute", inset: 0 }}>
+        <Callout x={amount.x + 30} y={amount.y - 110} eyebrow="SYSTEM PROGRAM · TRANSFER" anchor="left">
+          0.05 SOL, as decoded on the chip
+        </Callout>
+      </Show>
     </AbsoluteFill>
   );
 }
@@ -485,7 +557,7 @@ export function D6({ marks }: P) {
   const M = markSec(marks);
   const list = M(2, 4.7);
   const rows = (refusals as { name: string; error: string }[]).filter((r) => SHORT[r.name]);
-  const gaps = [0, 1.25, 2.4, 3.9, 5.0];
+  const gaps = [0, 0.9, 1.9, 2.7, 3.4];
   return (
     <SceneFade>
       <Glow shift={200} />
@@ -512,47 +584,61 @@ export function D6({ marks }: P) {
 }
 
 /* 7 · EVM and swaps: one key, five testnets; SODAX quotes, checked against the cartridge's own list */
-const NETS: [string, string][] = [
-  ["Ethereum", "ethereum.png"],
-  ["Base", "base.png"],
-  ["Arbitrum", "arbitrum.png"],
-  ["HyperEVM", "hyperevm.png"],
-  ["Robinhood", "robinhood.svg"],
+// the cartridge's EVM allowlist (testnets), in the order LEFT/RIGHT steps through them
+const NETS: [string, string, string][] = [
+  ["Ethereum Sepolia", "ethereum.png", "11155111"],
+  ["Base Sepolia", "base.png", "84532"],
+  ["Arbitrum Sepolia", "arbitrum.png", "421614"],
+  ["HyperEVM testnet", "hyperevm.png", "998"],
+  ["Robinhood Chain", "robinhood.svg", "46630"],
 ];
 export function D7({ marks }: P) {
   const M = markSec(marks);
   const t = useT();
   const swap = M(1, 8);
-  const screen = M(3, 14.4) + 0.4;
-  const sent = M(4, 19.6);
+  const sent = M(2, 19.6);
+  const screen = Math.max(swap + 4.2, sent - 3.6);
   // the take: RIGHT through the networks, the swap tab and quote, the swap screen, A held
   const netRate = (21.9 - 13.0) / (swap - 0.2);
   const recSegs: Seg[] = [{ at: 0, from: 13.0, rate: netRate }];
-  const phoneSegs: Seg[] = [{ at: 0, from: 25.0, rate: (33.9 - 25.0) / (screen - swap) }];
+  const phoneSegs: Seg[] = [{ at: 0, from: 27.5, rate: (33.9 - 27.5) / (screen - swap) }];
   const lcdSegs: Seg[] = [
     { at: 0, from: 37.6, rate: (42.0 - 37.6) / (sent - screen) },
     { at: sent - screen, from: 42.0 },
   ];
   // which network the Game Boy is on: the take's RIGHT presses, in scene time
   const take = 13.0 + t * netRate;
-  const presses = [15.13, 16.81, 18.55, 20.2, 21.9];
+  // the take logged each mark after the press and its 1.5 s wait, so the presses were 1.62 s earlier
+  const presses = [15.13, 16.81, 18.55, 20.2, 21.9].map((m) => m - 1.62);
   const net = presses.filter((x) => take >= x).length % 5;
   return (
     <SceneFade>
       {t < swap ? (
         <>
-          <Rec src="demo/evm.mp4" segs={recSegs} cams={[{ t: 0, ...CAM.duo }, { t: 1.2, x: 520, y: 260, w: 1180 }]} />
-          <Show from={0.6} style={{ position: "absolute", left: 420, top: 40, display: "flex", gap: 12 }}>
-            {NETS.map(([n, logo], i) => (
-              <div key={n} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 20px 12px 14px", borderRadius: 999, background: i === net ? C.ink : "rgba(255,255,255,0.95)", color: i === net ? "#fff" : C.ink, border: `1px solid ${C.line}`, fontFamily: SANS, fontWeight: 600, fontSize: 22, boxShadow: "0 14px 30px -20px rgba(40,44,90,0.5)" }}>
-                <Img src={a(`07-chain-logos/${logo}`)} style={{ width: 28, height: 28, borderRadius: 14, objectFit: "contain", background: "#fff" }} />
-                {n}
+          <Glow shift={240} />
+          {/* the Game Boy's own screen as RIGHT steps through the networks, and the list it steps through */}
+          <div style={{ position: "absolute", left: 170, top: 110 }}>
+            <LcdGameBoy src="demo/evm-lcd.mp4" segs={recSegs} height={860} />
+          </div>
+          <Show from={0.4} style={{ position: "absolute", left: 820, top: 150, width: 560 }}>
+            <Panel title="NETWORKS · chip/networks.ts">
+              <div style={{ padding: "14px 16px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+                {NETS.map(([n, logo, id], i) => (
+                  <div key={n} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 16px", borderRadius: 16, background: i === net ? C.ink : "transparent", color: i === net ? "#fff" : C.ink }}>
+                    <Img src={a(`07-chain-logos/${logo}`)} style={{ width: 34, height: 34, borderRadius: 17, objectFit: "contain", background: "#fff" }} />
+                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 27, flex: 1 }}>{n}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 19, opacity: 0.6 }}>{id}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </Panel>
           </Show>
-          <Show from={M(0, 0.5) + 3.2} style={{ position: "absolute", right: 80, top: 150 }}>
-            <Callout x={0} y={0} eyebrow="CHAIN ALLOWLIST · FEE CAP" anchor="right">
-              Max fee 0.01 of the network's coin
+          <Show from={M(0, 0.5) + 2.6} style={{ position: "absolute", left: 1420, top: 330 }}>
+            <Callout x={0} y={0} eyebrow="ALLOWLIST" anchor="left">
+              Other chains are refused
+            </Callout>
+            <Callout x={0} y={118} eyebrow="FEE CAP" anchor="left">
+              0.01 of the network's coin
             </Callout>
           </Show>
         </>
@@ -568,8 +654,8 @@ export function D7({ marks }: P) {
                 <Panel title="SWAP INTENT · what the phone sends" style={{ width: 1010 }}>
                   <Code
                     size={23}
-                    at={[swap + 0.6, swap + 0.9, M(2, 11.2), M(2, 11.2) + 0.3, swap + 1.2, M(2, 11.2) + 0.6, swap + 1.5]}
-                    hi={{ from: M(2, 11.2), line: [2, 5] }}
+                    at={[swap + 0.6, swap + 0.9, swap + 1.2, swap + 1.5, swap + 1.8, swap + 2.1, swap + 2.4]}
+                    hi={{ from: swap + 2.6, line: [2, 5] }}
                     lines={[
                       [p("{ src: { chain: "), s('"sol"'), p(" },")],
                       [p("  dst: { chain: "), s('"evm"'), p(", net: "), k("84532"), p(" },")],
@@ -582,11 +668,11 @@ export function D7({ marks }: P) {
                   />
                 </Panel>
               </Show>
-              <Show from={M(3, 14.4) - 1.2} style={{ position: "absolute", left: 760, top: 650 }}>
+              <Show from={swap + 2.8} style={{ position: "absolute", left: 760, top: 650 }}>
                 <Panel title="THE CARTRIDGE'S OWN LIST · chip/tokens.ts" style={{ width: 1010 }}>
                   <Code
                     size={23}
-                    at={[M(3, 14.4) - 1, M(3, 14.4) - 0.6]}
+                    at={[swap + 3.0, swap + 3.3]}
                     lines={[
                       [s('"11111111111111111111111111111111"'), p(": { symbol: "), s('"SOL"'), p(", decimals: "), k("9"), p(" }")],
                       [s('"0x833589fc…bda02913"'), p(": { symbol: "), s('"USDC"'), p(", decimals: "), k("6"), p(" }")],
@@ -632,7 +718,7 @@ export function D8({ dur, marks }: P) {
   const M = markSec(marks);
   const t = useT();
   const sec = dur / 30;
-  const endAt = M(2, 10.6);
+  const endAt = M(1, 10.6);
   const card = interpolate(t, [endAt - 0.2, endAt + 0.6], [0, 1], { ...clamp, easing: EASE });
   return (
     <SceneFade>
@@ -661,7 +747,7 @@ export function D8({ dur, marks }: P) {
               </div>
             </Show>
           ))}
-          <Show from={M(1, 9.1)}>
+          <Show from={M(0, 0.5) + 3.6}>
             <Pill color="#fff" bg={C.ink} style={{ fontSize: 18 }}>
               THE ROM DOESN'T CHANGE
             </Pill>
@@ -698,4 +784,4 @@ export function EndCard({ o = 1, foot = true }: { o?: number; foot?: boolean }) 
   );
 }
 
-export const DEMO_SCENES = [D1, D2, D3, D4, D5, D6, D7, D8];
+export const DEMO_SCENES = [D0, D1, D2, D3, D4, D5, D6, D7, D8];

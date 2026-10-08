@@ -1,6 +1,8 @@
 """One ElevenLabs take of a whole script (cloned voice, eleven_v3), split into sections by character timing.
 
-    ELEVENLABS_API_KEY=... python3 scripts/voice_take.py rec/demo/directed.json rec/demo/vo
+    ELEVENLABS_API_KEY=... python3 scripts/voice_take.py rec/demo/directed.json rec/demo/vo [stability] [seed]
+
+stability: eleven_v3 takes 0.0 (creative, most expressive), 0.5 (natural, default) or 1.0 (robust).
 
 directed.json maps section ids to text with v3 direction tags. Writes full.mp3, align.json, the loudness-
 mastered full-master.wav and one <id>.wav per section into the output folder. The key is read from the
@@ -9,12 +11,14 @@ environment only.
 import base64, json, os, subprocess, sys, urllib.request
 
 src, out = sys.argv[1], sys.argv[2]
+stability = float(sys.argv[3]) if len(sys.argv) > 3 else 0.5
+seed = int(sys.argv[4]) if len(sys.argv) > 4 else 4242
 os.makedirs(out, exist_ok=True)
 vid = json.load(open("rec/ivc/voice.json"))["voice_id"]
 D = json.load(open(src))
 ids = list(D)
 full = "\n\n".join(D[i] for i in ids)
-body = json.dumps({"text": full, "model_id": "eleven_v3", "voice_settings": {"stability": 0.5, "similarity_boost": 0.9}, "seed": 4242}).encode()
+body = json.dumps({"text": full, "model_id": "eleven_v3", "voice_settings": {"stability": stability, "similarity_boost": 0.9}, "seed": seed}).encode()
 req = urllib.request.Request(f"https://api.elevenlabs.io/v1/text-to-speech/{vid}/with-timestamps?output_format=mp3_44100_192",
                              data=body, headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "Content-Type": "application/json"})
 d = json.load(urllib.request.urlopen(req, timeout=600))

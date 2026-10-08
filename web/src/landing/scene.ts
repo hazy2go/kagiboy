@@ -20,6 +20,7 @@ export interface Pose {
   tilt: number; // cartridge tipped back so its layers stack toward the camera, 0..1
   apart: number; // exploded view, 0..1
   shift: number; // wide screens: console pushed right, share of width. Phones: console centre, share of height from the top
+  gbApart?: number; // the console itself in an exploded view, 0..1 (video only; the site never sets it)
 }
 
 // keyframes along the stage's scroll, in metres and radians
@@ -68,7 +69,7 @@ export function poseAt(p: number, keys = KEYS): Pose {
     if (p <= b) {
       const t = smooth(Math.min(1, Math.max(0, (p - a) / (b - a))));
       const out = {} as Pose;
-      for (const k of Object.keys(pa) as (keyof Pose)[]) out[k] = pa[k] + (pb[k] - pa[k]) * t;
+      for (const k of Object.keys(pa) as (keyof Pose)[]) out[k] = (pa[k] ?? 0) + ((pb[k] ?? 0) - (pa[k] ?? 0)) * t;
       return out;
     }
   }
@@ -169,6 +170,12 @@ export class HeroScene {
     });
     this.cart = root.getObjectByName("Cartridge") ?? null;
     this.body = root.getObjectByName("GameBoy") ?? null;
+    if (this.body) {
+      for (const n of Object.keys(GB_APART)) {
+        const obj = this.body.getObjectByName(n);
+        if (obj) this.gbPieces[n] = { obj, home: obj.position.clone() };
+      }
+    }
     if (this.cart) {
       this.cartHome.copy(this.cart.position);
       this.cartQuat.copy(this.cart.quaternion);
@@ -359,6 +366,12 @@ export class HeroScene {
     // on tall screens the console body steps aside while the cartridge is apart, so nothing sits behind the copy
     if (this.body) this.body.visible = !(tall && pose.apart > 0.5);
 
+    // the console's own exploded view: its layers float forward off the body (video only)
+    const g = pose.gbApart ?? 0;
+    for (const [n, { obj, home }] of Object.entries(this.gbPieces)) {
+      obj.position.set(home.x, home.y, home.z + GB_APART[n] * g);
+    }
+
     if (this.cart) {
       const bob = Math.sin(t * 1.3) * 0.003 * rest;
       this.cart.position.set(this.cartHome.x, this.cartHome.y + pose.lift + bob, this.cartHome.z - pose.tilt * 0.02);
@@ -415,7 +428,24 @@ export class HeroScene {
   }
 
   private disposed = false;
+  private gbPieces: Record<string, { obj: THREE.Object3D; home: THREE.Vector3 }> = {};
 }
+
+/** How far each console part floats forward (metres, along its front axis) when `gbApart` is 1. */
+const GB_APART: Record<string, number> = {
+  Body: 0,
+  FacePrint: 0,
+  Speaker: 0.03,
+  DPad: 0.06,
+  ButtonA: 0.06,
+  ButtonB: 0.06,
+  Start: 0.06,
+  Select: 0.06,
+  Bezel: 0.095,
+  BezelPrint: 0.095,
+  LED: 0.095,
+  Screen: 0.125,
+};
 
 /** Free every geometry, material and texture under an object. */
 function freeObject(root: THREE.Object3D) {
