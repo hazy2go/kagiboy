@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, DISPLAY, EASE, Glow, PX, SANS, a } from "../ui";
-import { Console } from "../Three";
 import { Explode } from "./ExplodeView";
 import type { ExplodeAnchor } from "../../../web/src/landing/explode";
-import { poseAt as poseAtP } from "../../../web/src/landing/scene";
 import {
   AT,
   Big,
@@ -718,43 +716,73 @@ const HW: [string, string][] = [
   ["RP2350", "Speaks the same 0xD800 mailbox"],
   ["CYW43439", "Bluetooth LE to the phone"],
 ];
-export function D8({ dur, marks }: P) {
+// hazy's own Game Boy running the ROM from a flash cart (the About page's photos), in the order of the flow
+const PRINTS: { src: string; w: number; h: number; x: number; y: number; rot: number }[] = [
+  { src: "real/boot.webp", w: 440, h: 414, x: 930, y: 110, rot: -6 },
+  { src: "real/mash.webp", w: 360, h: 450, x: 1350, y: 80, rot: 4 },
+  { src: "real/pin.webp", w: 360, h: 450, x: 1010, y: 410, rot: 3 },
+  { src: "real/home.webp", w: 380, h: 475, x: 1420, y: 385, rot: -3 },
+];
+function Print({ src, w, h, x, y, rot, at }: { src: string; w: number; h: number; x: number; y: number; rot: number; at: number }) {
+  const t = useT();
+  const q = ease(interpolate(t, [at, at + 0.7], [0, 1], clamp));
+  if (q <= 0) return null;
+  // settles from a little higher and more tilted, then keeps drifting very slowly
+  const drift = (t - at) * 1.4;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y + (1 - q) * -50 + drift * 0.4,
+        width: w,
+        padding: 12,
+        paddingBottom: 34,
+        background: "#fff",
+        borderRadius: 6,
+        boxShadow: "0 30px 60px -28px rgba(40,44,90,0.55), 0 2px 6px rgba(40,44,90,0.12)",
+        transform: `rotate(${rot + (1 - q) * 5}deg) scale(${1.04 - 0.04 * q})`,
+        opacity: q,
+      }}
+    >
+      <Img src={staticFile(src)} style={{ display: "block", width: w - 24, height: h - 24 * (h / w), objectFit: "cover", borderRadius: 2 }} />
+    </div>
+  );
+}
+export function D8({ marks }: P) {
   const M = markSec(marks);
   const t = useT();
-  const sec = dur / 30;
-  const endAt = M(1, 10.6);
+  const romAt = M(0, 0.5) + 3.6;
+  const endAt = M(2, 9.3); // "go try it yourself"
   const card = interpolate(t, [endAt - 0.2, endAt + 0.6], [0, 1], { ...clamp, easing: EASE });
   return (
     <SceneFade>
       <Glow shift={300} />
       <AbsoluteFill style={{ opacity: 1 - card }}>
-        <Console
-          screens={["09-home"]}
-          shot={{
-            p: (u) => lerp(0.38, 0.56, ease(Math.min(1, u / (sec * 0.4)))),
-            screen: () => "09-home",
-            pose: (u) => {
-              const at = poseAtP(lerp(0.38, 0.56, ease(Math.min(1, u / (sec * 0.4)))));
-              return { ...at, dist: at.dist + 0.09, shift: 0.21 };
-            },
-          }}
-        />
-        <div style={{ position: "absolute", left: 130, top: 230, width: 720, display: "flex", flexDirection: "column", gap: 22 }}>
+        {PRINTS.map((pr, i) => (
+          <Print key={pr.src} {...pr} at={0.5 + i * 0.55} />
+        ))}
+        <div style={{ position: "absolute", left: 120, top: 190, width: 700, display: "flex", flexDirection: "column", gap: 18 }}>
           <Show from={0.4}>
             <span style={{ fontFamily: PX, fontSize: 22, letterSpacing: 5, color: C.accent }}>THE REAL CARTRIDGE</span>
           </Show>
           {HW.map(([n, d], i) => (
-            <Show key={n} from={0.8 + i * 1.6}>
-              <div style={{ padding: "22px 30px", borderRadius: 24, background: "rgba(255,255,255,0.9)", border: `1px solid ${C.line}`, display: "flex", flexDirection: "column", gap: 6 }}>
-                <span style={{ fontFamily: PX, fontSize: 30, color: C.ink }}>{n}</span>
-                <span style={{ fontFamily: SANS, fontSize: 27, color: C.ink2 }}>{d}</span>
+            <Show key={n} from={0.7 + i * 0.6}>
+              <div style={{ padding: "18px 26px", borderRadius: 22, background: "rgba(255,255,255,0.9)", border: `1px solid ${C.line}`, display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontFamily: PX, fontSize: 26, color: C.ink }}>{n}</span>
+                <span style={{ fontFamily: SANS, fontSize: 24, color: C.ink2 }}>{d}</span>
               </div>
             </Show>
           ))}
-          <Show from={M(0, 0.5) + 3.6}>
-            <Pill color="#fff" bg={C.ink} style={{ fontSize: 18 }}>
-              THE ROM DOESN'T CHANGE
-            </Pill>
+          <Show from={romAt}>
+            <div style={{ marginTop: 10, padding: "22px 26px", borderRadius: 22, background: C.ink, color: "#fff", display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 12, fontFamily: PX, fontSize: 19, letterSpacing: 3, color: "#9FE3B8" }}>
+                <span style={{ width: 11, height: 11, borderRadius: 6, background: "#47D17C" }} />
+                ALREADY RUNNING
+              </span>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 38, letterSpacing: -1 }}>On a real Game Boy, today</span>
+              <span style={{ fontFamily: SANS, fontSize: 23, color: "rgba(255,255,255,0.72)" }}>The same ROM, from a flash cart, on an original DMG</span>
+            </div>
           </Show>
         </div>
       </AbsoluteFill>
