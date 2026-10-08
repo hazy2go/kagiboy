@@ -1,11 +1,15 @@
-/** A soft two-step square blip on taps, a small nod to the Game Boy's menu sound. Silent when muted. */
-let ctx: AudioContext | null = null;
+import { session } from "../demo/session";
 
+/**
+ * A soft two-step square blip on taps, a small nod to the Game Boy's menu sound. Silent when muted.
+ * It plays through the session's own audio context, which is set up as "playback" so iOS doesn't
+ * mute it with the silent switch (a second context made here first would leave the page muted).
+ */
 export function blip(muted: boolean, hz = 1046) {
-  if (muted || typeof window === "undefined") return;
+  if (muted) return;
+  const ctx = session.sharedAudio();
+  if (!ctx) return;
   try {
-    ctx ??= new AudioContext();
-    if (ctx.state === "suspended") void ctx.resume();
     const t = ctx.currentTime;
     const o = ctx.createOscillator();
     const g = ctx.createGain();

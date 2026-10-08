@@ -96,6 +96,12 @@ export class Session {
    * Safari only lets audio start inside the tap or key press itself (not after an await), and on iOS
    * web audio follows the silent switch unless the page declares itself as playback, like a media app.
    */
+  /** The one audio context for the page (Game Boy beeps and the app's taps), unlocked inside the gesture. */
+  sharedAudio(): AudioContext | null {
+    this.unlockAudio();
+    return this.audio;
+  }
+
   private unlockAudio() {
     if (typeof AudioContext === "undefined") return;
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
