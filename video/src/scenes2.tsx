@@ -252,64 +252,62 @@ export function Reveal({ dur }: P) {
   );
 }
 
-/* 4 · how it feels: one shot per step, on the real console */
-type StepShot = { from: number; eyebrow: string; title: string; screen: string; pose: (u: number, t: number) => Record<string, number>; held?: (t: number) => string[] };
-const SCREEN = (u: number) => ({ az: lerp(-0.08, -0.02, u), el: 0.02, dist: lerp(0.26, 0.23, u), tx: 0, ty: 0.03, lift: 0, shift: 0.26 });
-const SHOTS: StepShot[] = [
-  { from: 0, eyebrow: "A new save file", title: "Turn it on", screen: "02-new-or-restore", pose: (u) => ({ az: lerp(-0.62, -0.38, u), el: 0.12, dist: lerp(0.5, 0.44, u), tx: 0.004, ty: 0.03, lift: 0, shift: 0.18 }) },
-  { from: 0.16, eyebrow: "01", title: "Mash the buttons", screen: "03-mash-buttons",
-    pose: (u) => ({ az: lerp(0.18, 0.05, u), el: 0.18, dist: lerp(0.21, 0.19, u), tx: 0.004, ty: -0.032, lift: 0, shift: 0.26 }),
-    held: (t) => { const k = Math.floor(t * 30); return k % 6 < 3 ? [["ButtonA", "DPad", "ButtonB", "DPad"][Math.floor(k / 6) % 4]] : []; } },
-  { from: 0.3, eyebrow: "02", title: "Shake it", screen: "04-shake",
-    pose: (u, t) => ({ az: -0.3 + Math.sin(t * 31) * 0.05, el: 0.1 + Math.cos(t * 27) * 0.04, dist: 0.46, tx: Math.sin(t * 23) * 0.004, ty: 0.02 + Math.cos(t * 29) * 0.004, lift: 0, shift: 0.2 }) },
-  { from: 0.47, eyebrow: "Every request", title: "Your phone can't decide.", screen: "11-approve-send", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.3, 0.24, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
-  { from: 0.8, eyebrow: "", title: "Hold A to sign", screen: "11-approve-send", pose: (u) => ({ az: lerp(0.32, 0.26, u), el: 0.16, dist: lerp(0.13, 0.115, u), tx: 0.031, ty: -0.021, lift: 0, shift: 0.18 }), held: () => ["ButtonA"] },
-  { from: 0.94, eyebrow: "", title: "Signed", screen: "12-signed-confirmed", pose: (u) => ({ az: 0, el: 0.02, dist: lerp(0.25, 0.235, u), tx: 0, ty: 0.03, lift: 0, shift: 0.2 }) },
+/* 4 · how it feels: real footage of the prototype, a flash cart in my own Game Boy next to the phone, one shot
+   per line (public/footage, cut and cropped from the two takes). */
+type StepShot = { clip: string; eyebrow: string; title: string };
+// a shot starts on a voice line: 0 = the scene start, 1..3 = sentence starts, 1.5 = halfway through sentence 1
+const SHOTS: (StepShot & { at: number })[] = [
+  { at: 0, clip: "01-on", eyebrow: "A new save file", title: "Turn it on" },
+  { at: 1, clip: "02-mash", eyebrow: "01", title: "Mash the buttons" },
+  { at: 1.5, clip: "03-shake", eyebrow: "02", title: "Shake it" },
+  { at: 2, clip: "04-request", eyebrow: "Every request", title: "Your phone can't decide." },
+  { at: 3, clip: "05-hold-a", eyebrow: "On the Game Boy", title: "Hold A to sign" },
 ];
 
-/** the frames where a button goes down, for a click each */
-function clicks(held: (t: number) => string[], len: number) {
-  const out: number[] = [];
-  let was = 0;
-  for (let fr = 0; fr < len; fr++) {
-    const n = held(fr / 30).length;
-    if (n > was) out.push(fr);
-    was = n;
-  }
-  return out;
-}
-
-export function Feel({ dur }: P) {
+export function Feel({ dur, marks = [] }: P) {
+  const mark = (at: number) => {
+    if (at === 0) return 0;
+    const i = Math.floor(at);
+    const m0 = marks[i]?.at ?? Math.round((dur * i) / 4);
+    if (at === i) return m0;
+    const m1 = marks[i + 1]?.at ?? dur;
+    return Math.round(m0 + (m1 - m0) * (at - i));
+  };
   return (
     <AbsoluteFill style={{ background: "#fff" }}>
+      <Glow shift={150} />
       {SHOTS.map((sh, i) => {
-        const a0 = Math.round(sh.from * dur);
-        const a1 = Math.round((SHOTS[i + 1]?.from ?? 1) * dur);
-        const len = a1 - a0;
+        const a0 = mark(sh.at);
+        const len = (i + 1 < SHOTS.length ? mark(SHOTS[i + 1].at) : dur) - a0;
         return (
-          <Sequence key={sh.title} from={a0} durationInFrames={len}>
-            <Glow shift={120 + i * 20} />
-            {sh.held && clicks(sh.held, len).map((fr) => (
-              <Sequence key={fr} from={fr} durationInFrames={10}>
-                <Audio src={staticFile("sfx/button-click.mp3")} volume={0.55} />
-              </Sequence>
-            ))}
-            <Console
-              screens={[sh.screen]}
-              shot={{ p: () => 0, plain: true, screen: () => sh.screen, held: sh.held, pose: (t) => sh.pose(Math.min(1, t / (len / 30)), t) as never }}
-            />
-            <div style={{ position: "absolute", left: 110, top: 770 }}>
+          <Sequence key={sh.clip} from={a0} durationInFrames={len}>
+            <Footage clip={sh.clip} len={len} />
+            <div style={{ position: "absolute", left: 110, top: 0, bottom: 150, width: 900, display: "flex", alignItems: "center" }}>
               <Pop start={3}>
                 <Card style={{ padding: "28px 36px", display: "flex", flexDirection: "column", gap: 12, background: "rgba(255,255,255,0.94)" }}>
-                  {sh.eyebrow && <Eyebrow>{sh.eyebrow}</Eyebrow>}
-                  <Title size={70} style={{ whiteSpace: "nowrap" }}>{sh.title}</Title>
+                  <Eyebrow>{sh.eyebrow}</Eyebrow>
+                  <Title size={64} style={{ whiteSpace: "nowrap" }}>{sh.title}</Title>
                 </Card>
               </Pop>
             </div>
           </Sequence>
         );
       })}
+      <div style={{ position: "absolute", left: 1072, top: 72, background: "rgba(255,255,255,0.92)", borderRadius: 999, padding: "10px 22px", fontFamily: SANS, fontWeight: 600, fontSize: 24, color: C.ink, boxShadow: "0 6px 20px rgba(20,24,40,0.12)" }}>
+        Prototype
+      </div>
     </AbsoluteFill>
+  );
+}
+
+/** one clip of the real footage in a rounded frame on the right (clear of the captions), pushing in slowly, with its own room sound low */
+function Footage({ clip, len }: { clip: string; len: number }) {
+  const f = useCurrentFrame();
+  const zoom = lerp(1, 1.035, f / Math.max(1, len));
+  return (
+    <div style={{ position: "absolute", left: 1044, top: 44, width: 766, height: 840, borderRadius: 40, overflow: "hidden", boxShadow: "0 30px 80px rgba(20,24,40,0.18)" }}>
+      <OffthreadVideo src={staticFile(`footage/${clip}.mp4`)} volume={1.6} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})` }} />
+    </div>
   );
 }
 
