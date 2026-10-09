@@ -3,23 +3,23 @@
 Status: design. The cartridge has not been built yet. The ROM already runs on a
 real DMG from a flash cart (the `make demo` build, with an in-ROM mock chip). The
 software in this repo (ROM, chip firmware logic, phone app) is what the hardware
-will run.
+will run. The design below has been simulated cycle by cycle against the real ROM:
+see [hardware-sim.md](hardware-sim.md).
 
 ## What's inside
 
 | Part | Job | Why this part | Est. unit cost* |
 |---|---|---|---|
-| **RP2350** MCU | Answers the Game Boy's cartridge bus (ROM reads, the mailbox at `0xA000`), runs the wallet firmware | Its PIO state machines can serve the 1 MHz bus in time. RP2040 flash carts already prove the approach. Also has signed boot, OTP, TrustZone and a hardware TRNG | ~$1.10 |
+| **RP2354B** MCU (RP2350, QFN-80, 2 MB flash in package) | Answers the Game Boy's cartridge bus (ROM reads, the mailbox), runs the wallet firmware | Its PIO state machines serve the 1 MHz bus in time at the stock 150 MHz (simulated). The cartridge needs 39 GPIO, so the 48-GPIO B package. Also has signed boot, OTP, TrustZone and a hardware TRNG | ~$1.10** |
 | **NXP SE050E2** secure element | Generates and stores the seed, signs, enforces the PIN retry counter | Common Criteria EAL 6+. Supports **Ed25519** (Solana) and **secp256k1** (EVM) | ~$3 (100+) |
 | **Infineon CYW43439** | Bluetooth LE link to the phone | Same radio as the Pico 2 W, so drivers exist | ~$4 |
 | **LIS3DH** accelerometer | "Shake your Game Boy" entropy, tilt-to-scroll | Cheap, low power, I²C | ~$0.80 |
-| 3× **TXB0108** | 5 V Game Boy bus ↔ 3.3 V logic | Used by existing RP2040 carts | ~$1.50 |
-| 4 MB QSPI flash | Holds the ROM and firmware (no keys) | | ~$0.40 |
+| 4× **TXB0108** | 5 V Game Boy bus ↔ 3.3 V logic (28 bus lines) | Used by existing RP2040 carts | ~$2 |
 | PCB, shell, label | Standard DMG-size cartridge, potted | | ~$3 |
 | **Total** | | | **~$14 parts at 100+ units** |
 
 *Distributor list prices, October 2026, small volume. Assembly, certification and
-packaging are not included.
+packaging are not included. **RP2350A single-unit price; the B package wasn't priced.
 
 ## How it fits together
 
@@ -27,9 +27,9 @@ packaging are not included.
  Game Boy (screen + buttons; never sees a key)
       │  32-pin cartridge edge, 5 V bus
  ┌────┴──────────────────────────────────────────────────┐
- │ TXB0108 ×3                                            │
+ │ TXB0108 ×4                                            │
  │    │                                                  │
- │ RP2350 ── PIO: serves ROM + mailbox at 0xA000         │
+ │ RP2354B ── PIO: serves ROM + mailbox (0x7F00 / 0xA000)│
  │    │  I²C                                             │
  │    ├── SE050E2 ─ seed, keys, PIN counter (stay in)    │
  │    ├── LIS3DH ── accelerometer                        │
@@ -38,8 +38,11 @@ packaging are not included.
 ```
 
 The Game Boy runs the wallet ROM like any other game. To talk to the key chip it
-reads and writes the cartridge RAM window, which the RP2350 answers instead of a
-RAM chip. The demo uses the same protocol at `0xD800` (see
+writes requests to the cartridge RAM window (`0xA000`) and reads replies through ROM
+space it leaves empty (`0x7F00`), both answered by the RP2350 from SRAM. Reading
+through ROM space puts every read on the cartridge's fastest path; the simulation
+showed that replies read from `0xA000` would be too slow (see
+[hardware-sim.md](hardware-sim.md)). The demo uses the same protocol at `0xD800` (see
 [protocol.md](protocol.md)).
 
 ## Security model

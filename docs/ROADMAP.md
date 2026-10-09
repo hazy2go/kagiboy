@@ -22,7 +22,7 @@ For each one we state the problem and the mitigation below. The plan has five ph
  ┌─┴───────────────────────────────────────────────────────────────────┐
  │ Level translation: data bus via SN74LVC8T245 (DIR from /RD)         │
  │                                                                     │
- │ RP2350 (A4 stepping) or RP2354A (2 MB in-package flash)             │
+ │ RP2354B (RP2350 A4, 2 MB in-package flash, 48 GPIO)                 │
  │  Secure world: wallet logic, tx decode, policy, SE050 session,      │
  │                PIO bus server, CONFIRM button + LED (Secure GPIO)   │
  │  Non-secure:   BLE host stack, phone protocol parser                │
@@ -43,7 +43,7 @@ For each one we state the problem and the mitigation below. The plan has five ph
   4. It zeroizes the seed and child keys in RAM.
   5. From then on, every signature happens inside the SE050.
 - **What this costs us.** The seed is **not retained**. Adding a 6th account, or the planned link-cable clone, means re-entering the 12 words. We think "after setup, your seed exists only on your paper" is worth that. This is open question Q2.
-- **Ed25519 quirks.** The SE050 uses big-endian for Ed25519 keys and signatures, while RFC 8032 is little-endian. Firmware must byte-reverse ([AN12413 §7](https://www.nxp.com/docs/en/application-note/AN12413.pdf)). wolfSSL measured about 103 ms per Ed25519 signature ([wolfSSL](https://www.wolfssl.com/wolfssl-nxp-se050-support/)).
+- **Ed25519 quirks.** The SE050 uses big-endian for Ed25519 keys and signatures, while RFC 8032 is little-endian. Firmware must byte-reverse ([AN12413 §7](https://www.nxp.com/docs/en/application-note/AN12413.pdf)). wolfSSL measured about 261 ms per Ed25519 signature and 103 ms per ECDSA signature ([wolfSSL](https://www.wolfssl.com/wolfssl-nxp-se050-support/)). The SE050E runs I²C at 1 MHz at most (clock stretching is off by default; [datasheet §4.1.1](https://www.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf)), and its ECDSA output carries no recovery id, so the firmware normalises to low-S and computes the EVM yParity itself.
 - **Hard limit on Solana messages.** `EdDSASign` takes the *plain* message (Solana uses PureEdDSA, so there is no prehash). The APDU payload is capped at 889 bytes ([AN12413](https://www.nxp.com/docs/en/application-note/AN12413.pdf)). After TLV overhead, Solana messages over about 850 bytes cannot be signed in the SE050, and Solana transactions can be up to 1,232 bytes. Today's scope, plain SOL transfers of about 150–250 bytes, fits easily. Large DeFi transactions would be refused. This is open question Q1.
 - **EVM.** The MCU computes keccak-256 over the bytes it displayed. The SE signs the 32-byte hash. The MCU then normalizes to low-s (EIP-2) and computes the recovery id.
 
@@ -76,7 +76,7 @@ For reference, Keystone 3 Pro uses three SEs from different vendors ([Keystone](
 
   Hacking Challenge 2, on the AES secure-boot side channel, runs to 2026-10-31 ([Raspberry Pi](https://www.raspberrypi.com/rp2350-hacking-challenge-2/)).
 - **Isolating the radio stack.** The [internal audit](audit-security.md) rates it critical (D1) that the Bluetooth stack shares an MCU with the wallet logic. Our answer is to run the BLE host stack and phone parser in the **Arm TrustZone Non-secure world**. Wallet logic, the SE050 session, and the CONFIRM button GPIO live in the Secure world, behind one narrow, fuzzed message interface. A Bluetooth remote-code-execution bug then lands in a world that can neither press CONFIRM nor talk to the SE. If the Phase 3 audit says that isn't enough, Rev B moves BLE to a second small MCU over UART.
-- **Price.** RP2350A is $0.80 on 3,400-unit reels and $1.10 singly ([Raspberry Pi](https://www.raspberrypi.com/news/rp2350-now-available-to-buy/), [CNX](https://www.cnx-software.com/2025/03/18/buy-raspberry-pi-rp2350-mcu-rp2354a-and-rp2354b-variants/)). The **RP2354A**, with 2 MB flash inside the package, costs $0.20 more. It removes the external QSPI flash chip and a probe-able bus, so it is our Rev B default.
+- **Price.** RP2350A is $0.80 on 3,400-unit reels and $1.10 singly ([Raspberry Pi](https://www.raspberrypi.com/news/rp2350-now-available-to-buy/), [CNX](https://www.cnx-software.com/2025/03/18/buy-raspberry-pi-rp2350-mcu-rp2354a-and-rp2354b-variants/)). The RP2354 variants put 2 MB of flash inside the package, which removes the external QSPI flash chip and a probe-able bus. The cartridge needs 39 GPIO (28 of them on the Game Boy bus), so it has to be the 48-GPIO **RP2354B**: the 30-GPIO A packages are too small ([hardware-sim.md](hardware-sim.md)).
 
 ### Radio: Raspberry Pi RM2 module instead of a chip-down CYW43439
 
@@ -96,11 +96,13 @@ The Game Boy data bus is shared and bidirectional, which is exactly where auto-d
 - A stock DMG draws about 235 mW. An EverDrive GB adds about 120% ([Gekkio](https://gekkio.fi/blog/2021/power-consumption-of-game-boy-flash-cartridges/)).
 - RP2040 cart makers warn their draw is "significantly higher than normal cartridges" and tight on modded consoles ([Tindie](https://www.tindie.com/products/zeraphim/rp2040-based-game-boy-cartridge/)).
 - The SE050 peaks at 19 mA with AES and public-key operations running together ([datasheet](https://www.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf)).
-- **We could not find a verified number for CYW43439 BLE current, or for how much the DMG's 5 V converter can supply to the cartridge.**
+- The CYW43439 draws about 71 µA connected at a 1 s interval and 93 µA advertising at 1 s ([Infineon datasheet, table 39](https://www.mouser.com/datasheet/2/196/Infineon_CYW43439_DataSheet_v05_00_EN-3361555.pdf)).
+- Simulated over a whole session, the cartridge adds about 13 mA (67 mW, +28% of a DMG) at the home screen and peaks near 60 mA, well under what an EverDrive adds ([hardware-sim.md](hardware-sim.md)).
+- **We could not find how much the DMG's 5 V converter can supply to the cartridge.**
 
 Design rules:
 - The radio is off unless a phone session is active.
-- The SE050 sits in deep power-down (<5 µA) between operations.
+- The SE050 sits in deep power-down (<5 µA) while the cartridge is locked. Deep power-down drops the PIN-authenticated session, so while unlocked it uses power-down (~0.45 mA) instead.
 - The RP2350 runs at the lowest clock that meets bus timing.
 
 Exit criterion for Phase 1: average cartridge draw at most 2× a stock cart, with no brownout on a DMG running on alkaline AAs at end of life.
@@ -147,9 +149,10 @@ Trust boundary in one sentence: **the SE050 protects key extraction, the RP2350 
 - **Goals:** prove the bus, the power budget and the SE050 port.
 - **Deliverables:**
   1. Run the existing ROM on a real DMG from an off-the-shelf flash cart (week 1).
-  2. Fork the open-source RP2040 cart firmware, add the mailbox at `0xA000` (the ROM moves off `0xD800`), and run `chip.ts` logic ported to C on the cart.
-  3. Pico 2 W + OM-SE050ARD-E + LIS3DH on a cartridge breakout. Port key derivation and import, PIN auth object, Ed25519/secp256k1 signing.
-  4. Power measurements.
+  2. Fork the open-source RP2040 cart firmware, load the simulated PIO program (`hardware/sim/programs.ts`) and the mailbox (`make hw`: writes to `0xA000`, replies read from `0x7F00`), and run `chip.ts` logic ported to C on the cart.
+  3. Measure what the simulation had to assume: the PIO → DMA → PIO round trip, the point where the DMG CPU latches read data, and SE050 key-import and session times.
+  4. Pico 2 W + OM-SE050ARD-E + LIS3DH on a cartridge breakout. Port key derivation and import, PIN auth object, Ed25519/secp256k1 signing.
+  5. Power measurements.
 - **Exit criteria:**
   - A real DMG signs a devnet and a Sepolia transfer with keys inside the SE050.
   - No bus errors over 24 hours.
@@ -171,7 +174,7 @@ Trust boundary in one sentence: **the SE050 protects key extraction, the RP2350 
 ### Phase 3: Rev B, hardening and external audit (months 4–7)
 - **Goals:** a design we are willing to let strangers attack.
 - **Deliverables:**
-  - Rev B with SN74LVC8T245, RP2354A and potting.
+  - Rev B with SN74LVC8T245, RP2354B and potting.
   - Clear-signing decoders (SPL, common programs, EIP-712).
   - Genuine-check flow.
   - Reproducible builds.

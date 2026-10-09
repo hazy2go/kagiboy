@@ -1,0 +1,52 @@
+sessions: 2830 frames (47.4 s of Game Boy time) each, 2.2 s
+  signed: {"sol":true,"evm":true,"swap":true}, unlocked after power cycle: true; worst corner: {"sol":true,"evm":true,"swap":true}, true
+
+firmware latency (the ROM gives up after 600 frames = 10046 ms):
+  PING           typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 17 ms
+  ENTROPY        typ     0.1 ms   worst     0.1 ms   Game Boy waited ≤ 16 ms
+  CREATE         typ   582.7 ms   worst   712.3 ms   Game Boy waited ≤ 720 ms
+  SET_PIN        typ   264.8 ms   worst   400.6 ms   Game Boy waited ≤ 417 ms
+  PHONE          typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 17 ms
+  PAIR           typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 17 ms
+  PAIR accept    typ    50.3 ms   worst   400.5 ms   Game Boy waited ≤ 401 ms
+  ACCOUNT        typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 16 ms
+  QR             typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 14 ms
+  PENDING        typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 17 ms
+  SIGN sol       typ   264.1 ms   worst   316.3 ms   Game Boy waited ≤ 318 ms
+  TXSTATUS       typ     0.3 ms   worst     0.5 ms   Game Boy waited ≤ 17 ms
+  SIGN evm       typ   165.0 ms   worst   205.6 ms   Game Boy waited ≤ 218 ms
+  SIGN swap-sol  typ   263.0 ms   worst   315.3 ms   Game Boy waited ≤ 318 ms
+  UNLOCK         typ   187.2 ms   worst   278.0 ms   Game Boy waited ≤ 283 ms
+
+bus: 49685048 machine cycles; ROM reads 3464157 (3704 of them mailbox), RAM-window writes 317, ROM-area writes 0
+  work-RAM cycles the cartridge must ignore: 879690 reads (incl. OAM DMA), 280468 writes; longest run of back-to-back cartridge reads: 25
+  most writes in any 8 cycles: 4; the Game Boy wrote a chip-owned byte: 0 times; read back its own bytes: 0; OAM DMA conflicts: 0
+
+cycle-level window: 298459 machine cycles (10 frames with mailbox traffic + 7 sampled frames)
+  romWindow/A @100 MHz       20/32 instr   margin to CLK-fall latch FAILS   to next-CLK latch 471.4 ns   contention/spurious/hold/write errors 0   (early latch, cycle 0: valid 7.0 ns too late)
+  romWindow/B @100 MHz       20/32 instr   margin to CLK-fall latch FAILS   to next-CLK latch 467.5 ns   contention/spurious/hold/write errors 0   (early latch, cycle 0: valid 9.8 ns too late)
+  romWindow/A @125 MHz       20/32 instr   margin to CLK-fall latch 50.8 ns   to next-CLK latch 531.5 ns   contention/spurious/hold/write errors 0
+  romWindow/B @125 MHz       20/32 instr   margin to CLK-fall latch 46.1 ns   to next-CLK latch 527.5 ns   contention/spurious/hold/write errors 0
+  romWindow/A @150 MHz       20/32 instr   margin to CLK-fall latch 81.8 ns   to next-CLK latch 562.2 ns   contention/spurious/hold/write errors 0
+  romWindow/B @150 MHz       20/32 instr   margin to CLK-fall latch 77.6 ns   to next-CLK latch 558.5 ns   contention/spurious/hold/write errors 0
+  romWindow/A @200 MHz       21/32 instr   margin to CLK-fall latch 107.6 ns   to next-CLK latch 586.5 ns   contention/spurious/hold/write errors 0
+  romWindow/B @200 MHz       21/32 instr   margin to CLK-fall latch 103.1 ns   to next-CLK latch 584.4 ns   contention/spurious/hold/write errors 0
+  speculative/A @150 MHz     32/32 instr   margin to CLK-fall latch FAILS   to next-CLK latch 378.1 ns   contention/spurious/hold/write errors 0   (early latch, cycle 3149: wrong or undriven byte)
+  decodeFirst/A @150 MHz     26/32 instr   margin to CLK-fall latch FAILS   to next-CLK latch 398.1 ns   contention/spurious/hold/write errors 0   (early latch, cycle 0: wrong or undriven byte)
+  decodeFirst/A @200 MHz     26/32 instr   margin to CLK-fall latch FAILS   to next-CLK latch 459.6 ns   contention/spurious/hold/write errors 0   (early latch, cycle 0: valid 7.0 ns too late)
+  decodeFirst/A @250 MHz     27/32 instr   margin to CLK-fall latch 15.3 ns   to next-CLK latch 497.0 ns   contention/spurious/hold/write errors 0
+  DMA hop (cycles) vs conservative-latch margin @125 MHz, worst corner: 4: 75 ns  8: 51 ns  12: FAIL  16: FAIL  20: FAIL  24: FAIL
+  DMA hop (cycles) vs conservative-latch margin @150 MHz, worst corner: 4: 89 ns  8: 83 ns  12: 29 ns  16: FAIL  20: FAIL  24: FAIL
+
+pins: 39 needed (28 on the cartridge bus); RP2350A/RP2354A have 30, RP2350B/RP2354B have 48
+  /CS isn't needed: with the ROM read window, the cartridge never answers 0xA000 reads and decodes writes by address
+
+power at 150 MHz, LDO (stock DMG ≈ 235 mW; an original EverDrive adds ≈ 230 mW and runs fine):
+  home screen, phone connected                  13.4 mA    67 mW  (+28% of a DMG)
+  home screen, radio off                        12.7 mA    64 mW  (+27% of a DMG)
+  locked (SE050 deep power-down, radio off)     12.2 mA    61 mW  (+26% of a DMG)
+  signing (SE050 public-key engine running)     28.1 mA   141 mW  (+60% of a DMG)
+  session average 13.2 mA 66 mW; peak 60 mA (SE050 peak + a radio burst + busy core, all at once)
+  with a buck converter instead: home 10.4 mA; with a 30 ms connection interval: home 14.9 mA
+
+wrote /Users/hazy/gb-wallet/hardware/sim/out/results.json

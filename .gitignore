@@ -12,3 +12,4 @@ assets/renders/drafts
 .impeccable/direction.json
 __pycache__/
 .impeccable/
+hardware/sim/out/results.json

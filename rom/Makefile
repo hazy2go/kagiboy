@@ -25,6 +25,17 @@ $(DEMO_OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h src/demo_ch
 	mkdir -p build
 	$(LCC) -DDEMO_CHIP -Wa-l -Wl-m -Wl-yt0x03 -Wl-ya1 -Wm-yn"$(TITLE)" -o $(DEMO_OUT) src/main.c src/gfx.c src/assets.c
 
+# Real-cartridge build: the Game Boy writes requests to the cartridge RAM window (0xA000) and reads
+# replies from ROM space it leaves empty (0x7F00), both answered by the cartridge MCU.
+# hardware/sim runs it; the shipping wallet.gb is unchanged.
+HW_OUT = build/wallet-hw.gb
+
+hw: $(HW_OUT)
+
+$(HW_OUT): src/main.c src/gfx.c src/gfx.h src/assets.c src/brand.h
+	mkdir -p build
+	$(LCC) -DMB_ADDR=0xA000 -DMB_READ_ADDR=0x7F00 -Wa-l -Wl-m -Wm-yn"$(TITLE)" -o $(HW_OUT) src/main.c src/gfx.c src/assets.c
+
 # canned replies from the real browser chip; needs web/ dependencies installed
 src/demo_chip.h: assets/gen_demo_chip.mts ../web/src/chip/chip.ts ../web/src/chip/keys.ts
 	../web/node_modules/.bin/tsx assets/gen_demo_chip.mts
@@ -32,7 +43,7 @@ src/demo_chip.h: assets/gen_demo_chip.mts ../web/src/chip/chip.ts ../web/src/chi
 clean:
 	rm -rf build
 
-.PHONY: all demo clean
+.PHONY: all demo hw clean
 
 src/assets.c src/assets.h: assets/gen_assets.py
 	python3 assets/gen_assets.py

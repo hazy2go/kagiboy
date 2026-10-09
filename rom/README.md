@@ -11,7 +11,10 @@ the chip says and asks you to confirm.
 ```sh
 make          # build/wallet.gb, also copied to ../web/public/wallet.gb for the demo
 make demo     # build/wallet-demo.gb, for a flash cart on a real Game Boy
+make hw       # build/wallet-hw.gb, for the real cartridge: mailbox writes at 0xA000, reads at 0x7F00
 ```
+
+`make hw` is what [hardware/sim](../hardware/sim) runs to simulate the cartridge.
 
 The Makefile expects GBDK in `~/gbdk` (`make GBDK=/path/to/gbdk` otherwise).
 

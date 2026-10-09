@@ -6,8 +6,11 @@ real hardware, `web/src/chip/` in the demo).
 
 The two sides talk through a 256-byte mailbox.
 
-- **Real cartridge:** the cartridge MCU answers reads/writes on the external RAM
-  window (`0xA000`), exactly where a normal cartridge's save RAM sits.
+- **Real cartridge** (`make hw`): the Game Boy writes its half to the external RAM
+  window (`0xA000`), where a normal cartridge's save RAM sits, and reads the chip's
+  half through ROM space it leaves empty (`0x7F00`). The cartridge MCU answers both
+  from SRAM. Every read is then a plain ROM read, which the cartridge serves fastest
+  (see [hardware-sim.md](hardware-sim.md)).
 - **Demo:** the mailbox lives in work RAM at `0xD800` so any emulator works; the
   chip reads and writes it between frames.
 

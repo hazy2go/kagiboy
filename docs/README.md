@@ -2,7 +2,8 @@
 
 Start with [protocol.md](protocol.md) if you want to know how the Game Boy and
 the chip talk, and [hardware.md](hardware.md) for what goes inside the real
-cartridge. [ROADMAP.md](ROADMAP.md) is the path from here to a cartridge that's
+cartridge. [hardware-sim.md](hardware-sim.md) is that cartridge simulated cycle by
+cycle against the real ROM, before building it. [ROADMAP.md](ROADMAP.md) is the path from here to a cartridge that's
 been audited and that someone could actually buy.
 
 | Folder | What's in it |

@@ -9,7 +9,20 @@
 #include "brand.h"
 #include "gfx.h"
 
-#define MB ((volatile uint8_t *)0xD800)
+/*
+ * The mailbox: work RAM in the emulator and demo builds. On the real cartridge (`make hw`) the Game Boy
+ * writes its half through the cartridge RAM window (0xA000) and reads the chip's half through unused
+ * ROM space (0x7F00), so every read is a plain ROM read the cartridge serves on its fastest path.
+ * The ROM only ever writes the bytes it owns and reads the bytes the chip owns.
+ */
+#ifndef MB_ADDR
+#define MB_ADDR 0xD800
+#endif
+#ifndef MB_READ_ADDR
+#define MB_READ_ADDR MB_ADDR
+#endif
+#define MB ((volatile uint8_t *)MB_ADDR)
+#define MBR ((volatile uint8_t *)MB_READ_ADDR)
 #define MB_REQ_SEQ 0x00
 #define MB_CMD 0x01
 #define MB_REQ_LEN 0x02
@@ -375,20 +388,20 @@ static uint8_t chip_call(uint8_t cmd, uint8_t arg, const uint8_t *data, uint8_t 
     seq++;
     if (seq == 0) seq = 1;
     MB[MB_REQ_SEQ] = seq;
-    while (MB[MB_RESP_SEQ] != seq) {
+    while (MBR[MB_RESP_SEQ] != seq) {
         vsync();
         anim_tick(++frame);
         if (++waited > 600) return ST_TIMEOUT;
     }
-    resp_len = MB[MB_RESP_LEN];
+    resp_len = MBR[MB_RESP_LEN];
     if (resp_len > RESP_MAX) resp_len = RESP_MAX;
-    for (i = 0; i < resp_len; i++) resp[i] = MB[MB_RESP + i];
+    for (i = 0; i < resp_len; i++) resp[i] = MBR[MB_RESP + i];
     resp[resp_len] = 0;
-    return MB[MB_STATUS];
+    return MBR[MB_STATUS];
 }
 
 static uint8_t chip_present(void) {
-    return MB[MB_MAGIC] == CHIP_MAGIC;
+    return MBR[MB_MAGIC] == CHIP_MAGIC;
 }
 
 /* Scrub a secret request (PIN, word indices) from the mailbox once answered. */
@@ -398,11 +411,11 @@ static void clear_req(uint8_t len) {
     MB[MB_REQ_LEN] = 0;
 }
 
-#define ACCEL_X() ((int8_t)MB[MB_ACCEL_X])
-#define ACCEL_Y() ((int8_t)MB[MB_ACCEL_Y])
-#define TX_PENDING() (MB[MB_PENDING])
-#define REQ_KIND() (MB[MB_PENDING]) /* 1 sign request, 2 a phone asks to pair */
-#define PHONE_PAIRED() (MB[MB_PAIRED] == 1)
+#define ACCEL_X() ((int8_t)MBR[MB_ACCEL_X])
+#define ACCEL_Y() ((int8_t)MBR[MB_ACCEL_Y])
+#define TX_PENDING() (MBR[MB_PENDING])
+#define REQ_KIND() (MBR[MB_PENDING]) /* 1 sign request, 2 a phone asks to pair */
+#define PHONE_PAIRED() (MBR[MB_PAIRED] == 1)
 #endif
 
 /* ---------- reading chip replies ---------- */
