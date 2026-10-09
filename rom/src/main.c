@@ -1476,7 +1476,7 @@ static void pair_request(void) {
 }
 
 static void sign_request(void) {
-    uint8_t held = 0, shown = 0, k, st, w;
+    uint8_t held = 0, shown = 0, k, st, w, swap;
     uint16_t hold_start = 0, elapsed;
     char *to, *amount, *fee, *network, *unit;
     /* every interrupted screen lands here; a pairing is the other kind of request */
@@ -1494,7 +1494,9 @@ static void sign_request(void) {
     beep(0xF0);
     screen_begin();
     header(T_ICON_SHIELD_0, "Approve?", network);
-    cap(1, 4, "SEND");
+    /* a swap pays one coin for another: its own words, so it never reads like a plain send */
+    swap = !memcmp(network, "SWAP ", 5);
+    cap(1, 4, swap ? "SWAP" : "SEND");
     w = big_width(amount);
     if (w <= 14) {
         big(1, 5, amount);
@@ -1508,7 +1510,7 @@ static void sign_request(void) {
     }
     cap(1, 7, "FEE");
     txt_n(2, 8, fee, 16);
-    cap(1, 9, "TO");
+    cap(1, 9, swap ? "FOR" : "TO");
     box(1, 10, 18, 5);
     wrap(2, 11, 16, to, 3);
     bar(2, 16, 14, 0, 60);
