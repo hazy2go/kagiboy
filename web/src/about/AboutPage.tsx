@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Waitlist } from "../landing/Waitlist";
 import "./about.css";
-import { MasonryLightbox } from "../site/ui/masonry-lightbox";
+import { LightboxModal, MasonryLightbox } from "../site/ui/masonry-lightbox";
 import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
 import "../site/tw.css";
 
@@ -44,8 +45,9 @@ const LOOPS = [
   { src: "/loops/swap", step: "03 SWAP", body: "SOL to USDC on Base. The Game Boy tells me what I get before I sign.", alt: "A SOL to USDC swap reviewed on the Game Boy screen and signed by holding A" },
 ] as const;
 
-/** a looping take that only plays while it's on screen, and not at all for people who'd rather no motion */
-function Loop({ src, alt }: { src: string; alt: string }) {
+/** a looping take that only plays while it's on screen (not at all for people who'd rather no motion); a tap
+ *  opens it big in the same lightbox as the photos below */
+function Loop({ id, src, alt, onOpen }: { id: number; src: string; alt: string; onOpen: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
@@ -54,7 +56,11 @@ function Loop({ src, alt }: { src: string; alt: string }) {
     io.observe(v);
     return () => io.disconnect();
   }, []);
-  return <video ref={ref} src={`${src}.mp4`} poster={`${src}.jpg`} muted loop playsInline preload="none" aria-label={alt} width={720} height={790} />;
+  return (
+    <motion.button type="button" layoutId={`loop-${id}`} className="tried-open" onClick={onOpen} aria-label={`Open bigger: ${alt}`}>
+      <video ref={ref} src={`${src}.mp4`} poster={`${src}.jpg`} muted loop playsInline preload="none" width={720} height={790} />
+    </motion.button>
+  );
 }
 
 const PLAYER = [
@@ -66,6 +72,9 @@ const PLAYER = [
 ] as const;
 
 export function AboutPage() {
+  const [openLoop, setOpenLoop] = useState<number | null>(null);
+  const closeLoop = useCallback(() => setOpenLoop(null), []);
+  const opened = openLoop === null ? null : LOOPS[openLoop];
   useEffect(() => {
     document.documentElement.classList.add("kb-root");
     document.title = "About kagiboy";
@@ -156,13 +165,18 @@ export function AboutPage() {
             hardware, so for now both screens follow the same script side by side. Everything on the Game Boy is the real ROM.
           </p>
         </header>
+        <LightboxModal
+          prefix="loop"
+          onClose={closeLoop}
+          selected={opened && { id: openLoop! + 1, src: `${opened.src}.jpg`, video: `${opened.src}.mp4`, alt: opened.alt, description: opened.step, width: 720, height: 790 }}
+        />
         <div className="tried-row">
           {LOOPS.map((l, i) => (
             // the shadow sits on a wrapper: the slip's torn-edge mask would cut its own shadow off
             <div key={l.step} className="tried-slip">
               <figure className="receipt paper-white print-in" style={{ ["--i" as string]: i }}>
                 <div className="perf" aria-hidden />
-                <Loop src={l.src} alt={l.alt} />
+                <Loop id={i + 1} src={l.src} alt={l.alt} onOpen={() => setOpenLoop(i)} />
                 <figcaption>
                   <span className="px">{l.step}</span>
                   {l.body}

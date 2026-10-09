@@ -172,17 +172,37 @@
   rotate: -0.5deg;
 }
 
-/* the take, printed in a soft frame on the slip */
+/* the take, printed in a soft frame on the slip; a tap opens it big */
+.tried-open {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ece9e2;
+  cursor: zoom-in;
+}
+
+.tried-open:focus-visible {
+  outline: 2px solid var(--kb-ink);
+  outline-offset: 3px;
+}
+
 .tried-slip video {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 720 / 790;
-  margin-top: 12px;
-  border-radius: 14px;
-  background: #ece9e2;
   object-fit: cover;
-  box-shadow: inset 0 0 0 1px rgba(31, 35, 48, 0.08);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .tried-open:hover video {
+    transform: scale(1.04);
+  }
 }
 
 .tried-slip figcaption {

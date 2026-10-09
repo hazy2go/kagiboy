@@ -4,7 +4,7 @@
 // the site's colours and type, photos tagged with what the screen shows.
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 export interface ImageType {
@@ -18,6 +18,8 @@ export interface ImageType {
   height?: number;
   /** kagiboy: where a tile's crop is anchored (CSS object-position) */
   position?: string;
+  /** kagiboy: a looping take instead of a photo (src is then its poster) */
+  video?: string;
 }
 
 export interface MasonryLightboxProps {
@@ -71,17 +73,13 @@ const CLOSE_BUTTON_DELAY = 0.15;
 
 const emptySubscribe = () => () => {};
 
-export const MasonryLightbox = ({
-  images = [],
-  className = "",
-}: MasonryLightboxProps) => {
-  const [selected, setSelected] = useState<ImageType | null>(null);
+/** the opened photo or take, zooming out of its tile (shared layoutId `${prefix}-${id}`) */
+export function LightboxModal({ selected, onClose, prefix = "photo" }: { selected: ImageType | null; onClose: () => void; prefix?: string }) {
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false,
   );
-  const prefersReducedMotion = useReducedMotion();
 
   // lock scroll + close on escape while the viewer is open
   useEffect(() => {
@@ -99,7 +97,7 @@ export const MasonryLightbox = ({
     }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
+      if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -107,7 +105,7 @@ export const MasonryLightbox = ({
       document.body.style.paddingRight = previousPaddingRight;
       window.removeEventListener("keydown", onKey);
     };
-  }, [selected]);
+  }, [selected, onClose]);
 
   const modal = (
     <AnimatePresence>
@@ -118,20 +116,36 @@ export const MasonryLightbox = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: BACKDROP_DURATION }}
-          onClick={() => setSelected(null)}
+          onClick={onClose}
         >
           <motion.div
-            layoutId={`photo-${selected.id}`}
+            layoutId={`${prefix}-${selected.id}`}
             className={`relative overflow-hidden ${MODAL_RADIUS} shadow-2xl ${MODAL_BG}`}
             transition={{ type: "spring", ...MODAL_SPRING }}
             onClick={(e) => e.stopPropagation()}
           >
-            <img               src={selected.src}
-              alt={selected.alt}
-              width={selected.width ?? DEFAULT_WIDTH}
-              height={selected.height ?? DEFAULT_HEIGHT}
-              className={`block w-auto h-auto ${MODAL_MAX_SIZE} object-contain`}
-            />
+            {selected.video ? (
+              <video
+                src={selected.video}
+                poster={selected.src}
+                aria-label={selected.alt}
+                autoPlay
+                muted
+                loop
+                playsInline
+                width={selected.width ?? DEFAULT_WIDTH}
+                height={selected.height ?? DEFAULT_HEIGHT}
+                className={`block w-auto h-auto ${MODAL_MAX_SIZE} object-contain`}
+              />
+            ) : (
+              <img
+                src={selected.src}
+                alt={selected.alt}
+                width={selected.width ?? DEFAULT_WIDTH}
+                height={selected.height ?? DEFAULT_HEIGHT}
+                className={`block w-auto h-auto ${MODAL_MAX_SIZE} object-contain`}
+              />
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -145,7 +159,7 @@ export const MasonryLightbox = ({
             <motion.button
               type="button"
               aria-label="Close"
-              onClick={() => setSelected(null)}
+              onClick={onClose}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: CLOSE_BUTTON_DELAY }}
@@ -165,6 +179,17 @@ export const MasonryLightbox = ({
       )}
     </AnimatePresence>
   );
+
+  return mounted ? createPortal(modal, document.body) : null;
+}
+
+export const MasonryLightbox = ({
+  images = [],
+  className = "",
+}: MasonryLightboxProps) => {
+  const [selected, setSelected] = useState<ImageType | null>(null);
+  const close = useCallback(() => setSelected(null), []);
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <div
@@ -219,7 +244,7 @@ export const MasonryLightbox = ({
         })}
       </div>
 
-      {mounted ? createPortal(modal, document.body) : null}
+      <LightboxModal selected={selected} onClose={close} />
     </div>
   );
 };
