@@ -303,13 +303,13 @@ export function Feel({ dur, marks = [] }: P) {
   );
 }
 
-/** one clip of the real footage in a rounded frame (766 x 840, clear of the captions), pushing in slowly */
-export function Footage({ clip, len, clicks = [] }: { clip: string; len: number; clicks?: number[] }) {
-  const f = useCurrentFrame();
-  const zoom = lerp(1, 1.035, f / Math.max(1, len));
+/** one clip of the real footage in a rounded frame (766 x 840, clear of the captions). The clips are cut at exactly
+ *  that size so the browser never resamples them, and held still on purpose: a
+ *  slow zoom resamples every frame and blurs the Game Boy's pixel text. */
+export function Footage({ clip, clicks = [] }: { clip: string; len: number; clicks?: number[] }) {
   return (
     <div style={{ position: "relative", width: 766, height: 840, borderRadius: 40, overflow: "hidden", boxShadow: "0 30px 80px rgba(20,24,40,0.18)" }}>
-      <OffthreadVideo src={staticFile(`footage/${clip}.mp4`)} muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})` }} />
+      <OffthreadVideo src={staticFile(`footage/${clip}.mp4`)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       {clicks.map((fr) => (
         <Sequence key={fr} from={fr} durationInFrames={10}>
           <Audio src={staticFile("sfx/button-click.mp3")} volume={0.5} />
