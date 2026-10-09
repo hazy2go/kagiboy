@@ -633,8 +633,8 @@ export function Landing() {
 
       <footer className="kb-foot">
         <p>
-          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge hardware is a
-          work in progress.
+          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge is in
+          production.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
         <p className="foot-links">

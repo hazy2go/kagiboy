@@ -239,7 +239,7 @@ export function AboutPage() {
             <p>
               {PLACEHOLDER_PHOTOS
                 ? "Mockups for now: the scenes are generated, the screens are the real ROM. Photos of my own Game Boy running it are on the way."
-                : "The same screens as the live demo, on my own Game Boy, loaded from a flash cart. This test build has a pretend chip inside the ROM: it holds no real keys and signs nothing, until the cartridge exists."}
+                : "The same screens as the live demo, on my own Game Boy, loaded from a flash cart. This test build has a pretend chip inside the ROM: it holds no real keys and signs nothing, until the cartridge ships."}
             </p>
           </header>
           <MasonryLightbox
@@ -260,8 +260,8 @@ export function AboutPage() {
 
       <footer className="kb-foot">
         <p>
-          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge hardware is a
-          work in progress.
+          kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge is in
+          production.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>

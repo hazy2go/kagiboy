@@ -23,7 +23,7 @@ A Game Boy can't lie to you like that. It has no network, no apps and no operati
 
 This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for now), the phone app, the website, the 3D model and the videos.
 
-> **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge's key chip is simulated in the browser until the hardware exists; the parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
+> **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge itself is in production; until it ships, its key chip is simulated in the browser. The parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
 
 ## See it work
 
@@ -97,7 +97,7 @@ Swaps come from the [SODAX](https://sodax.com) SDK with live quotes. The phone o
 
 <img src="docs/media/real-game-boy.jpg" alt="The kagiboy ROM running on an original Game Boy from a flash cart" width="100%">
 
-These are photos of my own DMG running the ROM from an EverDrive. There's no key chip in a flash cart, so `make demo` builds a version with a small stand-in chip inside the ROM: it has canned replies taken from the real chip code, saves the wallet and PIN to the cartridge's battery RAM, and plays a little chiptune of mine on the menus. It can't hold real keys and it doesn't sign anything. It's there so the whole flow can be walked through on real hardware while the cartridge gets built.
+These are photos of my own DMG running the ROM from an EverDrive. There's no key chip in a flash cart, so `make demo` builds a version with a small stand-in chip inside the ROM: it has canned replies taken from the real chip code, saves the wallet and PIN to the cartridge's battery RAM, and plays a little chiptune of mine on the menus. It can't hold real keys and it doesn't sign anything. It's there so the whole flow can be walked through on real hardware while the cartridge is in production.
 
 ## Build it
 
@@ -146,7 +146,7 @@ What isn't solved, in the demo:
 - Approving signs whatever request is pending. That's safe today because the phone can't replace or cancel a pending request, but it should be bound to a digest of what was shown before any queueing is added.
 - On OP-stack chains like Base, the L1 data fee is charged outside gas times max fee, so "MAX" isn't a strict cap there. It's around 2×10⁻¹⁶ ETH on Base Sepolia.
 - Balances come from the phone. The chip formats them but can't verify them.
-- Swaps are a preview. The cartridge decodes them against its own token list and signs, but that signature isn't what SODAX executes yet.
+- Swaps get live quotes from SODAX, and the cartridge decodes each one against its own token list and signs it. This build doesn't submit the signed swap to SODAX yet; that's the next step.
 - `pnpm audit --prod` reports 8 advisories, all deep inside the `@sodax/sdk` dependency tree. Same-major fixes are pinned; the rest need an SDK update. The SDK only loads on the swap screen.
 
 And in the hardware design:
@@ -154,7 +154,7 @@ And in the hardware design:
 - Transaction decoding, the fee cap and the PIN session run on the RP2350, not inside the secure element. The SE050 stops keys being extracted, not misuse by compromised firmware. The plan is signed firmware, the Bluetooth stack in TrustZone's non-secure world, and a potted board.
 - The SE050 can't derive BIP-32 or SLIP-10 keys, so the seed lives on the MCU during setup. The plan is to derive once, import the keys into the secure element and erase the seed.
 - The PIN and the words cross the cartridge bus in plain text, and a modified console could fake button presses. Use your own, unmodified Game Boy.
-- No cartridge has been built yet, and nothing has had an outside security review. Nobody should store real money on this until both have happened.
+- The cartridge is in production and nothing has had an outside security review yet. Nobody should store real money on this until the audited cartridge ships.
 
 The four audit rounds are in [docs/audits](docs/audits). The path to a cartridge you can actually buy is in [docs/ROADMAP.md](docs/ROADMAP.md).
 

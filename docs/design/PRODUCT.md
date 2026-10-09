@@ -35,8 +35,8 @@ Bluetooth, and using a secure element.
 ## Operating Context
 
 The demo runs the real ROM in an in-browser emulator with a simulated key chip
-and a phone panel, on Solana devnet and Ethereum Sepolia. The hardware is a
-design (docs/hardware.md): RP2350 MCU, NXP SE050E2 secure element, CYW43439
+and a phone panel, on Solana devnet and Ethereum Sepolia. The cartridge is in
+production (docs/hardware.md): RP2350 MCU, NXP SE050E2 secure element, CYW43439
 Bluetooth, LIS3DH accelerometer, ~$14 in parts at 100 units.
 
 ## Capabilities and Constraints
@@ -45,8 +45,8 @@ Bluetooth, LIS3DH accelerometer, ~$14 in parts at 100 units.
   Solana m/44'/501'/0'/0', EVM m/44'/60'/0'/0/0, PIN with wipe after 5, restore
   from 12 words, QR receive, exact amount/fee/network on screen, refuses what it
   can't show), the phone app, and a headless test suite.
-- Not built: the physical cartridge. Never claim it ships, is certified, or has
-  been tested on real hardware. The ROM has not yet been run on a physical DMG.
+- In production: the physical cartridge. Never claim it ships, is certified, or has
+  been audited. The ROM runs on a physical DMG from a flash cart.
 - Testnets only in the demo.
 - Waitlist: email sign-up is the end call to action; storage is provisioned at
   deploy time (Vercel), not yet.
@@ -76,7 +76,7 @@ Bluetooth, LIS3DH accelerometer, ~$14 in parts at 100 units.
 ## Product Principles
 
 1. Show, don't claim: the live demo and real screens carry the argument.
-2. Honest about status: the software is real, the hardware is a design.
+2. Honest about status: the software is real, the cartridge is in production.
 3. Calm confidence: security explained plainly, limits stated.
 4. Delight is the moat: it should feel like something you want to own.
 
