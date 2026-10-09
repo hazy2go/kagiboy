@@ -162,7 +162,7 @@ export function AboutPage() {
           <h2 id="tried-title">So I tried it.</h2>
           <p>
             My own Game Boy with the ROM on a flash cart, next to the phone app. The cartridge's radio comes with the real
-            hardware, so for now both screens follow the same script side by side. Everything on the Game Boy is the real ROM.
+            hardware, so for now the two aren't linked and run side by side. Everything on the Game Boy is the real ROM.
           </p>
         </header>
         <LightboxModal
@@ -239,7 +239,7 @@ export function AboutPage() {
             <p>
               {PLACEHOLDER_PHOTOS
                 ? "Mockups for now: the scenes are generated, the screens are the real ROM. Photos of my own Game Boy running it are on the way."
-                : "The same screens as the live demo, on my own Game Boy, loaded from a flash cart. This test build has a pretend chip inside the ROM: it holds no real keys and signs nothing, until the cartridge ships."}
+                : "The same screens as the live demo, on my own Game Boy, loaded from a flash cart. This prototype build has a test chip inside the ROM that holds no real keys, until the cartridge ships."}
             </p>
           </header>
           <MasonryLightbox

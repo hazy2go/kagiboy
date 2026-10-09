@@ -97,7 +97,7 @@ Swaps come from the [SODAX](https://sodax.com) SDK with live quotes. The phone o
 
 <img src="docs/media/real-game-boy.jpg" alt="The kagiboy ROM running on an original Game Boy from a flash cart" width="100%">
 
-These are photos of my own DMG running the ROM from an EverDrive. There's no key chip in a flash cart, so `make demo` builds a version with a small stand-in chip inside the ROM: it has canned replies taken from the real chip code, saves the wallet and PIN to the cartridge's battery RAM, and plays a little chiptune of mine on the menus. It can't hold real keys and it doesn't sign anything. It's there so the whole flow can be walked through on real hardware while the cartridge is in production.
+These are photos of my own DMG running the ROM from an EverDrive. A flash cart has no key chip, so `make demo` builds the prototype with a test chip inside the ROM, generated from the real chip code. It saves the wallet and PIN to the cartridge's battery RAM and plays a little chiptune of mine on the menus. It holds no real keys; it's there so the whole flow can be walked through on a real Game Boy while the cartridge is in production.
 
 ## Build it
 
@@ -106,7 +106,7 @@ The ROM needs [GBDK-2020](https://github.com/gbdk-2020/gbdk-2020). The Makefile 
 ```sh
 cd rom
 make          # build/wallet.gb, also copied to web/public/wallet.gb
-make demo     # build/wallet-demo.gb, the flash-cart build with the stand-in chip
+make demo     # build/wallet-demo.gb, the flash-cart prototype build
 ```
 
 The website and demo are Vite + React + TypeScript.
