@@ -256,12 +256,13 @@ export function Reveal({ dur }: P) {
    per line (public/footage, cut and cropped from the two takes). */
 type StepShot = { clip: string; eyebrow: string; title: string };
 // a shot starts on a voice line: 0 = the scene start, 1..3 = sentence starts, 1.5 = halfway through sentence 1
-const SHOTS: (StepShot & { at: number })[] = [
+const SHOTS: (StepShot & { at: number; clicks?: number[] })[] = [
   { at: 0, clip: "01-on", eyebrow: "A new save file", title: "Turn it on" },
-  { at: 1, clip: "02-mash", eyebrow: "01", title: "Mash the buttons" },
+  // the takes' own sound is muted (it has my voice on it); a click goes where a thumb goes down
+  { at: 1, clip: "02-mash", eyebrow: "01", title: "Mash the buttons", clicks: Array.from({ length: 13 }, (_, k) => 4 + k * 5 + (k % 3)) },
   { at: 1.5, clip: "03-shake", eyebrow: "02", title: "Shake it" },
   { at: 2, clip: "04-request", eyebrow: "Every request", title: "Your phone can't decide." },
-  { at: 3, clip: "05-hold-a", eyebrow: "On the Game Boy", title: "Hold A to sign" },
+  { at: 3, clip: "05-hold-a", eyebrow: "On the Game Boy", title: "Hold A to sign", clicks: [7] },
 ];
 
 export function Feel({ dur, marks = [] }: P) {
@@ -281,7 +282,9 @@ export function Feel({ dur, marks = [] }: P) {
         const len = (i + 1 < SHOTS.length ? mark(SHOTS[i + 1].at) : dur) - a0;
         return (
           <Sequence key={sh.clip} from={a0} durationInFrames={len}>
-            <Footage clip={sh.clip} len={len} />
+            <div style={{ position: "absolute", left: 1044, top: 44 }}>
+              <Footage clip={sh.clip} len={len} clicks={sh.clicks} />
+            </div>
             <div style={{ position: "absolute", left: 110, top: 0, bottom: 150, width: 900, display: "flex", alignItems: "center" }}>
               <Pop start={3}>
                 <Card style={{ padding: "28px 36px", display: "flex", flexDirection: "column", gap: 12, background: "rgba(255,255,255,0.94)" }}>
@@ -293,21 +296,57 @@ export function Feel({ dur, marks = [] }: P) {
           </Sequence>
         );
       })}
-      <div style={{ position: "absolute", left: 1072, top: 72, background: "rgba(255,255,255,0.92)", borderRadius: 999, padding: "10px 22px", fontFamily: SANS, fontWeight: 600, fontSize: 24, color: C.ink, boxShadow: "0 6px 20px rgba(20,24,40,0.12)" }}>
-        Prototype
+      <div style={{ position: "absolute", left: 1044 + 30, top: 44 + 26 }}>
+        <ProtoFlag />
       </div>
     </AbsoluteFill>
   );
 }
 
-/** one clip of the real footage in a rounded frame on the right (clear of the captions), pushing in slowly, with its own room sound low */
-function Footage({ clip, len }: { clip: string; len: number }) {
+/** one clip of the real footage in a rounded frame (766 x 840, clear of the captions), pushing in slowly */
+export function Footage({ clip, len, clicks = [] }: { clip: string; len: number; clicks?: number[] }) {
   const f = useCurrentFrame();
   const zoom = lerp(1, 1.035, f / Math.max(1, len));
   return (
-    <div style={{ position: "absolute", left: 1044, top: 44, width: 766, height: 840, borderRadius: 40, overflow: "hidden", boxShadow: "0 30px 80px rgba(20,24,40,0.18)" }}>
-      <OffthreadVideo src={staticFile(`footage/${clip}.mp4`)} volume={1.6} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})` }} />
+    <div style={{ position: "relative", width: 766, height: 840, borderRadius: 40, overflow: "hidden", boxShadow: "0 30px 80px rgba(20,24,40,0.18)" }}>
+      <OffthreadVideo src={staticFile(`footage/${clip}.mp4`)} muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})` }} />
+      {clicks.map((fr) => (
+        <Sequence key={fr} from={fr} durationInFrames={10}>
+          <Audio src={staticFile("sfx/button-click.mp3")} volume={0.5} />
+        </Sequence>
+      ))}
     </div>
+  );
+}
+
+/** a little pixel pennant on a pole, waving in steps like a sprite, so the footage reads as the prototype */
+export function ProtoFlag() {
+  const f = useCurrentFrame();
+  const px = 4; // one Game Boy pixel
+  const W = 62; // pennant length in pixels
+  const H = 12;
+  // each column of the cloth bobs on a slow sine, snapped to whole pixels, three frames per step
+  const step = Math.floor(f / 3);
+  const cols = Array.from({ length: W }, (_, x) => Math.round(Math.sin(x / 9 - step * 0.55) * 1.2 * (x / W)));
+  return (
+    <svg width={(W + 4) * px} height={(H + 24) * px} shapeRendering="crispEdges" style={{ overflow: "visible", filter: "drop-shadow(0 4px 10px rgba(20,24,40,0.25))" }}>
+      {/* pole and knob */}
+      <rect x={0} y={px} width={2 * px} height={(H + 22) * px} fill={C.ink} />
+      <rect x={-px} y={0} width={4 * px} height={2 * px} fill="#F2B84B" />
+      {cols.map((dy, x) => {
+        // swallowtail: the last pixels of the middle rows are cut away
+        const tail = W - x <= 5 ? W - x : 99;
+        return Array.from({ length: H }, (_, y) => {
+          const cut = tail < 99 && Math.abs(y - (H - 1) / 2) < 5 - tail + 1;
+          if (cut) return null;
+          const edge = y === 0 || y === H - 1 || x === W - 1;
+          return <rect key={`${x}-${y}`} x={(x + 2) * px} y={(y + 2 + dy) * px} width={px} height={px} fill={edge ? "#E58BA8" : C.pink} />;
+        });
+      })}
+      <text x={6 * px} y={(2 + H / 2 + 2.2) * px} fontFamily={PX} fontSize={22} fill={C.ink} transform={`translate(0 ${cols[28] * px})`}>
+        PROTOTYPE
+      </text>
+    </svg>
   );
 }
 

@@ -1,5 +1,6 @@
 import { AbsoluteFill, Img, Sequence, interpolate, useCurrentFrame } from "remotion";
 import { Console } from "./Three";
+import { Footage, ProtoFlag } from "./scenes2";
 import { C, Card, DISPLAY, Eyebrow, GameBoy, Glow, PX, Pop, SANS, Title, a, useIn, useSpring } from "./ui";
 
 type P = { dur: number; marks?: { at: number; text: string }[] };
@@ -223,8 +224,16 @@ export function Proof({ dur }: P) {
           <Img src={a("03-website-screenshots/desktop-13-demo.png")} style={{ width: "100%", display: "block" }} />
         </div>
       </AbsoluteFill>
-      <AbsoluteFill style={{ opacity: s2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 120 }}>
-        <GameBoy screens={["13-approve-swap"]} height={900} />
+      <AbsoluteFill style={{ opacity: s2, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 120, paddingBottom: 150 }}>
+        {/* the real swap: Review on Game Boy, the swap screen on the console, hold A */}
+        <div style={{ position: "relative" }}>
+          <Sequence from={b1} layout="none">
+            <Footage clip="06-swap" len={dur - b1} clicks={[138]} />
+          </Sequence>
+          <div style={{ position: "absolute", left: 30, top: 26 }}>
+            <ProtoFlag />
+          </div>
+        </div>
         <div style={{ width: 760, display: "flex", flexDirection: "column", gap: 30 }}>
           <Pop start={b1 + 6}>
             <Eyebrow>Live demo · six chains</Eyebrow>

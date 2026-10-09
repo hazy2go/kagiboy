@@ -120,6 +120,87 @@
   color: var(--kb-ink);
 }
 
+/* tried: three printed slips, each with a looping take of the prototype */
+.tried {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 calc(var(--kb-gutter) + env(safe-area-inset-right)) clamp(90px, 13vh, 140px)
+    calc(var(--kb-gutter) + env(safe-area-inset-left));
+}
+
+.tried header {
+  max-width: 38rem;
+  margin-bottom: clamp(32px, 5vh, 48px);
+}
+
+.tried h2 {
+  font-size: clamp(32px, 3.6vw, 48px);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.tried header p:not(.px) {
+  margin-top: 18px;
+  font-size: clamp(17px, 1.4vw, 19px);
+  line-height: 1.6;
+  color: var(--kb-ink-2);
+}
+
+.tried-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.tried-slip {
+  filter: drop-shadow(0 14px 22px rgba(70, 76, 128, 0.12)) drop-shadow(0 2px 3px rgba(70, 76, 128, 0.08));
+}
+
+.tried-slip figure {
+  margin: 0;
+  padding: 4px 16px 12px;
+}
+
+.tried-slip:nth-child(2) {
+  margin-top: 40px;
+  rotate: 0.6deg;
+}
+
+.tried-slip:nth-child(3) {
+  margin-top: 14px;
+  rotate: -0.5deg;
+}
+
+/* the take, printed in a soft frame on the slip */
+.tried-slip video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 790;
+  margin-top: 12px;
+  border-radius: 14px;
+  background: #ece9e2;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(31, 35, 48, 0.08);
+}
+
+.tried-slip figcaption {
+  margin: 14px 2px 6px;
+  padding-top: 12px;
+  border-top: 2px dashed rgba(43, 47, 58, 0.24);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--kb-ink-2);
+}
+
+.tried-slip figcaption .px {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--kb-ink);
+}
+
 /* why: three slips, slightly offset like they were torn off one after another */
 .why {
   display: grid;
@@ -329,6 +410,30 @@
   .why {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  /* the takes slide sideways on a phone, one and a bit in view, so the page doesn't grow three videos tall */
+  .tried-row {
+    display: flex;
+    gap: 14px;
+    margin: 0 calc(-1 * (var(--kb-gutter) + env(safe-area-inset-right))) 0 calc(-1 * (var(--kb-gutter) + env(safe-area-inset-left)));
+    padding: 8px calc(var(--kb-gutter) + env(safe-area-inset-right)) 18px calc(var(--kb-gutter) + env(safe-area-inset-left));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 var(--kb-gutter);
+    scrollbar-width: none;
+  }
+
+  .tried-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tried-slip,
+  .tried-slip:nth-child(n) {
+    flex: 0 0 78%;
+    margin-top: 0;
+    rotate: none;
+    scroll-snap-align: start;
   }
 
   .why-slip:nth-child(n) {

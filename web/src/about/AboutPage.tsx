@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Waitlist } from "../landing/Waitlist";
 import "./about.css";
@@ -35,6 +35,27 @@ const WHY = [
     body: "I'm not out to beat the big wallet companies. This is for people who grew up with a Game Boy and ended up in crypto, like me.",
   },
 ] as const;
+
+// Real takes of the prototype (the ROM on a flash cart in my Game Boy, next to the phone app), each cut so
+// it ends where it began and loops without a jump. public/loops, ~0.5 MB each.
+const LOOPS = [
+  { src: "/loops/pair", step: "01 PAIR", body: "Same code on both screens. I press A and they know each other.", alt: "The phone and the Game Boy both showing the pairing code 246810, then the wallet home screen on both" },
+  { src: "/loops/send", step: "02 SEND", body: "The phone asks for 1 SOL. Nothing moves until I hold A.", alt: "The phone asks the cartridge to sign a 1 SOL send; the Game Boy shows the amount and address, A is held, and it signs" },
+  { src: "/loops/swap", step: "03 SWAP", body: "SOL to USDC on Base. The Game Boy tells me what I get before I sign.", alt: "A SOL to USDC swap reviewed on the Game Boy screen and signed by holding A" },
+] as const;
+
+/** a looping take that only plays while it's on screen, and not at all for people who'd rather no motion */
+function Loop({ src, alt }: { src: string; alt: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: 0.35 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
+  return <video ref={ref} src={`${src}.mp4`} poster={`${src}.jpg`} muted loop playsInline preload="none" aria-label={alt} width={720} height={790} />;
+}
 
 const PLAYER = [
   ["NAME", "HAZY"],
@@ -123,6 +144,33 @@ export function AboutPage() {
               The cartridge would need a tiny radio to hear the phone, but it would only ever carry public data.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="tried" aria-labelledby="tried-title">
+        <header>
+          <p className="px eyebrow">PROTOTYPE, TAKE ONE</p>
+          <h2 id="tried-title">So I tried it.</h2>
+          <p>
+            My own Game Boy with the ROM on a flash cart, next to the phone app. The cartridge's radio comes with the real
+            hardware, so for now both screens follow the same script side by side. Everything on the Game Boy is the real ROM.
+          </p>
+        </header>
+        <div className="tried-row">
+          {LOOPS.map((l, i) => (
+            // the shadow sits on a wrapper: the slip's torn-edge mask would cut its own shadow off
+            <div key={l.step} className="tried-slip">
+              <figure className="receipt paper-white print-in" style={{ ["--i" as string]: i }}>
+                <div className="perf" aria-hidden />
+                <Loop src={l.src} alt={l.alt} />
+                <figcaption>
+                  <span className="px">{l.step}</span>
+                  {l.body}
+                </figcaption>
+                <div className="perf bottom" aria-hidden />
+              </figure>
+            </div>
+          ))}
         </div>
       </section>
 
