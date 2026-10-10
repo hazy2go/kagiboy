@@ -324,7 +324,7 @@ export function AboutPage() {
           {LOOPS.map((l, i) => (
             // the shadow sits on a wrapper: the slip's torn-edge mask would cut its own shadow off
             <div key={l.step} className="tried-slip">
-              <figure className="receipt paper-white print-in" style={{ ["--i" as string]: i }}>
+              <figure className="receipt paper-white">
                 <div className="perf" aria-hidden />
                 <Loop id={i + 1} src={l.src} alt={l.alt} onOpen={() => setOpenLoop(i)} />
                 <figcaption>
@@ -350,7 +350,7 @@ export function AboutPage() {
       </section>
 
       <section className="me" aria-labelledby="me-title">
-        <div className="player print-in">
+        <div className="player">
           <p className="player-stripe px" aria-hidden>
             <i />
             <span>PLAYER 1</span>
