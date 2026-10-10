@@ -41,7 +41,17 @@ export function Waitlist() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Couldn't save that. Try again in a minute.");
-      setState({ kind: "done", position: typeof body.position === "number" ? body.position : null, already: !!body.already });
+      // the server never gives a number back for an email already on the list (so nobody can look up when
+      // someone joined); this browser remembers the number it was given the first time instead
+      const key = `kagiboy.waitlist.${email.trim().toLowerCase()}`;
+      let position: number | null = typeof body.position === "number" ? body.position : null;
+      try {
+        if (position != null) localStorage.setItem(key, String(position));
+        else position = Number(localStorage.getItem(key)) || null;
+      } catch {
+        /* storage blocked: no remembered number */
+      }
+      setState({ kind: "done", position, already: !!body.already });
       if (!body.already && !reduced) void celebrate();
     } catch (err) {
       setState({ kind: "error", message: err instanceof Error ? err.message : "Couldn't save that." });
@@ -54,7 +64,7 @@ export function Waitlist() {
         <motion.div key="ticket" className="ticket" role="status" initial={{ opacity: 0, filter: "blur(10px)", y: -14 }} animate={{ ...BLUR_IN, y: 0 }} exit={BLUR_OUT}>
           <div className="ticket-perf" aria-hidden />
           <p className="px ticket-head">KAGIBOY WAITLIST</p>
-          <p className="px ticket-no">No. {state.position == null ? "----" : String(state.position).padStart(4, "0")}</p>
+          <p className="px ticket-no">{state.position == null ? "YOU'RE IN" : `No. ${String(state.position).padStart(4, "0")}`}</p>
           <p className="px">{state.already ? "ALREADY ON THE LIST" : "YOU'RE ON THE LIST"}</p>
           <p className="px ticket-mail">{maskEmail(email)}</p>
           <p className="px ticket-foot">ONE EMAIL WHEN IT SHIPS. NOTHING ELSE.</p>

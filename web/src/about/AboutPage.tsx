@@ -420,7 +420,8 @@ export function AboutPage() {
         <p>Leave your email and I'll write once, when the first cartridges are ready.</p>
         <Waitlist />
         <p className="about-cta-demo">
-          Or try it right now: <Link to="/demo">press start on the live demo</Link>
+          Or try it right now: <Link to="/demo">press start on the live demo</Link>, or{" "}
+          <a href="https://youtu.be/kjljPNDiCms" target="_blank" rel="noreferrer">watch the 2-minute pitch</a>.
         </p>
       </section>
       </main>
@@ -431,6 +432,11 @@ export function AboutPage() {
           the works.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
+        <p className="foot-links">
+          <Link to="/">Home</Link> · <Link to="/demo">Live demo</Link> ·{" "}
+          <a href="https://youtu.be/kjljPNDiCms" target="_blank" rel="noreferrer">Pitch video</a> ·{" "}
+          <a href="https://youtu.be/gYh473Yta5s" target="_blank" rel="noreferrer">Product demo</a>
+        </p>
       </footer>
     </div>
   );
