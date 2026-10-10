@@ -50,7 +50,7 @@
 @media (min-width: 1000px) {
   .about-flea {
     margin-bottom: -60%;
-    translate: 0 clamp(240px, 22.5vw, 330px); /* beside the Super Mario Land passage */
+    translate: 0 clamp(180px, 17vw, 250px); /* beside the Super Mario Land passage */
   }
 }
 
