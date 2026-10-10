@@ -76,7 +76,7 @@ Bluetooth, LIS3DH accelerometer, ~$14 in parts at 100 units.
 ## Product Principles
 
 1. Show, don't claim: the live demo and real screens carry the argument.
-2. Honest about status: the software is real, the cartridge is in production.
+2. Honest about status: the software is real, the cartridge is in the works.
 3. Calm confidence: security explained plainly, limits stated.
 4. Delight is the moat: it should feel like something you want to own.
 

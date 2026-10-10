@@ -21,9 +21,9 @@ const GALLERY: { src: string; w: number; h: number; caption: string; alt: string
 
 const WHY = [
   {
-    stamp: "THE GAME BOY STAYS OFFLINE",
+    stamp: "BUILT IN THE OPEN",
     paper: "blue",
-    body: "The console has no Wi-Fi and no apps. The cartridge's small radio only talks to your phone, and only to pass along requests and public addresses. Your keys never travel.",
+    body: "Every line is open source, from the Game Boy software to the phone app, so you don't have to take my word for what it does.",
   },
   {
     stamp: "MADE FOR THE SHELF",
@@ -222,8 +222,7 @@ export function AboutPage() {
             maybe give you a little of the magic I felt the first time I held one.
           </p>
           <p>
-            If the Game Boy breaks, any Game Boy will do. If the cartridge breaks, your 12 words bring everything back, in a new kagiboy or in a regular wallet app like Phantom or MetaMask. And one day you get
-            to say: yes, my wallet is a Game Boy.
+            One day you get to say: yes, my wallet is a Game Boy.
           </p>
           <p className="kagi">
             <span lang="ja">鍵</span> <b>kagi</b> means key in Japanese, a small thank-you to where the Game Boy was
@@ -261,7 +260,7 @@ export function AboutPage() {
       <footer className="kb-foot">
         <p>
           kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge is in
-          production.
+          the works.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
       </footer>

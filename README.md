@@ -23,7 +23,7 @@ A Game Boy can't lie to you like that. It has no network, no apps and no operati
 
 This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for now), the phone app, the website, the 3D model and the videos.
 
-> **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge itself is in production; until it ships, its key chip is simulated in the browser. The parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
+> **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge itself is in the works; until it ships, its key chip is simulated in the browser. The parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
 
 ## See it work
 
@@ -97,7 +97,7 @@ Swaps come from the [SODAX](https://sodax.com) SDK with live quotes. The phone o
 
 <img src="docs/media/real-game-boy.jpg" alt="The kagiboy ROM running on an original Game Boy from a flash cart" width="100%">
 
-These are photos of my own DMG running the ROM from an EverDrive. A flash cart has no key chip, so `make demo` builds the prototype with a test chip inside the ROM, generated from the real chip code. It saves the wallet and PIN to the cartridge's battery RAM and plays a little chiptune of mine on the menus. It holds no real keys; it's there so the whole flow can be walked through on a real Game Boy while the cartridge is in production.
+These are photos of my own DMG running the ROM from an EverDrive. A flash cart has no key chip, so `make demo` builds the prototype with a test chip inside the ROM, generated from the real chip code. It saves the wallet and PIN to the cartridge's battery RAM and plays a little chiptune of mine on the menus. It holds no real keys; it's there so the whole flow can be walked through on a real Game Boy while the cartridge is in the works.
 
 ## Build it
 
@@ -154,7 +154,7 @@ And in the hardware design:
 - Transaction decoding, the fee cap and the PIN session run on the RP2350, not inside the secure element. The SE050 stops keys being extracted, not misuse by compromised firmware. The plan is signed firmware, the Bluetooth stack in TrustZone's non-secure world, and a potted board.
 - The SE050 can't derive BIP-32 or SLIP-10 keys, so the seed lives on the MCU during setup. The plan is to derive once, import the keys into the secure element and erase the seed.
 - The PIN and the words cross the cartridge bus in plain text, and a modified console could fake button presses. Use your own, unmodified Game Boy.
-- The cartridge is in production and nothing has had an outside security review yet. Nobody should store real money on this until the audited cartridge ships.
+- The cartridge is in the works and nothing has had an outside security review yet. Nobody should store real money on this until the audited cartridge ships.
 
 The four audit rounds are in [docs/audits](docs/audits). The path to a cartridge you can actually buy is in [docs/ROADMAP.md](docs/ROADMAP.md).
 

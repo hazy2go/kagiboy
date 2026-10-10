@@ -1,6 +1,6 @@
 # kagiboy build and security roadmap
 
-Status on 2026-10-10: the software is real and the cartridge is in production. The GBDK ROM runs in an emulator and on a physical DMG from a flash cart. Until the cartridge ships, the key chip is simulated in the browser (`web/src/chip/chip.ts`). The phone companion signs real devnet and Sepolia transactions. This document is the plan for getting from there to a shippable, audited cartridge. Every external claim links to its source. Cost and time figures marked *estimate* are ours and were not quoted by a vendor.
+Status on 2026-10-10: the software is real and the cartridge is in the works. The GBDK ROM runs in an emulator and on a physical DMG from a flash cart. Until the cartridge ships, the key chip is simulated in the browser (`web/src/chip/chip.ts`). The phone companion signs real devnet and Sepolia transactions. This document is the plan for getting from there to a shippable, audited cartridge. Every external claim links to its source. Cost and time figures marked *estimate* are ours and were not quoted by a vendor.
 
 ## Summary
 

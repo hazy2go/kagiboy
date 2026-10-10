@@ -87,10 +87,10 @@ const COMPARE = {
 const FAQ = [
   { id: "breaks", title: "What if my cartridge breaks?", content: "Your 12 words bring everything back, in a new kagiboy or in any regular wallet app like Phantom or MetaMask. If the Game Boy breaks, any Game Boy will do." },
   { id: "gameboy", title: "Do I need a real Game Boy?", content: "Yes, kagiboy is a cartridge for the original Game Boy. Until it ships, the live demo runs the same Game Boy software in your browser." },
-  { id: "phone", title: "Can my phone move my money?", content: "No. The phone can only ask. The cartridge shows the real amount and address on the Game Boy's own screen and signs only when you hold A. Its Bluetooth carries requests and public addresses, never keys." },
+  { id: "phone", title: "Can my phone move my money?", content: "No. It can send requests, but it can't approve them. If a request has something the cartridge can't show you in full, like a token it doesn't know or a network it can't name, it refuses instead of signing blind." },
   { id: "chains", title: "Which chains does it support?", content: "Solana, plus Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain. One key covers every EVM network, and the Game Boy names the network on every request." },
   { id: "swaps", title: "How do swaps work?", content: "The app gets live quotes from SODAX, and the Game Boy shows what you pay, the least you'll get and the fees before you sign. The cartridge keeps its own list of tokens and works out the amounts itself, so the phone can't fudge the numbers. The Game Boy signs the swap; sending it on to SODAX is the next step." },
-  { id: "buy", title: "When can I buy one?", content: "Not yet. The software works today and the hardware is in progress. Join the waitlist and you'll get one email when the first small batch is ready, after an outside security review." },
+  { id: "buy", title: "When can I buy one?", content: "Not yet. The software works today and the hardware is in progress. Join the waitlist and you'll get one email when the first small batch is ready." },
   { id: "nintendo", title: "Is this made by Nintendo?", content: "No. kagiboy is an independent project. Game Boy is a trademark of Nintendo." },
 ];
 
@@ -463,11 +463,8 @@ export function Landing() {
         <p className="px eyebrow">HOW IT STARTED</p>
         <h2 id="origin-title">My dad found it at a flea market.</h2>
         <p>
-          I was so young I didn't know what Nintendo was. The game was Super Mario Land, and I never beat it. I didn't
-          care. I had the music and a whole world in my hands, at a time when the best thing on a phone was Snake.
-        </p>
-        <p>
-          Years later I work in crypto, and holding my keys has never felt like that. So I gave the Game Boy a new job.
+          It was my first console. Years later I work in crypto, and holding my keys has never felt like holding that
+          Game Boy. So I gave it a new job.
         </p>
         <Link to="/about" className="origin-link">
           Read the whole story <span aria-hidden>→</span>
@@ -559,7 +556,7 @@ export function Landing() {
       <section className="compare" aria-labelledby="compare-title">
         <header className="sec-head">
           <h2 id="compare-title">How it compares</h2>
-          <p>Not a Ledger rival, just a different place to keep your keys, with the same rules underneath.</p>
+          <p>A different place to keep your keys, with the same rules underneath.</p>
         </header>
         <Comparison {...COMPARE} />
       </section>
@@ -567,7 +564,7 @@ export function Landing() {
       <section className="inside" id="inside">
         <header className="sec-head">
           <h2>Made from parts you can buy today</h2>
-          <p>Modern flash carts already run on the same family of chip. kagiboy adds a secure element for your keys and a small radio for your phone.</p>
+          <p>Modern flash carts already run on the same family of chip. Before ordering a single board, I simulated the cartridge against the real Game Boy software, cycle by cycle, to check its timing and power.</p>
         </header>
         <div className="inside-grid">
           <img
@@ -614,7 +611,7 @@ export function Landing() {
           <h2>Go on, press Start</h2>
           <p>
             The real Game Boy software runs right in your browser, with the cartridge's chip simulated next to it. It
-            signs real testnet transactions on Solana, Ethereum, Base, Arbitrum, HyperEVM and Robinhood Chain.
+            signs real testnet transactions, start to finish.
           </p>
           <div className="demo-cta-actions">
             <Link to="/demo" className="btn btn-ink">
@@ -641,7 +638,7 @@ export function Landing() {
       <footer className="kb-foot">
         <p>
           kagiboy is a Colosseum hackathon project. The software is real and runs on testnets; the cartridge is in
-          production.
+          the works.
         </p>
         <p>Not affiliated with Nintendo. Game Boy is a trademark of Nintendo.</p>
         <p className="foot-links">

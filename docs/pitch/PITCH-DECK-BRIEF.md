@@ -95,7 +95,7 @@ hazy: lives in Japan, collects retro hardware, has spent years building in Web3.
 - **Waitlist** is open on the site.
 - Written with GBDK-2020 (ROM, C), React + three.js (site, live 3D Game Boy), viem and @solana/web3.js (signing), @sodax/sdk (swaps). Open-source license: MIT.
 
-**Hardware status:** the cartridge is in production. Next step is a dev-board cartridge (Pico 2 W + SE050 kit) signing on testnet from a real Game Boy.
+**Hardware status:** the cartridge is in the works. Next step is a dev-board cartridge (Pico 2 W + SE050 kit) signing on testnet from a real Game Boy.
 
 ---
 
