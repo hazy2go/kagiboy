@@ -65,10 +65,17 @@ function Loop({ id, src, alt, onOpen }: { id: number; src: string; alt: string; 
 
 const PLAYER = [
   ["NAME", "HAZY"],
-  ["BASE", "JAPAN"],
-  ["1ST GAME", "MARIO LAND"],
-  ["FOUND AT", "FLEA MARKET"],
-  ["COLLECTS", "GB TO GAMECUBE"],
+  ["HOME", "JAPAN"],
+  ["FAVOURITE", "GAME BOY"],
+] as const;
+
+// the consoles on hazy's shelf, as badges
+const BADGES = [
+  { label: "GB", title: "Game Boy" },
+  { label: "PSP", title: "PSP" },
+  { label: "PS1", title: "PlayStation" },
+  { label: "N64", title: "Nintendo 64" },
+  { label: "GC", title: "GameCube" },
 ] as const;
 
 export function AboutPage() {
@@ -200,29 +207,42 @@ export function AboutPage() {
       </section>
 
       <section className="me" aria-labelledby="me-title">
-        <div className="player receipt paper-white print-in">
-          <div className="perf" aria-hidden />
-          <p className="px receipt-title">PLAYER 1</p>
-          <ul>
-            {PLAYER.map(([k, v]) => (
-              <li key={k} className="px">
-                <span>{k}</span>
-                <i aria-hidden />
-                <span>{v}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="px receipt-foot">PRESS START</p>
-          <div className="perf bottom" aria-hidden />
+        <div className="player print-in">
+          <p className="player-stripe px" aria-hidden>
+            <i />
+            <span>PLAYER 1</span>
+            <i />
+          </p>
+          <div className="player-lcd">
+            <p className="sr-only">Player 1</p>
+            <dl>
+              {PLAYER.map(([k, v]) => (
+                <div key={k} className="px">
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="px player-label">BADGES</p>
+            <ul className="badges" aria-label="Consoles in my collection">
+              {BADGES.map((b) => (
+                <li key={b.label} className="px" title={b.title}>
+                  <span aria-hidden>{b.label}</span>
+                  <span className="sr-only">{b.title}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="px player-start" aria-hidden>
+              <b>▶</b> PRESS START
+            </p>
+          </div>
         </div>
         <div className="me-copy">
           <h2 id="me-title">Hey, I'm hazy.</h2>
           <p>
             I'm doing this because I want to bring one of my favourite things in the world back to life, and
-            maybe give you a little of the magic I felt the first time I held one.
-          </p>
-          <p>
-            One day you get to say: yes, my wallet is a Game Boy.
+            maybe give you a little of the magic I felt the first time I held one. And one day, you get to say: yes, my
+            wallet is a Game Boy.
           </p>
           <p className="kagi">
             <span lang="ja">鍵</span> <b>kagi</b> means key in Japanese, a small thank-you to where the Game Boy was
