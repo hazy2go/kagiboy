@@ -45,20 +45,21 @@ const LOOPS = [
   { src: "/loops/swap", step: "03 SWAP", body: "SOL to USDC on Base. The Game Boy tells me what I get before I sign.", alt: "A SOL to USDC swap reviewed on the Game Boy screen and signed by holding A" },
 ] as const;
 
-/** a looping take that only plays while it's on screen (not at all for people who'd rather no motion); a tap
+/** a looping take, downloaded as soon as the page opens, that only plays while it's on screen (not at all for people who'd rather no motion); a tap
  *  opens it big in the same lightbox as the photos below */
 function Loop({ id, src, alt, onOpen }: { id: number; src: string; alt: string; onOpen: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
     if (!v || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { threshold: 0.35 });
+    // starts a little before it scrolls in, so it's already moving when it appears
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()), { rootMargin: "300px 0px" });
     io.observe(v);
     return () => io.disconnect();
   }, []);
   return (
     <motion.button type="button" layoutId={`loop-${id}`} className="tried-open" onClick={onOpen} aria-label={`Open bigger: ${alt}`}>
-      <video ref={ref} src={`${src}.mp4`} poster={`${src}.jpg`} muted loop playsInline preload="none" width={720} height={790} />
+      <video ref={ref} src={`${src}.mp4`} poster={`${src}.jpg`} muted loop playsInline preload="auto" width={720} height={790} />
     </motion.button>
   );
 }
