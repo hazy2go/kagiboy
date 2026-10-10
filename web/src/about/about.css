@@ -33,15 +33,24 @@
 .about-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: clamp(32px, 6vw, 96px);
   padding-top: clamp(140px, 22vh, 220px);
-  padding-bottom: clamp(56px, 9vh, 96px);
+  padding-bottom: clamp(28px, 4vh, 48px);
 }
 
+/* starts level with the headline's second line, not beside it; a translate, so the section doesn't grow */
 .about-flea {
   width: clamp(200px, 20vw, 270px);
-  margin-top: 40px;
+  translate: 0 clamp(90px, 12vw, 150px);
+}
+
+/* wide enough that the story's text column can't run under it: the console hangs beside the story
+   instead of holding the section open, so the intro runs straight on into it */
+@media (min-width: 1000px) {
+  .about-flea {
+    margin-bottom: -60%;
+  }
 }
 
 .eyebrow {
@@ -553,6 +562,7 @@
   .about-flea {
     justify-self: center;
     margin-top: 0;
+    translate: none;
     width: min(230px, 58vw);
   }
 
