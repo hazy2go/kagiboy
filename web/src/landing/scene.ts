@@ -112,6 +112,10 @@ export class HeroScene {
   private fast = 0;
   private lastRender = 0;
   private lastPose = "";
+  /** Phones: the strip of the canvas (px) left free between the nav and the hero's headline. */
+  private band: { top: number; bottom: number } | null = null;
+  /** The console's bounds in its own frame, cartridge included, measured once it loads. */
+  private box: THREE.Box3 | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts: { still?: boolean; fixed?: Partial<Pose>; plainFraming?: boolean; offline?: boolean } = {}) {
     this.still = !!opts.still;
@@ -168,6 +172,8 @@ export class HeroScene {
         o.renderOrder = 2;
       }
     });
+    this.box = new THREE.Box3().setFromObject(this.gb);
+    this.box.max.y += 0.015; // the hero's lift and bob
     this.cart = root.getObjectByName("Cartridge") ?? null;
     this.body = root.getObjectByName("GameBoy") ?? null;
     if (this.body) {
@@ -229,6 +235,12 @@ export class HeroScene {
     // keep the console framed on tall phones
     this.camera.fov = w / h < 0.8 && !this.plainFraming ? 34 : 30;
     this.camera.updateProjectionMatrix();
+    this.needs = true;
+  }
+
+  /** Phones: where the hero's copy starts, so the console at rest fits above it instead of behind it. */
+  setBand(top: number, bottom: number) {
+    this.band = bottom - top > 80 ? { top, bottom } : null;
     this.needs = true;
   }
 
@@ -329,7 +341,7 @@ export class HeroScene {
 
     // a slow breath while the hero is at rest
     const rest = this.still || this.fixed ? 0 : Math.max(0, 1 - this.current / 0.12); // the demo console holds still so its buttons are easy to hit
-    this.place(pose, t, tall, rest);
+    this.place(pose, t, tall, rest, this.fixed ? 0 : this.current <= 0.12 ? 1 : Math.max(0, 1 - (this.current - 0.12) / 0.18));
 
     // nothing moved and the screen didn't change: keep the last frame on the canvas
     const c = this.camera;
@@ -342,8 +354,49 @@ export class HeroScene {
     return this.current;
   }
 
+  /**
+   * Phones, hero at rest: the console's real on-screen height decides the framing. When the copy below
+   * leaves less room than the keyframes assume (short screens, browser bars, big type), the camera
+   * backs off until the console fits the free band, and the console moves within the band only as far as
+   * it has to. `hero` fades this out as the first scroll move takes over. Returns the vertical view offset.
+   */
+  private fitBand(pose: Pose, aim: (r: number) => void, hero: number): number {
+    const plain = (0.5 - pose.shift) * this.h;
+    if (!this.band || !this.box || hero <= 0) return plain;
+    const c = this.camera;
+    const pad = Math.max(12, this.h * 0.025);
+    const top = this.band.top + pad;
+    const bottom = this.band.bottom - pad;
+    const span = () => {
+      c.clearViewOffset();
+      c.updateMatrixWorld();
+      this.gb.updateMatrixWorld();
+      let lo = Infinity;
+      let hi = -Infinity;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < 8; i++) {
+        v.set(i & 1 ? this.box!.max.x : this.box!.min.x, i & 2 ? this.box!.max.y : this.box!.min.y, i & 4 ? this.box!.max.z : this.box!.min.z);
+        const y = ((1 - v.applyMatrix4(this.gb.matrixWorld).project(c).y) / 2) * this.h;
+        lo = Math.min(lo, y);
+        hi = Math.max(hi, y);
+      }
+      return { lo, hi };
+    };
+    let dist = pose.dist;
+    let s = span();
+    // on-screen size goes roughly as 1/distance; two passes land it inside the band
+    for (let i = 0; i < 2 && s.hi - s.lo > bottom - top; i++) {
+      dist *= (s.hi - s.lo) / (bottom - top);
+      aim(pose.dist + (dist - pose.dist) * hero);
+      s = span();
+    }
+    // keep the designed position unless the console would cross the band's edges
+    const fit = Math.min(Math.max(plain, s.hi - bottom), s.lo - top);
+    return plain + (fit - plain) * hero;
+  }
+
   /** Puts the console, the cartridge and the camera where a pose says, at time `t`. */
-  private place(pose: Pose, t: number, tall: boolean, rest: number) {
+  private place(pose: Pose, t: number, tall: boolean, rest: number, hero = 0) {
     const breathe = Math.sin(t * 0.9) * 0.004 * rest;
     const jolt = this.wobble ? (Math.random() - 0.5) * 0.06 * this.wobble : 0;
     this.gb.position.y = breathe + jolt * 0.04;
@@ -351,17 +404,19 @@ export class HeroScene {
     this.gb.rotation.z = jolt * 0.6;
 
     const c = this.camera;
-    const r = pose.dist;
-    c.position.set(
-      pose.tx + r * Math.cos(pose.el) * Math.sin(pose.az),
-      pose.ty + r * Math.sin(pose.el),
-      r * Math.cos(pose.el) * Math.cos(pose.az),
-    );
-    c.lookAt(pose.tx, pose.ty, 0);
+    const aim = (r: number) => {
+      c.position.set(
+        pose.tx + r * Math.cos(pose.el) * Math.sin(pose.az),
+        pose.ty + r * Math.sin(pose.el),
+        r * Math.cos(pose.el) * Math.cos(pose.az),
+      );
+      c.lookAt(pose.tx, pose.ty, 0);
+    };
+    aim(pose.dist);
     // wide screens: console right of the copy; tall screens: console in the upper half
     if (this.plainFraming) c.clearViewOffset();
     else if (!tall) c.setViewOffset(this.w, this.h, -pose.shift * this.w, 0, this.w, this.h);
-    else c.setViewOffset(this.w, this.h, 0, (0.5 - pose.shift) * this.h, this.w, this.h);
+    else c.setViewOffset(this.w, this.h, 0, this.fitBand(pose, aim, hero), this.w, this.h);
 
     // on tall screens the console body steps aside while the cartridge is apart, so nothing sits behind the copy
     if (this.body) this.body.visible = !(tall && pose.apart > 0.5);

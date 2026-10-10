@@ -221,10 +221,17 @@ export function Landing() {
       const fit = () => {
         const r = canvas.getBoundingClientRect();
         scene.resize(r.width, r.height);
+        // phones: the console at rest gets the room between the nav and the headline, never the room behind it.
+        // Layout offsets, not client rects, so the hero's scroll fade doesn't move the measurement.
+        const hero = chapterRefs.current.hero;
+        const h1 = hero?.querySelector("h1");
+        const nav = document.querySelector<HTMLElement>(".kb-nav");
+        if (hero && h1) scene.setBand(nav ? nav.offsetTop + nav.offsetHeight : 0, hero.offsetTop + h1.offsetTop);
       };
       fit();
       const ro = new ResizeObserver(fit);
       ro.observe(canvas);
+      if (chapterRefs.current.hero) ro.observe(chapterRefs.current.hero);
       cleanupScene = () => {
         ro.disconnect();
         scene.dispose();
