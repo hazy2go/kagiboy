@@ -1,0 +1,183 @@
+/* the waitlist: a sheet of paper in the kagiboy printer (renders from assets/3d/printer.py).
+   The page's own paper sits between two renders: the printer with no paper behind it, and the
+   printer with a paper-shaped hole in front of it, so the tear bar and the slot's lip cover the
+   ticket where they should. Numbers from public/printer/printer.json. */
+
+.waitlist-msg {
+  font-size: 14px;
+  color: var(--kb-ink-3);
+}
+
+.waitlist-msg.is-error {
+  color: #b8304f;
+}
+
+.ticket {
+  width: min(360px, 88vw);
+  margin: 0 auto;
+  padding: 4px 26px 14px;
+  background: var(--paper-blue);
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.ticket-no {
+  font-size: 32px;
+}
+
+.ticket-head,
+.ticket-foot {
+  opacity: 0.6;
+}
+
+.ticket-blank .ticket-no {
+  opacity: 0.35;
+}
+
+.ticket-label {
+  margin-top: 6px;
+  text-align: left;
+  opacity: 0.6;
+}
+
+.ticket-blank input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px dotted rgba(43, 47, 58, 0.45);
+  border-radius: 0;
+  background: transparent;
+  font: 400 17px var(--kb-sans);
+  color: var(--kb-ink);
+}
+
+.ticket-blank input::placeholder {
+  color: var(--kb-ink-3);
+}
+
+.ticket-blank input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--kb-ink);
+}
+
+.ticket-blank input[aria-invalid="true"] {
+  border-bottom-color: #b8304f;
+}
+
+.ticket-blank .btn {
+  margin-top: 8px;
+}
+
+
+.printer {
+  --pw: clamp(560px, 150vw, 760px); /* the printer image's width */
+  --paper-l: 0.2608; /* paper's left edge, share of the image width */
+  --paper-w: 0.4784; /* paper's width */
+  --slot: 0.29543; /* image top to slot line, in image widths (0.52756 of the 0.56 tall image) */
+  position: relative;
+  width: var(--pw);
+  margin-left: 50%;
+  translate: -50% 0;
+  text-align: center;
+}
+
+.printer-paper {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-items: end;
+  width: calc(var(--pw) * var(--paper-w) + 2px);
+  margin-left: calc(var(--pw) * var(--paper-l) - 1px);
+  /* everything below the slot line is inside the printer */
+  clip-path: inset(-400px -60px 0 -60px);
+}
+
+.printer-paper > * {
+  grid-area: 1 / 1;
+}
+
+.printer .sheet {
+  width: auto;
+  padding-top: 16px;
+  padding-bottom: 26px;
+  will-change: transform;
+  /* fresh off the roll: torn on top where the last ticket came off, straight into the slot below */
+  -webkit-mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--zz) + 1px) no-repeat,
+    var(--tear-top) top / 160px var(--zz) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) bottom / 100% calc(100% - var(--zz) + 1px) no-repeat,
+    var(--tear-top) top / 160px var(--zz) repeat-x;
+}
+
+.printer .sheet-ticket {
+  padding-bottom: 18px;
+  transform-origin: 50% 100%;
+}
+
+/* torn off: both edges ragged, lifted clear of the stub */
+.printer.is-torn .sheet-ticket {
+  -webkit-mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--zz) + 2px) no-repeat,
+    var(--tear-top) top / 160px var(--zz) repeat-x,
+    var(--tear-bottom) bottom / 160px var(--zz) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--zz) + 2px) no-repeat,
+    var(--tear-top) top / 160px var(--zz) repeat-x,
+    var(--tear-bottom) bottom / 160px var(--zz) repeat-x;
+}
+
+/* what's left in the slot after the tear */
+.sheet-stub {
+  --zz: 9px;
+  align-self: end;
+  height: 16px;
+  opacity: 0;
+  -webkit-mask: var(--tear-top) top / 160px var(--zz) repeat-x, linear-gradient(#000 0 0) bottom / 100% 8px no-repeat;
+  mask: var(--tear-top) top / 160px var(--zz) repeat-x, linear-gradient(#000 0 0) bottom / 100% 8px no-repeat;
+}
+
+.printer.is-torn .sheet-stub {
+  opacity: 1;
+}
+
+.printer-back,
+.printer-front {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.printer-back {
+  position: relative;
+  z-index: 0;
+  margin-top: calc(var(--pw) * var(--slot) * -1);
+}
+
+.printer-front {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* a faint buzz while it prints */
+.printer.is-print {
+  animation: printer-buzz 0.09s steps(2) infinite;
+}
+
+@keyframes printer-buzz {
+  50% {
+    transform: translateY(0.6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .printer.is-print {
+    animation: none;
+  }
+}

@@ -417,11 +417,11 @@ export function AboutPage() {
 
       <section className="about-cta" id="waitlist">
         <h2>Want to follow along?</h2>
-        <p>Leave your email and I'll write once, when the first cartridges are ready.</p>
-        <Waitlist />
-        <p className="about-cta-demo">
-          Or try it right now: <Link to="/demo">press start on the live demo</Link>
+        <p>
+          Leave your email and I'll write once, when the first cartridges are ready. Or try it right now:{" "}
+          <Link to="/demo">press start on the live demo</Link>.
         </p>
+        <Waitlist />
       </section>
       </main>
 

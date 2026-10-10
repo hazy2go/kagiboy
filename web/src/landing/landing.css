@@ -641,7 +641,8 @@
 /* waitlist */
 .waitlist {
   text-align: center;
-  padding-bottom: clamp(90px, 14vh, 150px);
+  padding-bottom: 0;
+  overflow-x: clip; /* the printer is wider than a phone */
 }
 
 .waitlist > p {
@@ -660,73 +661,6 @@
     radial-gradient(40% 60% at 35% 60%, rgba(207, 226, 255, 0.75), transparent 70%),
     radial-gradient(40% 60% at 68% 55%, rgba(255, 220, 232, 0.75), transparent 70%);
   filter: blur(10px);
-}
-
-.waitlist-msg {
-  font-size: 14px;
-  color: var(--kb-ink-3);
-}
-
-.waitlist-msg.is-error {
-  color: #b8304f;
-}
-
-.ticket {
-  width: min(360px, 88vw);
-  margin: 0 auto;
-  padding: 4px 26px 14px;
-  background: var(--paper-blue);
-  display: grid;
-  gap: 8px;
-  text-align: center;
-}
-
-.ticket-no {
-  font-size: 32px;
-}
-
-.ticket-head,
-.ticket-foot {
-  opacity: 0.6;
-}
-
-.ticket-blank .ticket-no {
-  opacity: 0.35;
-}
-
-.ticket-label {
-  margin-top: 6px;
-  text-align: left;
-  opacity: 0.6;
-}
-
-.ticket-blank input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 2px;
-  border: 0;
-  border-bottom: 2px dotted rgba(43, 47, 58, 0.45);
-  border-radius: 0;
-  background: transparent;
-  font: 400 17px var(--kb-sans);
-  color: var(--kb-ink);
-}
-
-.ticket-blank input::placeholder {
-  color: var(--kb-ink-3);
-}
-
-.ticket-blank input:focus-visible {
-  outline: none;
-  border-bottom-color: var(--kb-ink);
-}
-
-.ticket-blank input[aria-invalid="true"] {
-  border-bottom-color: #b8304f;
-}
-
-.ticket-blank .btn {
-  margin-top: 8px;
 }
 
 .kb-foot {
