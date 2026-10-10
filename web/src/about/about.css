@@ -495,9 +495,8 @@
 
 .about-cta {
   padding-top: clamp(110px, 18vh, 180px);
-  padding-bottom: 0;
+  padding-bottom: clamp(80px, 12vh, 130px);
   text-align: center;
-  overflow-x: clip; /* the printer is wider than a phone */
 }
 
 .about-cta h2 {
@@ -532,7 +531,13 @@
   pointer-events: none;
 }
 
-.about-cta > p a {
+.about-cta > .about-cta-demo {
+  margin: 34px auto 0;
+  font-size: 16px;
+  color: var(--kb-ink-3);
+}
+
+.about-cta-demo a {
   color: var(--kb-ink);
   font-weight: 600;
   text-decoration: underline;
