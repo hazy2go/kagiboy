@@ -395,6 +395,7 @@
 .compare,
 .faq,
 .demo-cta,
+.watch,
 .waitlist {
   position: relative;
   padding: clamp(110px, 16vh, 180px) var(--kb-gutter) 0;
@@ -625,17 +626,30 @@
   align-items: center;
 }
 
-.demo-cta img {
-  width: 100%;
-  height: auto;
-  border-radius: 32px;
-  box-shadow: 0 30px 60px -40px rgba(60, 70, 120, 0.45);
-}
-
 .demo-cta p {
   margin: 18px 0 30px;
   font-size: 19px;
   color: var(--kb-ink-2);
+}
+
+/* the pitch video, between the scroll story and the founder's */
+.watch {
+  max-width: 1040px;
+}
+
+.watch-link {
+  justify-self: start;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kb-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+
+.watch-link span {
+  font-size: 11px;
+  margin-right: 4px;
 }
 
 /* waitlist */
@@ -886,6 +900,7 @@
   .inside,
   .status,
   .demo-cta,
+  .watch,
   .waitlist {
     padding-left: calc(var(--kb-gutter) + env(safe-area-inset-left));
     padding-right: calc(var(--kb-gutter) + env(safe-area-inset-right));
@@ -1094,6 +1109,7 @@
   .inside,
   .status,
   .demo-cta,
+  .watch,
   .waitlist {
     padding-top: 96px;
   }
@@ -1192,8 +1208,9 @@
     margin-top: 6px;
   }
 
-  .demo-cta img {
-    border-radius: 24px;
+  /* the hero stays two buttons and a line on phones; the pitch has its own section below */
+  .watch-link {
+    display: none;
   }
 }
 

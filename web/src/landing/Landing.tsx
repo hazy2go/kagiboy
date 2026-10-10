@@ -10,6 +10,7 @@ import { Comparison } from "../site/ui/comparison";
 import { Accordion } from "../site/ui/accordion";
 import "../site/tw.css";
 import { FleaMarketGameBoy } from "../site/FleaMarketGameBoy";
+import { VideoScreen } from "../site/VideoScreen";
 import "./landing.css";
 import { prefetchModel, takeModel } from "./model";
 
@@ -391,6 +392,9 @@ export function Landing() {
               <p className="live-note">
                 <span className="dot" aria-hidden /> The screen runs the real Game Boy software.
               </p>
+              <a href="#watch" className="watch-link">
+                <span aria-hidden>▶</span> Watch the 2-minute pitch
+              </a>
             </div>
           </div>
           <div className="slip slip-hero" ref={heroSlipRef} aria-hidden>
@@ -455,6 +459,14 @@ export function Landing() {
             Scroll down
           </p>
         </div>
+      </section>
+
+      <section className="watch" id="watch" aria-labelledby="watch-title">
+        <header className="sec-head">
+          <h2 id="watch-title">The whole idea in two minutes</h2>
+          <p>Why a Game Boy, how the cartridge keeps your keys, and where it goes from here.</p>
+        </header>
+        <VideoScreen id="kjljPNDiCms" title="kagiboy pitch" caption="PITCH · 1:59" poster="/video/pitch-poster" />
       </section>
 
       <section className="origin" aria-labelledby="origin-title">
@@ -606,7 +618,7 @@ export function Landing() {
       </section>
 
       <section className="demo-cta">
-        <img src="/renders/hero-front34.webp" alt="The Game Boy with the kagiboy cartridge, showing the wallet home screen" loading="lazy" />
+        <VideoScreen id="gYh473Yta5s" title="How kagiboy signs: the product demo" caption="PRODUCT DEMO · 2:25" poster="/video/demo-poster" />
         <div>
           <h2>Go on, press Start</h2>
           <p>

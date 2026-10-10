@@ -1,0 +1,137 @@
+/* a video in a Game Boy screen bezel (the About page's player card uses the same bezel) */
+.vscreen {
+  --bezel: #7d7f9e;
+  margin: 0;
+  padding: 16px clamp(16px, 3vw, 30px) 20px;
+  border-radius: 16px 16px clamp(48px, 8vw, 84px) 16px;
+  background: var(--bezel);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 34px 60px -36px rgba(60, 66, 120, 0.55);
+}
+
+.vscreen .vscreen-stripe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+}
+
+.vscreen-stripe i {
+  flex: 1;
+  height: 6px;
+  background:
+    linear-gradient(#8f2453, #8f2453) top / 100% 2px no-repeat,
+    linear-gradient(#2e3d8f, #2e3d8f) bottom / 100% 2px no-repeat;
+}
+
+.vscreen-lcd {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #1c1f27;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.vscreen-lcd iframe,
+.vscreen-poster,
+.vscreen-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.vscreen-poster {
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.vscreen-poster img {
+  object-fit: cover;
+  transition: transform 0.6s var(--kb-ease), filter 0.6s var(--kb-ease);
+}
+
+.vscreen-poster:hover img {
+  transform: scale(1.02);
+  filter: brightness(0.96);
+}
+
+/* bottom-left, clear of the thumbnails' headlines */
+.vscreen-play {
+  position: absolute;
+  left: clamp(12px, 3%, 28px);
+  bottom: clamp(12px, 5%, 28px);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px 14px 20px;
+  border-radius: 999px;
+  background: var(--kb-ink);
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  box-shadow: 0 16px 30px -12px rgba(20, 24, 40, 0.6);
+  transition: scale 0.3s var(--kb-ease);
+}
+
+.vscreen-poster:hover .vscreen-play {
+  scale: 1.06;
+}
+
+.vscreen-poster:focus-visible {
+  outline: 3px solid var(--kb-focus);
+  outline-offset: -3px;
+}
+
+.vscreen .vscreen-cap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: 14px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.88);
+  text-align: left;
+}
+
+.vscreen-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4a3a;
+  box-shadow: 0 0 8px rgba(255, 74, 58, 0.8);
+}
+
+.vscreen-cap a {
+  margin-left: auto;
+  color: #fff;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vscreen-poster img,
+  .vscreen-play {
+    transition: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .vscreen-play {
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    font-size: 11px;
+  }
+
+  .vscreen-play svg {
+    width: 9px;
+    height: 12px;
+  }
+}
