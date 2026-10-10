@@ -69,14 +69,157 @@ const PLAYER = [
   ["FAVOURITE", "GAME BOY"],
 ] as const;
 
-// the consoles on hazy's shelf, as badges
+// the consoles on hazy's shelf, as 16×16 pixel-art badges (one character per pixel, "." is clear)
+const BADGE_INK: Record<string, string> = {
+  o: "#2b2f3a", // outline
+  b: "#c9c6bf", // console grey
+  g: "#7d7f9e", // bezel
+  s: "#d6e8b0", // screen
+  d: "#2b2f3a", // d-pad
+  r: "#c2386f", // A/B, red light
+  k: "#3a3d48", // PSP black
+  w: "#e9ecf5", // highlights
+  y: "#f2c84b", // C buttons
+  u: "#4c6fe0", // A
+  e: "#3f9a63", // B
+  p: "#6a5acd", // GameCube indigo
+  q: "#8f80e6", // GameCube lid
+  l: "#b4b6cc", // PS1 lid
+  n: "#9a9ca6", // N64 grey
+};
 const BADGES = [
-  { label: "GB", title: "Game Boy" },
-  { label: "PSP", title: "PSP" },
-  { label: "PS1", title: "PlayStation" },
-  { label: "N64", title: "Nintendo 64" },
-  { label: "GC", title: "GameCube" },
+  {
+    label: "GB",
+    title: "Game Boy",
+    px: [
+      "...oooooooooo...",
+      "...obbbbbbbbo...",
+      "...oggggggggo...",
+      "...ogssssssgo...",
+      "...ogssssssgo...",
+      "...ogssssssgo...",
+      "...ogssssssgo...",
+      "...oggggggggo...",
+      "...obbbbbbbbo...",
+      "...obbbbbbbbo...",
+      "...obdbbbbrbo...",
+      "...odddbbrbbo...",
+      "...obdbbbbbbo...",
+      "...obbbddbbo....",
+      "...obbbbbbo.....",
+      "...ooooooo......",
+    ],
+  },
+  {
+    label: "PSP",
+    title: "PSP",
+    px: [
+      "................",
+      "................",
+      "................",
+      "................",
+      ".oooooooooooooo.",
+      "ookkooooooookkoo",
+      "okwkossssssokwko",
+      "owwwossssssowkwo",
+      "okwkossssssokwko",
+      "okkkossssssokkko",
+      "ookkooooooookkoo",
+      ".oooooooooooooo.",
+      "................",
+      "................",
+      "................",
+      "................",
+    ],
+  },
+  {
+    label: "PS1",
+    title: "PlayStation",
+    px: [
+      "................",
+      "................",
+      "..oooooooooooo..",
+      ".oobbboooobbboo.",
+      ".obbbollllobbbo.",
+      ".obbollllllobbo.",
+      ".obbollllllobbo.",
+      ".obbollggllobbo.",
+      ".obbollllllobbo.",
+      ".obbollllllobbo.",
+      ".obbbollllobbbo.",
+      ".obrbboooobddbo.",
+      ".oobbbbbbbbbboo.",
+      "..oooooooooooo..",
+      "................",
+      "................",
+    ],
+  },
+  {
+    label: "N64",
+    title: "Nintendo 64",
+    px: [
+      "................",
+      "................",
+      "................",
+      "..oooooooooooo..",
+      ".onnnnnnnnnynno.",
+      ".onndnnnnnynyno.",
+      ".ondddnrrnnynno.",
+      ".onndnnnnunnnno.",
+      ".onnnnnnnnennno.",
+      ".onnnooonooonno.",
+      ".onnno.odo.onno.",
+      ".onnno.ono.onno.",
+      ".ooooo.ooo.oooo.",
+      "................",
+      "................",
+      "................",
+    ],
+  },
+  {
+    label: "GC",
+    title: "GameCube",
+    px: [
+      "................",
+      "...oooooooooo...",
+      "...oo......oo...",
+      "...oo......oo...",
+      "..oooooooooooo..",
+      ".ooppppppppppoo.",
+      ".opppoooooopppo.",
+      ".opppoqqqqopppo.",
+      ".oppoqqqqqqoppo.",
+      ".oppoqqqqqqoppo.",
+      ".oppoqqqqqqoppo.",
+      ".opppoqqqqopppo.",
+      ".opppoooooopppo.",
+      ".opwppppppppppo.",
+      ".ooppppppppppoo.",
+      "..oooooooooooo..",
+    ],
+  },
 ] as const;
+
+/** a pixel grid as crisp SVG: one rect per horizontal run of the same colour */
+function PixelIcon({ px }: { px: readonly string[] }) {
+  const runs: { x: number; y: number; w: number; c: string }[] = [];
+  px.forEach((row, y) => {
+    for (let x = 0; x < row.length; ) {
+      const c = row[x];
+      let w = 1;
+      while (row[x + w] === c) w++;
+      if (c !== ".") runs.push({ x, y, w, c });
+      x += w;
+    }
+  });
+  return (
+    <svg viewBox="0 0 16 16" width="32" height="32" shapeRendering="crispEdges" aria-hidden>
+      {runs.map((r) => (
+        <rect key={`${r.x},${r.y}`} x={r.x} y={r.y} width={r.w} height={1} fill={BADGE_INK[r.c]} />
+      ))}
+    </svg>
+  );
+}
 
 export function AboutPage() {
   const [openLoop, setOpenLoop] = useState<number | null>(null);
@@ -226,8 +369,13 @@ export function AboutPage() {
             <p className="px player-label">BADGES</p>
             <ul className="badges" aria-label="Consoles in my collection">
               {BADGES.map((b) => (
-                <li key={b.label} className="px" title={b.title}>
-                  <span aria-hidden>{b.label}</span>
+                <li key={b.label} title={b.title}>
+                  <span className="badge-tile">
+                    <PixelIcon px={b.px} />
+                  </span>
+                  <span className="px badge-name" aria-hidden>
+                    {b.label}
+                  </span>
                   <span className="sr-only">{b.title}</span>
                 </li>
               ))}

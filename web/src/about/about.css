@@ -351,19 +351,37 @@
 
 .badges li {
   display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+.badge-tile {
+  display: grid;
   place-items: center;
+  width: 100%;
   aspect-ratio: 1;
-  font-size: 12px;
   border: 2px solid var(--lcd-ink);
   border-radius: 6px;
   box-shadow: inset 0 -3px 0 rgba(43, 47, 58, 0.14);
 }
 
-.badges li:nth-child(5n + 1) { background: var(--kb-blue); }
-.badges li:nth-child(5n + 2) { background: var(--kb-pink); }
-.badges li:nth-child(5n + 3) { background: var(--kb-lav); }
-.badges li:nth-child(5n + 4) { background: #fff3c9; }
-.badges li:nth-child(5n + 5) { background: #d9f2e6; }
+.badge-tile svg {
+  width: 72%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.badge-name {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(43, 47, 58, 0.7);
+}
+
+.badges li:nth-child(5n + 1) .badge-tile { background: var(--kb-blue); }
+.badges li:nth-child(5n + 2) .badge-tile { background: var(--kb-pink); }
+.badges li:nth-child(5n + 3) .badge-tile { background: var(--kb-lav); }
+.badges li:nth-child(5n + 4) .badge-tile { background: #fff3c9; }
+.badges li:nth-child(5n + 5) .badge-tile { background: #d9f2e6; }
 
 .player .player-start {
   margin: 18px 0 0;
