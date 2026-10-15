@@ -1,5 +1,15 @@
 # The cartridge
 
+> **Update 2026-10-15:** the board now exists as a design: [`hardware/cart`](../hardware/cart/README.md), built on our
+> WiFi Game Boy Cartridge (Croco Cartridge V2.1 + ESP32-C3 + a console-safe power stage). It differs from the plan
+> below in three places:
+> - **RP2350B with external flash, not RP2354B.** The flash-in-package swap is still planned for a later revision.
+> - **ESP32-C3 for Bluetooth, not a CYW43439/RM2.** The radio sits on its own chip, which is the isolation the
+>   audit asked for.
+> - **One TXB0108 on the data bus.** Address and control lines go straight into the RP2350.
+>
+> The SE050E2 and the LIS3DH are as planned. The rest of this page is the original plan.
+
 Status: design. The cartridge has not been built yet. The ROM already runs on a
 real DMG from a flash cart (the `make demo` build, with an in-ROM mock chip). The
 software in this repo (ROM, chip firmware logic, phone app) is what the hardware

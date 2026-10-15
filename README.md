@@ -25,6 +25,22 @@ This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for n
 
 > **Status, honestly.** The software is real and runs on testnets today: Solana devnet and five EVM testnets. The ROM runs on a real Game Boy from a flash cart and in your browser. The cartridge itself is in the works; until it ships, its key chip is simulated in the browser. The parts and the plan are in [docs/hardware.md](docs/hardware.md). Please don't put a real recovery phrase anywhere near this.
 
+## Updates
+
+**2026-10-15: the cartridge board.** kagiboy now has its own board, in [`hardware/cart`](hardware/cart/README.md). It's built on our open [WiFi Game Boy Cartridge](https://github.com/hazy2go/wifi-game-boy-cartridge), which is itself based on [Croco Cartridge V2.1](https://github.com/shilga/rp-gameboy-cartridge-hw):
+- an RP2350B serves the Game Boy's bus;
+- an NXP SE050E2 secure element holds the keys and signs;
+- a LIS3DH accelerometer adds shake entropy;
+- an ESP32-C3 on its own chip does Bluetooth to the phone, so the radio stack never shares a processor with the wallet;
+- a power stage that can't pull the Game Boy's 5 V below 4.588 V.
+
+It's placed and routed, and it passes every design check and simulation: ERC/DRC, schematic-to-board parity, I²C and power calculations, the transistor-level power audits, and the cycle-level bus simulation with the real ROM. It isn't ordered yet: one inductor is out of stock at JLC, and the firmware comes next.
+
+<p align="center">
+  <img src="hardware/cart/docs/img/board_top.png" alt="kagiboy cartridge board, top: RP2350B, SE050E2 secure element, LIS3DH, ESP32-C3 module and power stage" width="49%">
+  <img src="hardware/cart/docs/img/board_bottom.png" alt="kagiboy cartridge board, back: the kagiboy logo and github.com/hazy2go/kagiboy" width="49%">
+</p>
+
 ## See it work
 
 <table>
@@ -133,6 +149,7 @@ Everything runs without API keys. The only one is the waitlist on the website, w
 | [`assets/`](assets) | The Blender model and scripts, product renders, the logo and the social card. |
 | [`video/`](video) | Both submission videos, built in Remotion, plus the scripts that recorded the demo footage. |
 | [`docs/`](docs) | Protocol, hardware, roadmap, four rounds of audits, the pitch material. |
+| [`hardware/cart/`](hardware/cart) | The cartridge board (KiCad), its fab files, design checks and power simulations. [`hardware/sim/`](hardware/sim) is the cycle-level bus simulation. |
 
 ## Security model, and what isn't solved yet
 

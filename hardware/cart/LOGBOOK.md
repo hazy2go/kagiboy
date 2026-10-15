@@ -94,3 +94,47 @@ and microSD drew more than that, so the console-side load goes down.
 - `sim/system` (the WiFi cart's full-system sim) was not copied; kagiboy's own `hardware/sim` covers the bus.
 - The kagiboy hardware sim still models the earlier design (RP2354B, CYW43439, TXB0108 x4) and should be
   pointed at this board.
+
+## 2026-10-15 Checks, simulations, routing polish, back silkscreen
+**L1 (RP2350 regulator inductor) decision: keep AOTA-B201610S3R3-101-T.** RP2350 datasheet 6.3.8.2: LX must be
+fully shielded, 3.3 uH +-20 %, DCR <= 250 mOhm, Isat >= 1.5 A, **polarity-marked**. 6.3.8.3: the regulator's
+output depends on the inductor's field orientation, so the polarity mark is needed. In-stock generic 2016 parts
+have none, so no swap. Sourcing: JLC 4 left, LCSC out of stock, DigiKey ~26k, Mouser ~14k (2026-10-15). Hazy:
+waiting for a restock is fine; otherwise pre-order through JLC. No board change.
+
+**Simulations on this board:**
+- Power stage, vendor models (`sim/power`): A1-A7 81 PASS, A8 114 PASS. The A8 runs needed
+  `sim/power/out/.spiceinit` (ngbehavior=psa), now tracked. A1-A7 compile the radio's shipped `power_mgr.c`
+  (copied to `firmware/esp32c3/components/power_mgr`, MIT).
+- Stress case: A8 with the cart logic load at 80 mA instead of 60. 106 PASS, 52 FAIL. All 52 are corners where
+  the console's static load alone (console 100 mA + logic 80 mA through 2.5-3 ohm) is already below the 4.588 V
+  set-point or 4.5 V. There the radio path carries 0 mA (A8.2 "I 0.0 mA"), so A8.3 finds no loop crossover, and
+  the A8.4 hot-plug dip is just 5 - 3 x 0.18 = 4.46 V. So these are not radio-stage failures.
+  This board's logic draw (kagiboy power model: about 28 mA while signing, including the SE050) is under the 60 mA
+  the audits use.
+- Bus (`hardware/sim`, `pnpm sim`, real ROM, 47 s session): TXB0108 at 150 MHz, early-latch margin 81.8 ns,
+  0 contention/spurious/hold/write errors; unchanged vs the documented result. The model also puts the address
+  lines through a shifter; on this board they go straight into the RP2350, so the model is pessimistic here.
+
+**Design calcs section 10 (I2C):** Cb ~20 pF from the routed lengths (12-21 mm, 2-4 vias), checked at 30 pF.
+- SE050 bus: 2.2k gives 56 ns rise (Fm+ limit 120 ns) and 1.64 mA sink (SE050 VOL spec at 3 mA).
+- LIS3DH bus: 4.7k gives 121 ns (Fm limit 300 ns).
+
+**Routing polish** (`route_audit.py` / `route_clean.py` against the imported WiFi board, so only new copper is
+touched):
+- 26 router staircases and 4 crumbs before; 121 segments removed (12 chains pulled tight, 4 crumbs, 1 duplicate).
+- 2 collinear pairs merged by hand: the cleaner had missed them over a 1 nm offset.
+- Left: one 3-segment ACC_SCL escape between LIS3DH pads to its via (no shorter legal path).
+- No stubs, dangling copper or one-layer vias.
+
+**Back silkscreen:** RemAI art and "co-created with RemAI" removed. In their place, the kagiboy logo traced from
+`assets/logo/kagiboy-logo-horizontal.png` (`art/kagiboy_logo_bw.png`, 4.5 mm tall, thinnest stroke ~0.23 mm).
+The label reads "kagiboy wallet / Rev A 10/2026 / RP2350B+SE050E2", the URL is `github.com/hazy2go/kagiboy`,
+and the Croco credit stays.
+
+**SE050 3D model** for renders: KiCad's UQFN-20 3x3, z-scaled to 0.32 mm. The shell-height check uses the
+datasheet 0.33 mm (OVERRIDE): PASS.
+
+**Fab outputs regenerated** (BOM, CPL, Gerbers). BOM: 1 FAIL = L1 stock (above). Pin audit and placement fits agree.
+**Gates after everything:** kicad_check (ERC/DRC 0 new, unconnected 0, parity 0), netlist_check, design_calcs,
+sim_vs_netlist, height: all PASS. kagiboy software loop (ROM build, tsc, web build, smoke): all PASS.

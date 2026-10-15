@@ -69,6 +69,10 @@ def footprint():
     c = 2.15                                         # pads reach 1.9, +0.25 courtyard
     lines.append(f'\t(fp_rect (start {-c:g} {-c:g}) (end {c:g} {c:g}) (stroke (width 0.05) (type solid)) (fill no) '
                  f'(layer "F.CrtYd") (uuid "{u()}"))')
+    # 3D model for renders only: KiCad's UQFN-20 3x3 0.4 mm body (0.55 mm tall), scaled to the HX2QFN20's 0.32 mm
+    # (NXP SOT1969-1 Table 1). Shell clearance uses the datasheet height (height_check.py OVERRIDE), not this model.
+    lines.append('\t(model "${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/UQFN-20-1EP_3x3mm_P0.4mm_EP1.85x1.85mm.step"'
+                 ' (offset (xyz 0 0 0)) (scale (xyz 1 1 0.58)) (rotate (xyz 0 0 0)))')
     lines.append(')')
     return '\n'.join(lines) + '\n'
 

@@ -2,7 +2,7 @@
 
 **NOT READY TO ORDER.** Work in progress on branch `cart-hw`; see `../../../LOGBOOK.md`.
 Open before any order:
-1. **L1 out of stock**: Croco's RP2350 core-regulator inductor AOTA-B201610S3R3-101-T (C42411119) is down to 4 at JLC (need 10 for 5 boards). Raspberry Pi specifies this part for the RP2350 regulator, so a substitute needs a datasheet check first. The WiFi cart's order has the same problem.
+1. **L1 out of stock at JLC** (4 left, need 10): Croco's RP2350 core-regulator inductor AOTA-B201610S3R3-101-T (C42411119), also out at LCSC (2026-10-15). **Keep this exact part:** the RP2350 datasheet (6.3.8.2-6.3.8.3) requires a fully shielded, polarity-marked 3.3 uH inductor and recommends this one, because the regulator is sensitive to the inductor's orientation and roll-off. Generic 2016 3.3 uH parts have no polarity mark. Either wait for JLC to restock, or pre-order ~10 through JLC (DigiKey ~26k and Mouser ~14k in stock, about $0.21 each). The WiFi cart's order has the same hold.
 2. The WiFi cart's own hold points still apply to the shared radio and power stage: ESP32-C3 calibration time, antenna RSSI in the shell (see the WiFi repo's ORDER.md).
 3. Firmware: none of the wallet firmware (RP2350 bus + wallet logic, ESP32-C3 BLE) exists for this board yet.
 
@@ -27,7 +27,7 @@ Regenerate: `tools/make_bom.py GameboyCartridgeV2.1.kicad_sch fab`, `tools/make_
 | PCB qty | 5 | |
 | Thickness | **0.8 mm** | fits the cartridge slot (Croco's author recommends 0.8 mm) |
 | Impedance control / stackup | **Yes, JLC06081H-7628** | the stackup the layout was designed on: F.Cu-In1 0.2104 mm, same as Croco's 4-layer board, so its USB/HyperRAM/QSPI routing keeps its impedance (LOGBOOK) |
-| Via covering | **Epoxy filled & capped** (POFV) | 29 vias sit inside SMD pads (RP2350 exposed pad, ground pads); they must be filled or solder wicks away. Free on JLC 6-layer |
+| Via covering | **Epoxy filled & capped** (POFV) | 49 vias touch or sit inside SMD pads (RP2350 exposed pad, SE050 centre pad, LIS3DH and 0402 pads, plane stitching); they must be filled or solder wicks away. Free on JLC 6-layer |
 | Min via hole / diameter | 0.15 mm / 0.25 mm (board minimum used: 0.15 / 0.30) | |
 | Surface finish | **ENIG** | edge-connector fingers and fine-pitch parts; Croco's recommendation |
 | Gold fingers | No (ENIG covers them) | as Croco |

@@ -157,6 +157,25 @@ print('\n9. CH334P crystal load  [CH334 DS V2.91 6.1 p26: XI/XO internal ~16 pF 
 cl = 16 * 16 / 32 + 2.0
 print(f'  effective load = 16 pF || series 16 pF + ~2 pF stray = {cl:.1f} pF vs crystal CL 10 pF (C668845)')
 
+print('\n10. Wallet I2C buses: pull-ups vs rise time and sink current  [NXP UM10204 Table 10 (tr, IOL),'
+      ' SE050 DS Rev 3.8 Table 11 (VOL 0.4 V at 3 mA, IWPU <= 265 uA, VIL 0.25*VIN)]')
+# Bus capacitance from the routed board (2026-10-15): SE_SDA 18.8 mm / 4 vias, SE_SCL 12.3 mm / 2 vias,
+# ACC_SDA 20.7 mm / 2 vias, ACC_SCL 17.5 mm / 3 vias. ~1.5 pF/cm of 0.15 mm trace on this stackup, ~0.5 pF/via,
+# 10 pF per device pin (UM10204 Ci max) x 2 devices; = ~20 pF. 1.5x margin -> 30 pF.
+CB, VDD_MAX, VOL = 30e-12, 3.3 * 1.03, 0.4          # AP2112 +-3 % (DS-AP2112 Rev 2, VOUT accuracy)
+for bus, rp, f_khz, tr_max, iol_max, extra_pu in (
+        ('I2C1 SE050 (Fm+, 1 MHz)', 2.2e3, 1000, 120e-9, 3e-3, 265e-6),   # SE050 guarantees VOL only at 3 mA
+        ('I2C0 LIS3DH (Fm, 400 kHz)', 4.7e3, 400, 300e-9, 3e-3, 0.0)):
+    tr = 0.8473 * rp * 1.01 * CB                    # 30 -> 70 % rise, worst resistor
+    isink = (VDD_MAX - VOL) / (rp * 0.99) + extra_pu
+    print(f'  {bus}: Rp {rp / 1e3:.1f}k, Cb {CB * 1e12:.0f} pF -> tr {tr * 1e9:.0f} ns (max {tr_max * 1e9:.0f} ns); '
+          f'sink at VOL {isink * 1e3:.2f} mA (max {iol_max * 1e3:.0f} mA)')
+    limit(f'{bus} rise time', tr <= tr_max, f'{tr * 1e9:.0f} ns <= {tr_max * 1e9:.0f} ns')
+    limit(f'{bus} sink current', isink <= iol_max, f'{isink * 1e3:.2f} mA <= {iol_max * 1e3:.0f} mA')
+    print(f'  Cb could grow to {tr_max / (0.8473 * rp * 1.01) * 1e12:.0f} pF before the rise-time limit')
+limit('SE050 VOL 0.4 V below its VIL 0.25*VIN', 0.4 < 0.25 * 3.3 * 0.97, f'0.40 V < {0.25 * 3.3 * 0.97:.2f} V')
+print(f'  SE050 ENA pull-down 100k: {3.4 / 100e3 * 1e6:.0f} uA while enabled, 0 when in Deep Power-down (ENA low)')
+
 print('\nRESULT:', 'FAIL ' + ', '.join(FAIL) if FAIL else 'all limits PASS')
 if '--check' in sys.argv and FAIL:
     sys.exit(1)

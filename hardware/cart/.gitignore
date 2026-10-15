@@ -1,0 +1,6 @@
+# vendor SPICE models: simulation use only, no public redistribution -> sim/models/fetch_models.py
+sim/models/*/
+!sim/models/tests/
+sim/models/tests/*.out
+sim/power/out/*
+!sim/power/out/.spiceinit

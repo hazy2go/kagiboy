@@ -26,6 +26,7 @@ NO_MODEL = {        # height in mm, source
 }
 # datasheet beats the KiCad model where both exist
 OVERRIDE = {
+    'U110': (0.33, 'SE050 HX2QFN20 SOT1969-1: seated height 0.33 mm max (NXP package information, Table 1)'),
     'J1': (3.46, 'GCT USB4105 drawing (4 Oct 2019, rev B4): 3.31 mm above PCB +-0.15 (KiCad model: 3.73 mm)'),
 }
 # reviewed exceptions: may exceed BUDGET
