@@ -9,7 +9,9 @@
 //! replies appear in the ROM window at 0x7F00 for the next Game Boy read.
 //!
 //! Keys and PIN live in the SE050 (I2C1 on GPIO6/7, enable on GPIO10) through `Se050Vault`; the flash record holds
-//! no secret. Not yet here (next steps): the ESP32-C3 link to the phone, the LIS3DH.
+//! no secret. The phone reaches the wallet through the ESP32-C3 (Bluetooth), which offers its messages on SPI0
+//! (GPIO0 MISO, GPIO2 SCK, GPIO3 MOSI, CS GPIO46): `link::LinkMaster` polls it every millisecond and
+//! `phone::PhoneServer` answers (docs/phone-link.md). Not yet here (next step): the LIS3DH.
 #![no_std]
 #![no_main]
 
@@ -25,12 +27,15 @@ use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pac;
 use embassy_rp::pac::dma::vals::{DataSize, TransCountMode, TreqSel};
 use embassy_rp::i2c::{self, I2c};
-use embassy_rp::peripherals::{FLASH, I2C1, PIO0, TRNG};
+use embassy_rp::peripherals::{FLASH, I2C1, PIO0, SPI0, TRNG};
+use embassy_rp::spi::{self, Spi};
 use embassy_rp::pio::{Config as PioConfig, Direction, FifoJoin, InterruptHandler, Pio, ShiftConfig, ShiftDirection};
 use embassy_rp::trng::Trng;
 use embassy_rp::{bind_interrupts, trng};
 use embassy_time::{Instant, Timer};
 use kagiboy_core::bus::Mailbox;
+use kagiboy_core::link::{LinkMaster, MAX_XFER};
+use kagiboy_core::phone::PhoneServer;
 use kagiboy_core::vault::Se050Vault;
 use kagiboy_core::{persist, se050, Chip, Persisted, Platform, Store};
 use {defmt_rtt as _, panic_probe as _};
@@ -129,6 +134,43 @@ impl Platform for Hw<'_> {
     fn now_ms(&self) -> u64 {
         self.epoch_at_boot_ms + Instant::now().as_millis()
     }
+    fn set_now_ms(&mut self, ms: u64) {
+        self.epoch_at_boot_ms = ms.saturating_sub(Instant::now().as_millis());
+    }
+}
+
+/// The ESP32-C3 on SPI0: mode 0, MSB first, 8 MHz, chip select by hand (GPIO46, idle high).
+struct Radio<'d> {
+    spi: Spi<'d, SPI0, spi::Blocking>,
+    cs: Output<'d>,
+    master: LinkMaster,
+    server: PhoneServer,
+    tx: [u8; MAX_XFER],
+    rx: [u8; MAX_XFER],
+}
+
+impl Radio<'_> {
+    /// One transaction, and another right after it if a fetch or a reply is due (CS high >= 100 us between).
+    async fn poll<S: Store, V: kagiboy_core::vault::Vault>(&mut self, chip: &mut Chip<S, V>, hw: &mut Hw<'_>) {
+        for _ in 0..3 {
+            let now = Instant::now().as_millis();
+            let n = self.master.next(now, &mut self.tx);
+            self.cs.set_low();
+            let ok = self.spi.blocking_transfer(&mut self.rx[..n], &self.tx[..n]).is_ok();
+            self.cs.set_high();
+            if !ok {
+                self.rx[..n].fill(0);
+            }
+            if let Some((seq, msg)) = self.master.done(now, &self.rx[..n]) {
+                let rep = self.server.handle(chip, &msg, hw);
+                self.master.reply(Instant::now().as_millis(), seq, &rep);
+            }
+            if !self.master.more() {
+                break;
+            }
+            Timer::after_micros(100).await;
+        }
+    }
 }
 
 #[embassy_executor::main]
@@ -143,7 +185,7 @@ async fn main(_spawner: Spawner) {
     // Hold the Game Boy in reset until the bus is served; the boot ROM reads the cartridge header immediately.
     let mut gb_reset = Output::new(p.PIN_45, Level::High);
     let _bus_enable = Output::new(p.PIN_44, Level::High); // TXB0108 OE
-    let _esp_cs = Output::new(p.PIN_46, Level::High); // ESP32-C3 chip select idles high (no pull-up on the board)
+    let esp_cs = Output::new(p.PIN_46, Level::High); // ESP32-C3 chip select idles high (no pull-up on the board)
 
     let image = unsafe { &mut *addr_of_mut!(IMAGE.0) };
     image.fill(0xff);
@@ -228,10 +270,27 @@ async fn main(_spawner: Spawner) {
     let mut mailbox = Mailbox::default();
     mailbox.service(&mut chip, &mut hw, image); // presence byte and status before the first read
 
+    // the ESP32-C3 link; its chip select (GPIO46) has been driven high since the bus setup
+    let mut spi_cfg = spi::Config::default();
+    spi_cfg.frequency = 8_000_000;
+    spi_cfg.phase = spi::Phase::CaptureOnFirstTransition;
+    spi_cfg.polarity = spi::Polarity::IdleLow;
+    let mut session = [0u8; 1];
+    hw.random(&mut session);
+    let mut radio = Radio {
+        spi: Spi::new_blocking(p.SPI0, p.PIN_2, p.PIN_3, p.PIN_0, spi_cfg),
+        cs: esp_cs,
+        master: LinkMaster::new(session[0]),
+        server: PhoneServer::new(),
+        tx: [0; MAX_XFER],
+        rx: [0; MAX_XFER],
+    };
+
     gb_reset.set_low(); // let the Game Boy boot
     info!("Game Boy released from reset");
 
     let mut next = 0usize;
+    let mut last_link = Instant::now();
     loop {
         // drain the captured write cycles in bus order
         let written = (pac::DMA.ch(CH_RING).write_addr().read().wrapping_sub(ring_base) / 4) as usize % RING_LEN;
@@ -241,6 +300,10 @@ async fn main(_spawner: Spawner) {
             next = (next + 1) % RING_LEN;
         }
         mailbox.service(&mut chip, &mut hw, image);
+        if last_link.elapsed().as_micros() >= 1000 {
+            last_link = Instant::now();
+            radio.poll(&mut chip, &mut hw).await;
+        }
         Timer::after_micros(500).await;
     }
 }

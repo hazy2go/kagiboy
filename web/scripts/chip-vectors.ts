@@ -10,6 +10,8 @@ import { serializeTransaction, type TransactionSerializableEIP1559 } from "viem"
 import { CartChip, type Persisted, type SignRequest, type SignResult, type SwapIntent } from "../src/chip/chip";
 import { CMD, MAILBOX, MB } from "../src/chip/protocol";
 import { walletFromMnemonic } from "../src/chip/keys";
+import { ChipServer, CHUNK, msg, parseReply, signMessages, ST, type Msg } from "../src/chip/link";
+import { Transaction as SolTx } from "@solana/web3.js";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
 const outDir = process.argv[2] ?? "../firmware/rp2350/core/tests/vectors";
@@ -75,6 +77,8 @@ const bus = {
 let seq = 0;
 let saved: Persisted | null = null;
 let chip: CartChip;
+let server: ChipServer;
+let tag = 0;
 
 function newChip() {
   chip = new CartChip({
@@ -82,6 +86,33 @@ function newChip() {
     save: (p) => (saved = structuredClone(p)),
     clear: () => (saved = null),
   });
+  server = new ChipServer(chip);
+  tag = 0;
+}
+
+// ---- the phone link: every phone call goes through the reference server as messages (src/chip/link.ts) ----
+/** Sends messages, records both sides' bytes on `rec`, returns the last reply. */
+async function link(rec: Op, ms: Msg[]) {
+  const req: string[] = [];
+  const rep: string[] = [];
+  let last = new Uint8Array();
+  for (const m of ms) {
+    tag = (tag % 255) + 1;
+    const q = m(tag);
+    last = await server.handle(q);
+    req.push(hexs(q));
+    rep.push(hexs(last));
+  }
+  const prev = (rec.link as { req: string[]; rep: string[] } | undefined) ?? { req: [], rep: [] };
+  rec.link = { req: [...prev.req, ...req], rep: [...prev.rep, ...rep] };
+  return parseReply(last);
+}
+/** The phone's STATUS poll after every step: the Rust server must describe the chip the same way. */
+async function statusPoll() {
+  await flush();
+  const rec: Op = { op: "status" };
+  await link(rec, [msg.status(now)]);
+  ops.push(rec);
 }
 
 const flush = () => new Promise((r) => setImmediate(r));
@@ -112,6 +143,7 @@ async function gb(cmdName: keyof typeof CMD, arg = 0, data: Uint8Array | number[
     resp: hexs(mem.subarray(MB.RESP, MB.RESP + mem[MB.RESP_LEN])),
     chipHalf: hexs(mem.subarray(MB.RESP_SEQ, 256)),
   });
+  await statusPoll();
   return { status: mem[MB.STATUS], resp: mem.slice(MB.RESP, MB.RESP + mem[MB.RESP_LEN]) };
 }
 
@@ -119,42 +151,60 @@ const text = (b: Uint8Array) => new TextDecoder().decode(b);
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 // ---- the phone side ----
-let pairingResult: Promise<boolean> | null = null;
 async function phonePairAsync(name: string) {
-  // requestPairing rejects (async) when refused up front; record that as a refusal
-  const p = chip.requestPairing(name);
-  let refused: string | null = null;
-  await Promise.race([p.catch((e) => (refused = errText(e))), flush()]);
-  if (refused) ops.push({ op: "pair", name, ok: false, error: refused });
-  else {
-    pairingResult = p;
-    ops.push({ op: "pair", name, ok: true, code: chip.pairingCode });
-  }
+  const rec: Op = { op: "pair", name };
+  const r = await link(rec, [msg.pair(name)]);
+  await flush();
+  if (r.status === ST.OK) Object.assign(rec, { ok: true, code: new TextDecoder().decode(r.body) });
+  else Object.assign(rec, { ok: false, error: new TextDecoder().decode(r.body) });
+  ops.push(rec);
+  await statusPoll();
 }
 
 const results = new Map<number, SignResult>();
-function phoneSign(label: string, req: SignRequest) {
-  const wire = wireRequest(req); // throws only for input the phone's own library won't encode
-  try {
-    const { id, result } = chip.requestSignature(req);
-    result.then((r) => results.set(id, r));
-    ops.push({ op: "sign", label, ...wire, ok: true, id });
-    return id;
-  } catch (e) {
-    ops.push({ op: "sign", label, ...wire, ok: false, error: errText(e) });
-    return -1;
-  }
+async function phoneSign(label: string, req: SignRequest) {
+  const rec: Op = { op: "sign", label, ...wireRequest(req) };
+  const r = await link(rec, signMessages(req));
+  let id = -1;
+  if (r.status === ST.OK) {
+    id = new DataView(r.body.buffer, r.body.byteOffset).getUint32(0, true);
+    Object.assign(rec, { ok: true, id });
+  } else Object.assign(rec, { ok: false, error: new TextDecoder().decode(r.body) });
+  ops.push(rec);
+  await statusPoll();
+  return id;
 }
 async function phoneResult(id: number) {
   await flush();
-  const r = results.get(id);
   const rec: Op = { op: "result", id };
-  if (!r) rec.pending = true;
-  else if (!r.approved) Object.assign(rec, { approved: false, reason: r.reason });
-  else if (r.chain === "sol") Object.assign(rec, { approved: true, chain: "sol", signed: hexs(r.signed.serialize()) });
-  else if (r.chain === "evm") Object.assign(rec, { approved: true, chain: "evm", signed: r.signed.slice(2) });
-  else Object.assign(rec, { approved: true, chain: "swap", signature: r.signature, digest: r.digest });
+  const r = await link(rec, [msg.result(id)]);
+  const b = r.body;
+  const str = (o: number) => [new TextDecoder().decode(b.subarray(o + 1, o + 1 + b[o])), o + 1 + b[o]] as const;
+  if (b[0] === 0) rec.pending = true;
+  else if (b[0] === 4) Object.assign(rec, { approved: false, reason: str(1)[0] });
+  else if (b[0] === 3) {
+    const [signature, o] = str(1);
+    Object.assign(rec, { approved: true, chain: "swap", signature, digest: str(o)[0] });
+    results.set(id, { approved: true, chain: "swap", signature, digest: str(o)[0] });
+  } else {
+    const len = b[1] | (b[2] << 8);
+    const out = new Uint8Array(len);
+    const gets: Msg[] = [];
+    for (let o = 0; o < len; o += CHUNK) gets.push(msg.get(o));
+    for (let k = 0; k < gets.length; k++) {
+      const g = await link(rec, [gets[k]]);
+      out.set(g.body.subarray(0, Math.min(CHUNK, len - k * CHUNK)), k * CHUNK);
+    }
+    if (b[0] === 1) {
+      Object.assign(rec, { approved: true, chain: "sol", signed: hexs(out) });
+      results.set(id, { approved: true, chain: "sol", signed: SolTx.from(out) });
+    } else {
+      Object.assign(rec, { approved: true, chain: "evm", signed: hexs(out) });
+      results.set(id, { approved: true, chain: "evm", signed: `0x${hexs(out)}` });
+    }
+  }
   ops.push(rec);
+  await statusPoll();
 }
 
 /** The bytes the phone would send over Bluetooth for each kind of request. */
@@ -176,9 +226,17 @@ function wireRequest(req: SignRequest): Op {
   };
 }
 
-function phone(op: string, fn: () => void, extra: Op = {}) {
+async function phone(op: string, m: Msg, extra: Op = {}) {
+  const rec: Op = { op, ...extra };
+  await link(rec, [m]);
+  ops.push(rec);
+  await statusPoll();
+}
+/** A power cycle (not a link message): the chip loses its RAM state. */
+async function powerCycle(fn: () => void) {
   fn();
-  ops.push({ op, ...extra });
+  ops.push({ op: "reset" });
+  await statusPoll();
 }
 
 // ---- requests used by the sessions ----
@@ -257,9 +315,9 @@ const me = walletFromMnemonic(mnemonic2);
 const myEvm = me.evm.address;
 
 // phone: unpaired, so balances are ignored and requests refused
-phone("balance", () => chip.setBalance("sol", 2_480_000_000n), { chain: "sol", units: "2480000000" });
+await phone("balance", msg.balance("sol", 2_480_000_000n), { chain: "sol", units: "2480000000" });
 await gb("ACCOUNT", 0);
-phoneSign("unpaired", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000) });
+await phoneSign("unpaired", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000) });
 await gb("PHONE", 0); // nobody paired
 await phonePairAsync("Pixel 9"); // the window is open on the home screen? no: refused until the GB opens it
 await gb("PHONE", 2); // open the pairing window
@@ -272,24 +330,24 @@ await gb("PAIR", 1, chip.pairingCode ?? "");
 await gb("PHONE", 0);
 await gb("PAIR", 0); // nothing waits now
 
-phone("balance", () => chip.setBalance("sol", 2_480_000_000n), { chain: "sol", units: "2480000000" });
-phone("balance", () => chip.setBalance("evm", 420_000_000_000_000_000n), { chain: "evm", units: "420000000000000000" });
+await phone("balance", msg.balance("sol", 2_480_000_000n), { chain: "sol", units: "2480000000" });
+await phone("balance", msg.balance("evm", 420_000_000_000_000_000n), { chain: "evm", units: "420000000000000000" });
 await gb("ACCOUNT", 0);
 await gb("ACCOUNT", 1);
-phone("balance", () => chip.setBalance("sol", 123_456_789_012_345_678n), { chain: "sol", units: "123456789012345678" });
+await phone("balance", msg.balance("sol", 123_456_789_012_345_678n), { chain: "sol", units: "123456789012345678" });
 await gb("ACCOUNT", 0);
-phone("balance", () => chip.setBalance("sol", 5n), { chain: "sol", units: "5" });
+await phone("balance", msg.balance("sol", 5n), { chain: "sol", units: "5" });
 await gb("ACCOUNT", 0);
-phone("balance", () => chip.setBalance("sol", null), { chain: "sol", units: null });
+await phone("balance", msg.balance("sol", null), { chain: "sol", units: null });
 await gb("ACCOUNT", 0);
 
 // Solana: refusals, then a real transfer
-phoneSign("sol: someone else pays", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000, { payer: DEST_SOL }) });
-phoneSign("sol: two instructions", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000, { extra: true }) });
-phoneSign("sol: not from me", { chain: "sol", tx: solTransfer(DEST_SOL, 1000, { payer: me.sol.publicKey }) });
-phoneSign("sol: too many digits", { chain: "sol", tx: solTransfer(me.sol.publicKey, 123_456_789_123_456_789) });
-const solId = phoneSign("sol: transfer", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1_234_500_000) });
-phoneSign("busy", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1) });
+await phoneSign("sol: someone else pays", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000, { payer: DEST_SOL }) });
+await phoneSign("sol: two instructions", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1000, { extra: true }) });
+await phoneSign("sol: not from me", { chain: "sol", tx: solTransfer(DEST_SOL, 1000, { payer: me.sol.publicKey }) });
+await phoneSign("sol: too many digits", { chain: "sol", tx: solTransfer(me.sol.publicKey, 123_456_789_123_456_789) });
+const solId = await phoneSign("sol: transfer", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1_234_500_000) });
+await phoneSign("busy", { chain: "sol", tx: solTransfer(me.sol.publicKey, 1) });
 await gb("PENDING");
 await gb("TXSTATUS");
 await gb("SIGN", 1);
@@ -297,22 +355,20 @@ await phoneResult(solId);
 await gb("TXSTATUS");
 const solSigned = results.get(solId);
 const solHash = solSigned && solSigned.approved && solSigned.chain === "sol" ? (await import("bs58")).default.encode(solSigned.signed.signature!) : "";
-const status = (id: number, state: string, detail: Op) => {
-  chip.setTxStatus(id, state as never, detail as never);
-  ops.push({ op: "txstatus", id, state, ...detail });
-};
-status(solId, "CONFIRMED", { hash: "1111111111111111111111111111111111111111111111111111111111111111" });
+const status = (id: number, state: string, detail: { hash?: string; reason?: string }) =>
+  phone("txstatus", msg.txStatus(id, state, detail.hash, detail.reason), { id, state, ...detail });
+await status(solId, "CONFIRMED", { hash: "1111111111111111111111111111111111111111111111111111111111111111" });
 await gb("TXSTATUS");
-status(solId, "BOGUS", {});
-status(solId, "FAILED", { reason: "SEND_MORE" });
-status(solId, "FAILED", { reason: "NO_FUNDS" });
+await status(solId, "BOGUS", {});
+await status(solId, "FAILED", { reason: "SEND_MORE" });
+await status(solId, "FAILED", { reason: "NO_FUNDS" });
 await gb("TXSTATUS");
-status(solId, "BROADCAST", { hash: solHash });
+await status(solId, "BROADCAST", { hash: solHash });
 await gb("TXSTATUS");
-status(solId, "FAILED", { reason: "NETWORK" }); // already out: refused
-status(solId, "CONFIRMED", { hash: solHash.toLowerCase() === solHash ? solHash : solHash });
+await status(solId, "FAILED", { reason: "NETWORK" }); // already out: refused
+await status(solId, "CONFIRMED", { hash: solHash.toLowerCase() === solHash ? solHash : solHash });
 await gb("TXSTATUS");
-status(solId + 5, "CONFIRMED", { hash: solHash });
+await status(solId + 5, "CONFIRMED", { hash: solHash });
 
 // EVM: refusals, then sends on two networks
 const evmBad: [string, Partial<TransactionSerializableEIP1559>][] = [
@@ -324,8 +380,8 @@ const evmBad: [string, Partial<TransactionSerializableEIP1559>][] = [
   ["evm: access list", { accessList: [{ address: "0x000000000000000000000000000000000000dEaD", storageKeys: [] }] }],
   ["evm: value too long", { value: 123_456_789_123_456_789_123n }],
 ];
-for (const [label, over] of evmBad) phoneSign(label, { chain: "evm", tx: sepolia(over) });
-const ethId = phoneSign("evm: sepolia", { chain: "evm", tx: sepolia() });
+for (const [label, over] of evmBad) await phoneSign(label, { chain: "evm", tx: sepolia(over) });
+const ethId = await phoneSign("evm: sepolia", { chain: "evm", tx: sepolia() });
 await gb("PENDING");
 await gb("SIGN", 1);
 await phoneResult(ethId);
@@ -334,24 +390,24 @@ const ethR = results.get(ethId);
 if (ethR?.approved && ethR.chain === "evm") {
   const { keccak256 } = await import("viem");
   const h = keccak256(ethR.signed);
-  status(ethId, "CONFIRMED", { hash: h.toUpperCase().replace("0X", "0x") });
+  await status(ethId, "CONFIRMED", { hash: h.toUpperCase().replace("0X", "0x") });
   await gb("TXSTATUS");
 }
-phone("network", () => chip.setEvmNetwork(998), { id: 998 });
-phone("network", () => chip.setEvmNetwork(5), { id: 5 }); // unknown: ignored
+await phone("network", msg.network(998), { id: 998 });
+await phone("network", msg.network(5), { id: 5 }); // unknown: ignored
 await gb("ACCOUNT", 1);
-phone("balance", () => chip.setBalance("evm", 3_000_000_000_000_000_000n), { chain: "evm", units: "3000000000000000000" });
+await phone("balance", msg.balance("evm", 3_000_000_000_000_000_000n), { chain: "evm", units: "3000000000000000000" });
 await gb("ACCOUNT", 1);
-const hypeId = phoneSign("evm: hyperevm", { chain: "evm", tx: sepolia({ chainId: 998, nonce: 7, value: 10n ** 18n }) });
+const hypeId = await phoneSign("evm: hyperevm", { chain: "evm", tx: sepolia({ chainId: 998, nonce: 7, value: 10n ** 18n }) });
 await gb("PENDING");
 await gb("SIGN", 0); // rejected on the Game Boy
 await phoneResult(hypeId);
 await gb("TXSTATUS");
-const arbId = phoneSign("evm: arbitrum, rollup gas", { chain: "evm", tx: sepolia({ chainId: 421614, gas: 250_000n, nonce: 8, maxFeePerGas: 100_000_000n, maxPriorityFeePerGas: 10_000_000n }) });
+const arbId = await phoneSign("evm: arbitrum, rollup gas", { chain: "evm", tx: sepolia({ chainId: 421614, gas: 250_000n, nonce: 8, maxFeePerGas: 100_000_000n, maxPriorityFeePerGas: 10_000_000n }) });
 await gb("PENDING");
 await gb("SIGN", 1);
 await phoneResult(arbId);
-const rhId = phoneSign("evm: robinhood", { chain: "evm", tx: sepolia({ chainId: 46630, nonce: 9, value: 0n }) });
+const rhId = await phoneSign("evm: robinhood", { chain: "evm", tx: sepolia({ chainId: 46630, nonce: 9, value: 0n }) });
 await gb("PENDING");
 await gb("SIGN", 1);
 await phoneResult(rhId);
@@ -371,19 +427,19 @@ const swapBad: [string, SwapIntent][] = [
   ["swap: zero amount", { ...swaps[0][1], sellAmount: 0n }],
   ["swap: unknown network", { ...swaps[0][1], dst: { chain: "evm", net: 1 } }],
 ];
-for (const [label, s] of swapBad) phoneSign(label, { chain: "swap", swap: s });
+for (const [label, s] of swapBad) await phoneSign(label, { chain: "swap", swap: s });
 for (const [label, s] of swaps) {
-  const id = phoneSign(label, { chain: "swap", swap: s });
+  const id = await phoneSign(label, { chain: "swap", swap: s });
   await gb("PENDING");
   await gb("SIGN", 1);
   await phoneResult(id);
   await gb("TXSTATUS");
-  status(id, "CONFIRMED", { hash: "x" }); // a demo swap can't be relabelled
+  await status(id, "CONFIRMED", { hash: "x" }); // a demo swap can't be relabelled
   await gb("TXSTATUS");
 }
 
 // a request the owner doesn't see: power is pulled, then LOCK drops one
-const lostId = phoneSign("evm: lost on lock", { chain: "evm", tx: sepolia({ nonce: 30 }) });
+const lostId = await phoneSign("evm: lost on lock", { chain: "evm", tx: sepolia({ nonce: 30 }) });
 await gb("LOCK");
 await phoneResult(lostId);
 await gb("PING");
@@ -405,7 +461,7 @@ await phonePairAsync("iPhone");
 advance(60_001);
 await gb("PAIR", 0);
 // forget the phone from the Game Boy, then wipe
-const fId = phoneSign("evm: then forgotten", { chain: "evm", tx: sepolia({ nonce: 40 }) });
+const fId = await phoneSign("evm: then forgotten", { chain: "evm", tx: sepolia({ nonce: 40 }) });
 await gb("PHONE", 1);
 await phoneResult(fId);
 await gb("PHONE", 0);
@@ -454,9 +510,9 @@ await gb("SET_PIN", 0, [5, 5, 5, 5]);
 await gb("PHONE", 2);
 await phonePairAsync("Galaxy");
 await gb("PAIR", 1, chip.pairingCode ?? "");
-const pId = phoneSign("sol: then power is pulled", { chain: "sol", tx: solTransfer(walletFromMnemonic(good.join(" ")).sol.publicKey, 42) });
+const pId = await phoneSign("sol: then power is pulled", { chain: "sol", tx: solTransfer(walletFromMnemonic(good.join(" ")).sol.publicKey, 42) });
 await gb("PENDING");
-phone("reset", () => {
+await powerCycle(() => {
   chip.reset();
   mem.fill(0);
   seq = 0;
@@ -467,7 +523,7 @@ await gb("PENDING");
 await gb("UNLOCK", 0, [5, 5, 5, 5]);
 await gb("PHONE", 0); // the pairing survived the power cycle
 await gb("ACCOUNT", 0);
-phone("unpair", () => chip.unpair());
+await phone("unpair", msg.unpair());
 await gb("PHONE", 0);
 await gb("ACCOUNT", 1);
 save("session-power", "power cycle drops a waiting request and RAM state; pairing persists; unpair from the phone");

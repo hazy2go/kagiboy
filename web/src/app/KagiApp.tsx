@@ -1,12 +1,13 @@
 import "../polyfill"; // must run before @solana/web3.js loads
 import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowDown, ArrowLeftRight, ArrowUp, Check, ChevronRight, Copy, Gamepad2, History, Power, Volume2, VolumeX, Wallet as WalletIcon } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Bluetooth, Check, ChevronRight, Copy, Gamepad2, History, Power, Volume2, VolumeX, Wallet as WalletIcon } from "lucide-react";
 import qrcode from "qrcode-generator";
 import { formatUnits, parseUnits } from "viem";
 import type { Chain } from "../chip/protocol";
 import { EVM_NETWORKS } from "../chip/networks";
 import { useSession } from "../demo/session";
+import { bluetoothAvailable } from "../chip/ble";
 import { explorer } from "../phone/phone";
 import { chainOf, intentFor, loadTokens, PARTNER_FEE_BPS, quote, SLIPPAGE_BPS, SWAP_CHAINS, type Quote, type Token } from "./swap";
 import { CHAIN_ICONS, SYMBOL_ICONS, TOKEN_ICONS } from "./tokenIcons";
@@ -159,6 +160,20 @@ function Cta({ children, onClick, variant = "solid", disabled, type = "button", 
 
 function Connect({ onOpen }: { onOpen?: () => void }) {
   const s = useSession();
+  const [linking, setLinking] = useState(false);
+  const [error, setError] = useState("");
+  const real = async () => {
+    setLinking(true);
+    setError("");
+    try {
+      await s.connectCartridge();
+    } catch (e) {
+      // closing the browser's device picker is not an error worth showing
+      if ((e as Error).name !== "NotFoundError") setError((e as Error).message);
+    } finally {
+      setLinking(false);
+    }
+  };
   return (
     <Intro title="Connect your kagiboy">
       <p className={lede}>Put the cartridge in your Game Boy and switch it on. Your keys stay in the cartridge; this app can only ask.</p>
@@ -171,6 +186,13 @@ function Connect({ onOpen }: { onOpen?: () => void }) {
       >
         Switch on
       </Cta>
+      {bluetoothAvailable() && (
+        <Cta variant="soft" className="mt-3 min-w-[200px]" onClick={real} disabled={linking}>
+          <Bluetooth className="size-4" />
+          {linking ? "Looking for it…" : "Use a real cartridge"}
+        </Cta>
+      )}
+      {error && <p className="mx-auto mt-3 max-w-[19rem] text-[13px] text-[#b2364e]">{error}</p>}
     </Intro>
   );
 }
@@ -511,7 +533,7 @@ function Swap({ onRecord, onOpen }: { onRecord: (r: SwapRecord) => void; onOpen?
       at: Date.now(),
     };
     try {
-      const req = s.chip.requestSignature({ chain: "swap", swap: intentFor(q) });
+      const req = await s.chip.requestSignature({ chain: "swap", swap: intentFor(q) });
       onRecord(rec);
       onOpen?.();
       const r = await req.result;
@@ -782,11 +804,12 @@ function Cartridge({ onOpen }: { onOpen?: () => void }) {
         <div className="min-w-0">
           <p className="m-0 font-display text-[18px] font-semibold tracking-[-0.02em]">kagiboy</p>
           <p className="m-0 text-[13px] text-muted-foreground">{ph ? `Paired with this ${ph.name === "IPHONE" ? "iPhone" : "phone"}` : "Not paired"}</p>
+          {s.cartridge && <p className="m-0 text-[13px] text-muted-foreground">Over Bluetooth · {s.cartridge.name}</p>}
         </div>
       </div>
 
       <div className="mt-4 divide-y divide-border overflow-hidden rounded-[22px] border border-border bg-card">
-        {onOpen && (
+        {onOpen && !s.cartridge && (
           <button type="button" className={rowCls} onClick={onOpen}>
             <Gamepad2 className="size-5 text-muted-foreground" />
             <span className="flex-1">Open the Game Boy</span>
@@ -811,9 +834,9 @@ function Cartridge({ onOpen }: { onOpen?: () => void }) {
           <span className="flex-1">Swap fee</span>
           <span className="text-[14px] text-muted-foreground">{PARTNER_FEE_BPS / 100}% to kagiboy</span>
         </div>
-        <button type="button" className={rowCls} onClick={() => s.powerOff()}>
+        <button type="button" className={rowCls} onClick={() => (s.cartridge ? s.dropCartridge() : s.powerOff())}>
           <Power className="size-5 text-muted-foreground" />
-          <span className="flex-1">Switch off</span>
+          <span className="flex-1">{s.cartridge ? "Disconnect" : "Switch off"}</span>
         </button>
       </div>
 

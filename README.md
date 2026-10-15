@@ -47,7 +47,14 @@ as keys that can only sign, makes the PIN an SE050 object that allows five attem
 key signs only inside a session opened with that PIN. The SE050 driver is our own, MIT. Without a chip, it's tested
 against a behavioural SE050 model: every recorded browser session replays through it byte for byte.
 
-Next: the Bluetooth link through the ESP32-C3, and the accelerometer.
+**2026-10-15: the Bluetooth link.** The phone app can now talk to a real cartridge: "Use a real cartridge" on the
+connect screen (Chrome or Edge, on a computer or Android). Messages go phone → Bluetooth LE → the ESP32-C3, which
+passes them over SPI to the RP2350, unchanged. The wallet answers and the reply comes back the same way. The ESP never
+sees a key or a PIN. Spec: [docs/phone-link.md](docs/phone-link.md). Every phone call of the recorded sessions goes
+through the whole chain in the tests: the web app's bytes, the ESP's C code and the RP2350's Rust code, with damaged
+and missed transfers and restarts on both chips. Every reply matches the browser chip's. Not yet run on hardware.
+
+Next: the accelerometer.
 
 <p align="center">
   <img src="hardware/cart/docs/img/board_top.png" alt="kagiboy cartridge board, top: RP2350B, SE050E2 secure element, LIS3DH, ESP32-C3 module and power stage" width="49%">

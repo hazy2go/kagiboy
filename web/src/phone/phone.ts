@@ -1,7 +1,8 @@
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { createPublicClient, formatUnits, http, isAddress, keccak256, parseUnits } from "viem";
 import bs58 from "bs58";
-import type { CartChip, FailReason, SignResult } from "../chip/chip";
+import type { FailReason, SignResult } from "../chip/chip";
+import type { PhoneChip } from "../chip/link";
 import type { Chain } from "../chip/protocol";
 import { DEFAULT_EVM, evmNetwork, type EvmNetwork } from "../chip/networks";
 
@@ -51,9 +52,9 @@ export class Phone {
   activity: Activity[] = [];
   sending = false;
   private listeners = new Set<() => void>();
-  private chip: CartChip;
+  private chip: PhoneChip;
 
-  constructor(chip: CartChip) {
+  constructor(chip: PhoneChip) {
     this.chip = chip;
     // the Game Boy can switch networks too; the app follows it
     chip.onNetwork = (id) => this.setEvmNetwork(id);
@@ -259,7 +260,7 @@ export class Phone {
     const tx = new Transaction({ feePayer: fromKey, blockhash, lastValidBlockHeight }).add(
       SystemProgram.transfer({ fromPubkey: fromKey, toPubkey: new PublicKey(to), lamports }),
     );
-    const { id, result } = this.chip.requestSignature({ chain: "sol", tx });
+    const { id, result } = await this.chip.requestSignature({ chain: "sol", tx });
     const signed = await result;
     if (!signed.approved || signed.chain !== "sol") return update(rejection(signed));
     await this.track(
@@ -288,7 +289,7 @@ export class Phone {
     if (this.balances.evm != null && maxCost > this.balances.evm) {
       throw new Error(`With the network fee this needs up to ${formatUnits(maxCost, 18)} ${net.symbol}.`);
     }
-    const { id, result } = this.chip.requestSignature({
+    const { id, result } = await this.chip.requestSignature({
       chain: "evm",
       tx: {
         type: "eip1559",

@@ -1,0 +1,24 @@
+CONFIG_IDF_TARGET="esp32c3"
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+# Flashing and the console go over the native USB (through the hub on the cart)
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+# 1 ms FreeRTOS tick: the power manager runs every 1 ms
+CONFIG_FREERTOS_HZ=1000
+# Bluetooth LE only, NimBLE host, one connection: the paired phone
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=247
+CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME="KAGIBOY"
+# no bonding store needed: the wallet pairs the phone itself (6-digit code approved on the Game Boy)
+CONFIG_BT_NIMBLE_NVS_PERSIST=n
+# Same boot budget as the WiFi cart: reach app_main on the reservoir's energy (hardware/cart/docs)
+CONFIG_BOOTLOADER_SKIP_VALIDATE_ON_POWER_ON=y
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+CONFIG_PM_ENABLE=y

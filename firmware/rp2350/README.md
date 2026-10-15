@@ -5,7 +5,7 @@ MIT. Work in progress: the board isn't built yet.
 | Crate | What | Status |
 |---|---|---|
 | `core/` (`kagiboy-core`) | The wallet logic: the Game Boy mailbox, PIN and wipe rules, BIP-39 words, Solana and EVM keys, transaction decoding and signing, swaps, pairing, QR codes; the bus-side mailbox (`bus.rs`) and the stored-wallet format (`persist.rs`). `no_std`, so the same code runs on the RP2350 and in host tests | done, matches the browser chip byte for byte |
-| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` with the keys in the SE050 | bus, mailbox, wallet and SE050 done, builds; phone link (ESP32-C3) and LIS3DH next |
+| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` with the keys in the SE050 | bus, mailbox, wallet, SE050 and the phone link (ESP32-C3 on SPI0) done, builds; LIS3DH next |
 
 ## How the bus is served (`cart/`)
 - `gb_read` (PIO0 SM0) answers every ROM read from a 32 KB image in SRAM: two chained DMA channels turn the address it
@@ -50,10 +50,20 @@ MIT. Work in progress: the board isn't built yet.
   - Planted bugs (Ed25519 byte order, S normalisation, a permissive policy, signing outside the session) are all
     caught.
 
+## The phone link (`core/src/phone.rs`, `core/src/link.rs`)
+The phone's messages arrive over Bluetooth at the ESP32-C3 (`firmware/esp32c3`), which offers them on SPI0. The
+cartridge polls every millisecond (`link::LinkMaster`, the WiFi cart's SPI framing with the direction reversed) and
+`phone::PhoneServer` answers them with the chip. Spec and tests: [docs/phone-link.md](../../docs/phone-link.md).
+- `tests/phone_link.rs`: the web app's bytes for every phone call of the recorded sessions, and the reference
+  server's replies: identical, with the software vault and with the SE050 behind the Game Boy bus.
+- `tests/spi_link.rs`: the same sessions through both link halves as they ship. The ESP's C half is built with the
+  host compiler and driven over a pipe. The link gets damaged and missed transfers and restarts on both sides.
+  Planted bugs in either half are caught: no duplicate filter, no ack, no CRC, an ack crossing an ESP restart, a
+  resent reply passed on twice.
+
 ## Not done yet
 - **The SE050 on hardware:** the board isn't built. Also still to add: platform SCP03 (an encrypted I2C link, keys
   in RP2350 OTP) and Deep Power-down while locked.
-- **Phone link:** the ESP32-C3 over SPI (the WiFi cart's protocol v1), with Bluetooth LE on the ESP side.
 - **LIS3DH** for shake entropy and tilt.
 - Running on hardware: the board isn't built.
 

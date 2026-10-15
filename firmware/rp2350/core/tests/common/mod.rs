@@ -6,6 +6,7 @@ use std::collections::VecDeque;
 
 use kagiboy_core::bus::{encode_write, Mailbox, ROM_WINDOW};
 use kagiboy_core::chip::mb;
+use kagiboy_core::phone::PhoneServer;
 use kagiboy_core::vault::Vault;
 use kagiboy_core::{Chain, Chip, Persisted, Platform, SignRequest, SignResult, Store, SwapRequest};
 use serde_json::Value;
@@ -24,7 +25,7 @@ impl Store for Mem {
 }
 
 /// Serves the random draws the browser chip made, in order and with the same lengths.
-struct Replay {
+pub struct Replay {
     rng: VecDeque<Vec<u8>>,
     now: u64,
     draws: usize,
@@ -67,7 +68,26 @@ pub fn request(op: &Value) -> SignRequest {
 /// Replays a recorded browser-chip session against `chip` and requires identical bytes. `via_bus`: drive the Game
 /// Boy side as the cartridge sees it (captured write cycles in, the ROM window out), with work-RAM and chip-half
 /// writes mixed in that must be ignored. `power_cycle` runs alongside the chip's own reset (e.g. an SE050 model).
-pub fn run_with<V: Vault>(name: &str, via_bus: bool, mut chip: Chip<Mem, V>, power_cycle: impl Fn(&mut Chip<Mem, V>), label: &str) {
+pub fn run_with<V: Vault>(name: &str, via_bus: bool, chip: Chip<Mem, V>, power_cycle: impl Fn(&mut Chip<Mem, V>), label: &str) {
+    run_mode(name, via_bus, None, chip, power_cycle, label)
+}
+
+/// How a phone-link message reaches the chip and its reply comes back.
+pub trait PhoneSide<V: Vault> {
+    fn exchange(&mut self, chip: &mut Chip<Mem, V>, req: &[u8], p: &mut Replay) -> Vec<u8>;
+}
+
+/// Straight into the cartridge's server.
+impl<V: Vault> PhoneSide<V> for PhoneServer {
+    fn exchange(&mut self, chip: &mut Chip<Mem, V>, req: &[u8], p: &mut Replay) -> Vec<u8> {
+        self.handle(chip, req, p)
+    }
+}
+
+/// `via_link`: every phone call goes in as the phone-link messages the web app sent (`link.req`), through
+/// `PhoneServer`, and its replies must equal the reference server's (`link.rep`), STATUS polls included.
+pub fn run_mode<V: Vault>(name: &str, via_bus: bool, mut link: Option<&mut dyn PhoneSide<V>>, mut chip: Chip<Mem, V>, power_cycle: impl Fn(&mut Chip<Mem, V>), label: &str) {
+    let via_link = link.is_some();
     let path = format!("{}/tests/vectors/{name}.json", env!("CARGO_MANIFEST_DIR"));
     let doc: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     let mut p = Replay { rng: VecDeque::new(), now: doc["start"].as_u64().unwrap(), draws: 0 };
@@ -84,7 +104,20 @@ pub fn run_with<V: Vault>(name: &str, via_bus: bool, mut chip: Chip<Mem, V>, pow
             p.rng.push_back(hex::decode(s(op, "hex")).unwrap());
             continue;
         }
+        if let (Some(server), Some(l)) = (link.as_deref_mut(), op.get("link")) {
+            for (k, (q, want)) in l["req"].as_array().unwrap().iter().zip(l["rep"].as_array().unwrap()).enumerate() {
+                let got = server.exchange(&mut chip, &hex::decode(q.as_str().unwrap()).unwrap(), &mut p);
+                assert_eq!(hex::encode(got), want.as_str().unwrap(), "{at}: link message {k} ({})", q.as_str().unwrap());
+            }
+            checked += 1;
+            unused_draws += p.rng.len();
+            p.rng.clear();
+            continue;
+        }
         match kind {
+            "status" => {
+                checked -= 1; // only meaningful over the link
+            }
             "clock" => p.now = op["now"].as_u64().unwrap(),
             "gb" => {
                 let data = hex::decode(s(op, "data")).unwrap();
@@ -179,6 +212,6 @@ pub fn run_with<V: Vault>(name: &str, via_bus: bool, mut chip: Chip<Mem, V>, pow
         unused_draws += p.rng.len();
         p.rng.clear();
     }
-    println!("{name}{}{label}: {checked} ops identical, {} random draws used, {unused_draws} browser-only draws skipped", if via_bus { " (via the bus)" } else { "" }, p.draws);
+    println!("{name}{}{}{label}: {checked} ops identical, {} random draws used, {unused_draws} browser-only draws skipped", if via_bus { " (via the bus)" } else { "" }, if via_link { " (phone link)" } else { "" }, p.draws);
 }
 

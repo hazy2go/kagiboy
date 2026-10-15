@@ -208,11 +208,11 @@ export function GameBoyShell({
   useEffect(() => {
     sceneRef.current?.shake(shaking ? 1 : 0);
     if (!shaking) {
-      s.chip.accel = { x: 0, y: 0 };
+      s.sim.accel = { x: 0, y: 0 };
       return;
     }
     const id = setInterval(() => {
-      s.chip.accel = { x: Math.round(Math.random() * 140 - 70), y: Math.round(Math.random() * 140 - 70) };
+      s.sim.accel = { x: Math.round(Math.random() * 140 - 70), y: Math.round(Math.random() * 140 - 70) };
     }, 30);
     return () => clearInterval(id);
   }, [shaking, s]);
@@ -222,7 +222,7 @@ export function GameBoyShell({
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
       if (!a || a.x == null || a.y == null) return;
-      s.chip.accel = { x: clamp(a.x * 12), y: clamp(a.y * 12) };
+      s.sim.accel = { x: clamp(a.x * 12), y: clamp(a.y * 12) };
     };
     window.addEventListener("devicemotion", onMotion);
     return () => window.removeEventListener("devicemotion", onMotion);

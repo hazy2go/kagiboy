@@ -2,6 +2,8 @@ import { useSyncExternalStore } from "react";
 import { CartChip, type Persisted, type Storage } from "../chip/chip";
 import { GameBoy, SOFT_LCD, type Key } from "../emu/gameboy";
 import { Phone } from "../phone/phone";
+import { connectCartridge, type Cartridge } from "../chip/ble";
+import type { PhoneChip } from "../chip/link";
 
 const STORE_KEY = "kagiboy.secure-element";
 
@@ -43,8 +45,15 @@ function readMuted() {
 
 /** Owns the emulator loop and the three parts: Game Boy, cartridge chip, phone. */
 export class Session {
-  readonly chip = new CartChip(browserStorage);
-  readonly phone = new Phone(this.chip);
+  /** the cartridge chip in the browser, behind the emulated Game Boy */
+  readonly sim = new CartChip(browserStorage);
+  /** what the phone app talks to: `sim`, or a real cartridge over Bluetooth */
+  chip: PhoneChip = this.sim;
+  phone = new Phone(this.sim);
+  /** a real cartridge, while one is connected */
+  cartridge: Cartridge | null = null;
+  private unsubs: (() => void)[] = [];
+  private shownState: PhoneChip["state"] = "none";
   private gb: GameBoy | null = null;
   private rom: Uint8Array | null = null;
   private canvas: HTMLCanvasElement | null = null;
@@ -65,12 +74,57 @@ export class Session {
   private audio: AudioContext | null = null;
 
   constructor() {
+    this.watch();
+  }
+
+  /** Re-render on any change of the chip or phone the app is using; balances follow the lock state. */
+  private watch() {
+    for (const u of this.unsubs) u();
     const bump = () => {
+      const st = this.chip.state;
+      // a real cartridge: balances follow its lock state here (the emulator loop does it for the browser chip)
+      if (this.chip !== this.sim && st !== this.shownState) {
+        if (st === "unlocked") this.phone.refreshBalances();
+        else if (this.shownState === "unlocked") this.phone.clearBalances();
+        this.shownState = st;
+      }
       this.version++;
       for (const fn of this.listeners) fn();
     };
-    this.chip.subscribe(bump);
-    this.phone.subscribe(bump);
+    this.unsubs = [this.chip.subscribe(bump), this.phone.subscribe(bump)];
+  }
+
+  /** Switches the app to a real cartridge over Bluetooth (the emulated Game Boy goes off). */
+  async connectCartridge() {
+    const cart = await connectCartridge();
+    if (this.powered) this.powerOff();
+    this.cartridge = cart;
+    this.chip = cart.chip;
+    this.phone = new Phone(cart.chip);
+    this.shownState = "none";
+    this.watch();
+    this.powered = true;
+    clearInterval(this.balanceTimer);
+    this.balanceTimer = window.setInterval(() => !document.hidden && this.phone.refreshBalances(), 15000);
+    cart.onGone = () => this.dropCartridge();
+    this.notify();
+    this.phone.refreshBalances();
+  }
+
+  /** Back to the cartridge in the browser (the link dropped, or the owner disconnected). */
+  dropCartridge() {
+    if (!this.cartridge) return;
+    const cart = this.cartridge;
+    this.cartridge = null;
+    cart.onGone = null;
+    cart.disconnect();
+    clearInterval(this.balanceTimer);
+    this.chip = this.sim;
+    this.phone = new Phone(this.sim);
+    this.shownState = this.sim.state;
+    this.watch();
+    this.powered = false;
+    this.notify();
   }
 
   subscribe = (fn: () => void) => {
@@ -111,13 +165,14 @@ export class Session {
   }
 
   async powerOn() {
+    this.dropCartridge();
     this.unlockAudio(); // before the await below, while we're still inside the click
     this.rom ??= new Uint8Array(await (await fetch("/wallet.gb")).arrayBuffer());
     this.gb = new GameBoy(this.rom);
     this.gb.onBeep = (hz) => this.beep(hz);
     this.pressedAt.clear();
     this.releaseAt.clear();
-    this.chip.reset();
+    this.sim.reset();
     this.phone.clearBalances();
     this.powered = true;
     this.last = performance.now();
@@ -134,7 +189,7 @@ export class Session {
     clearInterval(this.balanceTimer);
     this.gb = null;
     this.powered = false;
-    this.chip.reset();
+    this.sim.reset();
     this.phone.clearBalances();
     const ctx = this.canvas?.getContext("2d");
     if (ctx && this.canvas) {
@@ -219,10 +274,10 @@ export class Session {
     // keep real Game Boy speed on 60, 120 and 144 Hz displays
     this.debt = Math.min(this.debt + (now - this.last), FRAME_MS * 4);
     this.last = now;
-    const before = this.chip.state;
+    const before = this.sim.state;
     while (this.debt >= FRAME_MS) {
       gb.frame();
-      this.chip.tick(gb);
+      this.sim.tick(gb);
       this.frameCount++;
       for (const [k, at] of this.releaseAt) {
         if (this.frameCount >= at) {
@@ -232,8 +287,8 @@ export class Session {
       }
       this.debt -= FRAME_MS;
     }
-    if (before !== "unlocked" && this.chip.state === "unlocked") this.phone.refreshBalances();
-    if (before === "unlocked" && this.chip.state !== "unlocked") this.phone.clearBalances();
+    if (before !== "unlocked" && this.sim.state === "unlocked") this.phone.refreshBalances();
+    if (before === "unlocked" && this.sim.state !== "unlocked") this.phone.clearBalances();
     if (this.canvas && this.image) {
       gb.draw(this.image.data, SOFT_LCD);
       this.canvas.getContext("2d")!.putImageData(this.image, 0, 0);

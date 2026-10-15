@@ -75,6 +75,29 @@ const FAIL_REASON: [(&str, &str); 5] = [
 pub trait Platform {
     fn random(&mut self, buf: &mut [u8]);
     fn now_ms(&self) -> u64;
+    /// The phone's clock (unix ms) arrived over the link; a cartridge without a clock of its own runs from it.
+    fn set_now_ms(&mut self, _ms: u64) {}
+}
+
+/// How the last pairing a phone asked for ended (the phone link's STATUS reports it).
+pub mod pair_end {
+    pub const NONE: u8 = 0;
+    pub const ACCEPTED: u8 = 1;
+    pub const REFUSED: u8 = 2;
+    pub const LAPSED: u8 = 3;
+}
+
+/// The chip as the phone link's STATUS describes it.
+pub struct View<'a> {
+    pub state: u8,
+    pub paired: bool,
+    pub has_pending: bool,
+    pub pair_window_open: bool,
+    pub pairing_code: Option<&'a str>,
+    pub pairing_end: u8,
+    pub evm_network: u64,
+    pub public: Option<Public>,
+    pub phone: Option<Phone>,
 }
 
 /// What survives a power cycle (the secure element / flash on the cartridge).
@@ -224,8 +247,8 @@ pub struct Chip<S: Store, V: Vault = SoftVault> {
     evm_net: usize,
     /// sign results the phone hasn't collected yet
     results: Vec<(u32, SignResult)>,
-    /// how the last pairing request ended: Some(true) accepted, Some(false) refused or lapsed
-    pub pairing_outcome: Option<bool>,
+    /// how the last pairing request ended (`pair_end`)
+    pub pairing_end: u8,
     /// set when the Game Boy switches the EVM network; the phone follows
     pub network_changed: Option<u64>,
 }
@@ -336,7 +359,7 @@ impl<S: Store, V: Vault> Chip<S, V> {
             pair_window_until: 0,
             evm_net: 0,
             results: Vec::new(),
-            pairing_outcome: None,
+            pairing_end: pair_end::NONE,
             network_changed: None,
         }
     }
@@ -381,7 +404,7 @@ impl<S: Store, V: Vault> Chip<S, V> {
     pub fn expire(&mut self, p: &impl Platform) {
         if let Some((_, at)) = self.pairing {
             if p.now_ms() >= at + PAIR_TIMEOUT_MS {
-                self.drop_pairing();
+                self.drop_pairing_as(pair_end::LAPSED);
             }
         }
     }
@@ -409,7 +432,7 @@ impl<S: Store, V: Vault> Chip<S, V> {
         p.random(&mut b);
         let code = format!("{:06}", u32::from_le_bytes(b) % 1_000_000);
         self.pairing = Some((code.clone(), p.now_ms()));
-        self.pairing_outcome = None;
+        self.pairing_end = pair_end::NONE;
         Ok(code)
     }
 
@@ -427,8 +450,31 @@ impl<S: Store, V: Vault> Chip<S, V> {
     }
 
     fn drop_pairing(&mut self) {
+        self.drop_pairing_as(pair_end::REFUSED);
+    }
+
+    fn drop_pairing_as(&mut self, end: u8) {
         if self.pairing.take().is_some() {
-            self.pairing_outcome = Some(false);
+            self.pairing_end = end;
+        }
+    }
+
+    /// What the phone link's STATUS reports.
+    pub fn view(&self, p: &impl Platform) -> View<'_> {
+        View {
+            state: self.state(),
+            paired: self.paired(),
+            has_pending: self.pending.is_some(),
+            pair_window_open: self.window_open(p),
+            pairing_code: self.pairing_code(),
+            pairing_end: self.pairing_end,
+            evm_network: EVM_NETWORKS[self.evm_net].0,
+            public: self.public.filter(|_| self.unlocked),
+            phone: if self.paired() {
+                Some(self.persisted.as_ref().and_then(|p| p.phone.clone()).unwrap_or(Phone { name: "PHONE".into(), id: "----".into(), since_ms: 0 }))
+            } else {
+                None
+            },
         }
     }
 
@@ -734,7 +780,7 @@ impl<S: Store, V: Vault> Chip<S, V> {
                     per.phone = Some(phone);
                     self.save();
                 }
-                self.pairing_outcome = Some(arg == 1);
+                self.pairing_end = if arg == 1 { pair_end::ACCEPTED } else { pair_end::REFUSED };
                 self.pair_window_until = 0;
                 Reply::st(0)
             }

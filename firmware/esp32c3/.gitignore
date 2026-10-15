@@ -1,0 +1,4 @@
+wallet/build/
+wallet/sdkconfig
+wallet/sdkconfig.old
+wallet/managed_components/

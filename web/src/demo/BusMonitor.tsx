@@ -3,7 +3,7 @@ import { useSession } from "./session";
 /** Every request the Game Boy makes and every reply, printed as a running tape. */
 export function BusMonitor() {
   const s = useSession();
-  const rows = s.chip.log.slice(-28).reverse();
+  const rows = s.sim.log.slice(-28).reverse();
   return (
     <section className="bus" aria-label="Cartridge bus log">
       <header>

@@ -59,6 +59,8 @@ export interface SwapIntent {
 
 export type SignRequest =
   | { chain: "sol"; tx: Transaction }
+  /** the message bytes as they arrive over Bluetooth; the chip signs exactly these */
+  | { chain: "sol"; message: Uint8Array }
   | { chain: "evm"; tx: TransactionSerializableEIP1559 }
   | { chain: "swap"; swap: SwapIntent };
 
@@ -265,6 +267,11 @@ export class CartChip {
 
   /** Told when the Game Boy switches the EVM network itself, so the phone can follow. */
   onNetwork: ((id: number) => void) | null = null;
+
+  /** The EVM network the Game Boy's second card shows. */
+  get evmNetworkId() {
+    return this.evmNet.id;
+  }
 
   setEvmNetwork(id: number) {
     const net = evmNetwork(id);
@@ -491,6 +498,7 @@ export class CartChip {
         // the Game Boy sends back the code it showed; accept only that exact pairing
         if (arg === 1 && String.fromCharCode(...data.slice(0, 6)) !== pr.code) return { status: 1 };
         this.pairing = null;
+        if (arg === 2) this.lastPairingEnd = "refused";
         if (arg === 1) {
           // a new phone replaces the old one: one cartridge, one phone
           this.persisted.paired = true;
@@ -693,7 +701,7 @@ function snapshot(req: SignRequest, wallet: Wallet): Snapshot {
 function decodeRequest(req: SignRequest, wallet: Wallet): Snapshot {
   if (req.chain === "swap") return decodeSwap(req.swap, wallet);
   if (req.chain === "sol") {
-    const message = new Uint8Array(req.tx.serializeMessage());
+    const message = "message" in req ? Uint8Array.from(req.message) : new Uint8Array(req.tx.serializeMessage());
     const tx = Transaction.populate(Message.from(message));
     const me = wallet.sol.publicKey;
     if (!tx.feePayer?.equals(me)) throw new Error("the fee payer must be this cartridge's wallet");
