@@ -7,10 +7,12 @@
 
 extern crate alloc;
 
+pub mod bus;
 pub mod chip;
 pub mod eth;
 pub mod fmt;
 pub mod keys;
+pub mod persist;
 pub mod qr;
 pub mod sol;
 pub mod tables;

@@ -14,7 +14,29 @@
 import { assemble, type Program, type SmConfig } from "./pio";
 import { BUS, SHIFTER, hi, lo } from "./params";
 
-export const PIN = { A0: 0, A14: 14, A15: 15, RD: 16, CS: 17, D0: 18, DIR: 26, WR: 27, PHI: 28 } as const;
+export interface Pins {
+  A0: number;
+  A14: number;
+  A15: number;
+  RD: number;
+  CS: number;
+  D0: number;
+  /** Rev B shifter direction pin; -1 if the board has none */
+  DIR: number;
+  /** -1: the board doesn't wire /WR (writes are recognised by /RD staying high) */
+  WR: number;
+  PHI: number;
+}
+/** The pin map this simulation was first built for (one PIO window, GPIO 0-31). */
+export const PIN: Pins = { A0: 0, A14: 14, A15: 15, RD: 16, CS: 17, D0: 18, DIR: 26, WR: 27, PHI: 28 };
+export const PIN_DEFAULT: Pins = { A0: 0, A14: 14, A15: 15, RD: 16, CS: 17, D0: 18, DIR: 26, WR: 27, PHI: 28 };
+/**
+ * The cartridge board as built (hardware/cart, Croco wiring): CLK GPIO17, /RD 18, /CS 19, A0-A15 20-35, D0-D7 36-43,
+ * no /WR. Numbers are relative to the PIO block's GPIOBASE = 16, so the block sees GPIO16-47 as its pins 0-31.
+ * Address and control lines go straight into the RP2350; only D0-D7 pass the TXB0108.
+ */
+export const PIN_CROCO: Pins = { A0: 4, A14: 18, A15: 19, RD: 2, CS: 3, D0: 20, DIR: -1, WR: -1, PHI: 1 };
+export type Wiring = "kagiboy" | "croco";
 
 export type Rev = "A" | "B"; // A: TXB0108 auto-direction, B: SN74LVC8T245 with DIR from PIO
 /**
@@ -27,6 +49,9 @@ export type Variant = "romWindow" | "speculative" | "decodeFirst";
 
 export interface SmSpec {
   name: string;
+  /** the program text the firmware assembles (symbolic gpio names resolved by `defs`) */
+  src: string;
+  defs: Record<string, number>;
   prog: Program;
   cfg: SmConfig;
   x?: number;
@@ -36,6 +61,8 @@ export interface SmSpec {
 
 export interface Design {
   variant: Variant;
+  wiring: Wiring;
+  pins: Pins;
   rev: Rev;
   mhz: number;
   sms: SmSpec[];
@@ -60,7 +87,9 @@ export const GUARD_NS = 2; // setup margin into the input flop
 
 const clean = (s: string) => s.replace(/\n\s*\n/g, "\n");
 
-export function buildDesign(variant: Variant, rev: Rev, mhz: number): Design {
+export function buildDesign(variant: Variant, rev: Rev, mhz: number, wiring: Wiring = "kagiboy"): Design {
+  const PIN = wiring === "croco" ? PIN_CROCO : PIN_DEFAULT;
+  if (wiring === "croco" && (rev !== "A" || variant !== "romWindow")) throw new Error("the Croco wiring is built with the TXB0108 (Rev A) and the ROM read window");
   const T = 1000 / mhz;
   const sh = rev === "A" ? SHIFTER.txb0108 : SHIFTER.lvc8t245;
   const dMin = lo(sh.bToA);
@@ -70,7 +99,7 @@ export function buildDesign(variant: Variant, rev: Rev, mhz: number): Design {
   // cycles k so that pins sampled k·T after the edge (as the PIO sees it) are late enough
   const atLeast = (need: number) => Math.max(0, Math.ceil((need - dMin + GUARD_NS) / T));
   const DA = 2; // the release path takes this many cycles to get back to "fetch"
-  const defs = { PHI: PIN.PHI, WR: PIN.WR };
+  const defs = { PHI: PIN.PHI, WR: PIN.WR, RD: PIN.RD };
   const notes: Record<string, number> = {};
 
   // After `wait 1 gpio PHI [DA]`, the n-th following instruction sees pins sampled (1 + DA + n)·T
@@ -179,13 +208,49 @@ skip:
   const sms: SmSpec[] = [
     {
       name: "read",
+      src: clean(src),
+      defs,
       prog,
-      cfg: { inBase: 0, outBase: PIN.D0, outCount: rev === "B" ? 9 : 8, jmpPin: PIN.RD, inShiftLeft: true, outShiftRight: true, autopush: 32 },
+      cfg: { inBase: PIN.A0, outBase: PIN.D0, outCount: rev === "B" ? 9 : 8, jmpPin: PIN.RD, inShiftLeft: true, outShiftRight: true, autopush: 32 },
       y: variant === "decodeFirst" ? 0x2001 : 0x4000, // ROM image at 0x2000_0000 / bus image at 0x2001_0000
       table: variant === "decodeFirst" ? "bus" : "romimg",
     },
   ];
 
+  if (wiring === "croco") {
+    // no /WR on this board: a write is a cycle where /RD stays high. Look at /RD once the address (and /RD) have
+    // settled; if it is high, sample the address and data well after CLK falls, when even late write data is valid.
+    // /RD rises with the address (<= addrValid max, no shifter on this line); the two-flop synchroniser and the PIO
+    // clock grid can each cost up to one clock, so look one clock plus 5 ns after the latest edge
+    const rdAt = Math.max(0, Math.ceil((hi(BUS.addrValid) + T + 5) / T) - 2);
+    const DW = Math.max(0, Math.ceil((hi(BUS.writeDataValid) + dMax + GUARD_NS - lo(BUS.clkFall)) / T) + 8);
+    notes.writeRdSample = (2 + rdAt) * T;
+    notes.writeSampleAfterClkFall = (1 + DW) * T;
+    const wsrc = `
+.program gb_write
+.wrap_target
+top:
+    wait 0 gpio PHI
+    wait 1 gpio PHI
+${burn(rdAt)}
+    jmp pin, write
+    jmp top
+write:
+    wait 0 gpio PHI [${Math.min(DW, 31)}]
+${burn(Math.max(0, DW - 31))}
+    in pins, 28
+.wrap
+`;
+    sms.push({
+      name: "write",
+      src: clean(wsrc),
+      defs,
+      prog: assemble(clean(wsrc), defs),
+      cfg: { inBase: 0, outBase: PIN.D0, outCount: 8, jmpPin: PIN.RD, inShiftLeft: false, outShiftRight: true, autopush: 28 },
+      table: "ring",
+    });
+    return { variant, rev, mhz, wiring, pins: PIN, sms, notes, driveBlock: prog.lines.length };
+  }
   // writes (another PIO block: it only listens): sample while /WR is low, once even late data has settled
   const DW = Math.max(0, atLeast(hi(BUS.writeDataValid) - lo(BUS.wrLow) + dMax) - 1);
   notes.writeSampleAfterWrFall = (1 + DW) * T + dMin;
@@ -200,11 +265,13 @@ ${burn(Math.max(0, DW - 31))}
 `;
   sms.push({
     name: "write",
+    src: clean(wsrc),
+    defs,
     prog: assemble(clean(wsrc), defs),
     cfg: { inBase: 0, outBase: PIN.D0, outCount: 8, inShiftLeft: false, outShiftRight: true, autopush: 26 },
     table: "ring",
   });
-  return { variant, rev, mhz, sms, notes, driveBlock: prog.lines.length };
+  return { variant, rev, mhz, wiring, pins: PIN, sms, notes, driveBlock: prog.lines.length };
 }
 
 /** The obvious alternative, one state machine per region, for the report: does it fit one block? */

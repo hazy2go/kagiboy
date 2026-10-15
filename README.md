@@ -34,7 +34,15 @@ This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for n
 - an ESP32-C3 on its own chip does Bluetooth to the phone, so the radio stack never shares a processor with the wallet;
 - a power stage that can't pull the Game Boy's 5 V below 4.588 V.
 
-It's placed and routed, and it passes every design check and simulation: ERC/DRC, schematic-to-board parity, I²C and power calculations, the transistor-level power audits, and the cycle-level bus simulation with the real ROM. It isn't ordered yet: one inductor is out of stock at JLC, and the firmware comes next.
+It's placed and routed, and it passes every design check and simulation: ERC/DRC, schematic-to-board parity, I²C and power calculations, the transistor-level power audits, and the cycle-level bus simulation with the real ROM. It isn't ordered yet: one inductor is out of stock at JLC.
+
+**2026-10-15: the cartridge firmware, first part.** [`firmware/rp2350`](firmware/rp2350/README.md), Rust, MIT:
+- **The wallet logic,** ported from the browser chip. It's checked against recorded sessions of the browser chip
+  and gives identical bytes: every reply, refusal and signature.
+- **The firmware that serves the Game Boy bus** with the exact PIO programs the cycle-level simulation validated
+  for this board.
+
+Next: the SE050, the Bluetooth link through the ESP32-C3, and the accelerometer.
 
 <p align="center">
   <img src="hardware/cart/docs/img/board_top.png" alt="kagiboy cartridge board, top: RP2350B, SE050E2 secure element, LIS3DH, ESP32-C3 module and power stage" width="49%">

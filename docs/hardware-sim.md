@@ -61,6 +61,7 @@ The design has to meet the early one.
 | Mailbox at 0xA000, speculative | 150 MHz | 32 / 32 | fails (mailbox reads) | 378 ns | 0 |
 | Mailbox at 0xA000, decode first | 200 MHz | 26 / 32 | fails by 7 ns | 460 ns | 0 |
 | Mailbox at 0xA000, decode first | 250 MHz | 27 / 32 | 15.3 ns | 497 ns | 0 |
+| **The board as built** (`hardware/cart`, Croco pin map, no /WR), TXB0108 | **150 MHz** | **20 + 7 / 32** | **83.0 ns** | **565 ns** | **0** |
 
 **Bus errors** counts these, summed over the worst corner, the best corner and 12
 random draws:
@@ -135,6 +136,30 @@ The cartridge needs 39 GPIOs:
 
 The 30-GPIO RP2350A and RP2354A don't have enough. The RP2354B has 48 GPIO and the
 same 2 MB of flash in the package.
+
+### The board as built (added 2026-10-15)
+
+The cartridge board in `hardware/cart` is wired differently from the pin map above:
+- CLK, /RD, /CS and A0-A15 go straight into the RP2350 (GPIO17-35); only D0-D7 pass the TXB0108 (GPIO36-43).
+- There is no /WR line.
+
+The simulation now takes the pin map as a parameter (`PIN_CROCO` in `programs.ts`).
+
+**Reads:** the same 20-instruction program, with 83.0 ns of margin at the early latch at 150 MHz. That's slightly
+better than above, because the address lines skip the shifter.
+
+**Writes:** a 7-instruction program recognises a write as a cycle with /RD high, then samples the address and data
+100 ns after CLK falls. The firmware loads these exact programs (`hardware/sim/emit-pio.ts` writes
+`firmware/rp2350/cart/pio/`).
+
+Two fixes came out of this:
+- **The firmware's /RD check:** it first looked at /RD 5 ns after its latest rise. The synchroniser and the PIO
+  clock grid can each cost a clock, so it now looks one clock plus 5 ns later. That check is still far ahead of
+  CLK falling.
+- **A bug in the simulation itself:** for two back-to-back writes, the end of the first write's /RD and the start
+  of the second's were computed by two different float expressions. The release then sorted after the rise and
+  left /RD low through the second write. Both times are now computed the same way. The other designs' results
+  didn't change.
 
 ## What the simulation changed
 

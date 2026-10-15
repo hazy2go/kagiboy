@@ -1,0 +1,20 @@
+[package]
+name = "kagiboy-cart"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "kagiboy cartridge firmware for the RP2350B: serves the wallet ROM and mailbox on the Game Boy bus"
+
+[dependencies]
+kagiboy-core = { path = "../core" }
+embassy-rp = { version = "0.10", features = ["rp235xb", "time-driver", "critical-section-impl", "unstable-pac", "defmt", "binary-info"] }
+embassy-executor = { version = "0.10", features = ["platform-cortex-m", "executor-thread", "defmt"] }
+embassy-time = { version = "0.5", features = ["defmt"] }
+defmt = "1"
+defmt-rtt = "1"
+panic-probe = { version = "1", features = ["print-defmt"] }
+cortex-m = { version = "0.7", features = ["inline-asm"] }
+cortex-m-rt = "0.7"
+embedded-alloc = "0.7"
+static_cell = "2"
+pio = "0.3"

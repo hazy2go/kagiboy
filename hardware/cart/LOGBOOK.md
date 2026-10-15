@@ -150,3 +150,20 @@ Hazy: the base design is already credited in the WiFi cart repo, so the kagiboy 
   (schematic sheets). Internal footprint-library names (`CrocoV2:`) are not printed and stay.
 - Gerbers regenerated and zipped (`fab/kagiboy-cart-RevA-gerbers.zip`, 16 files). Gate: PASS (0 new).
 - The submitted Colosseum state is tagged `colosseum-submission` (c20ffd3) on GitHub.
+
+## 2026-10-15 Firmware: the bus on this board, simulated and built
+- **Board facts for the firmware:**
+  - CLK/RD/CS/A0-A15 on GPIO17-35, straight into the RP2350; D0-D7 on GPIO36-43 through the TXB0108.
+  - No /WR. GPIO44 high enables the shifter. GPIO45 high holds the Game Boy in reset.
+  - These match the pin map in the schematic netlist. The polarities were read from the Croco firmware, facts
+    only, since that code is GPL.
+- **Simulation:** `hardware/sim` gained this pin map and a /RD-based write program. Real ROM traffic at 150 MHz:
+  83.0 ns early-latch margin and 0 errors over worst, best and 12 random corners (`docs/hardware-sim.md`).
+- **Firmware:** `firmware/rp2350/cart` (Embassy) serves the bus with those programs:
+  - PIO with two chained DMA channels for reads, and a DMA ring for writes.
+  - It holds the Game Boy in reset until the bus is up.
+  - It builds for thumbv8m: about 206 KB of flash and 197 KB of RAM.
+- **Found while building it:** embassy-rp 0.10 writes the PIO `jmp pin` as an absolute GPIO number. With
+  GPIOBASE=16 that would make the programs test A14 instead of /RD, so the firmware sets EXECCTRL itself.
+- **Assembler check:** the PIO programs assemble to identical words with pio-parser (the firmware's) and Adafruit's
+  pioasm.

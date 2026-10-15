@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core"]
+members = ["core", "cart"]
 
 [profile.release]
 opt-level = "s"

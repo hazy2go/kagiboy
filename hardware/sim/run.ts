@@ -3,7 +3,7 @@
 // Needs rom/build/wallet-hw.gb: cd rom && make hw
 
 import { mkdirSync, writeFileSync } from "node:fs";
-import { buildDesign, PIN, type Rev, type Variant } from "./programs";
+import { buildDesign, PIN, type Rev, type Variant, type Wiring } from "./programs";
 import { mailboxAtA000, rng, sampleTrial, simulate, type SimResult } from "./cartsim";
 import { runSession, WindowRecorder, FRAME_T } from "./session";
 import { tToMs, type Corner } from "./firmware";
@@ -87,15 +87,17 @@ log(`  most writes in any 8 cycles: ${stats.maxWritesIn8}; the Game Boy wrote a 
 const win = rec;
 const winA000 = mailboxAtA000(rec);
 log(`\ncycle-level window: ${win.kinds.length} machine cycles (${rec.kept.mailbox} frames with mailbox traffic + ${rec.kept.sampled} sampled frames)`);
-interface Row { variant: Variant; rev: Rev; mhz: number; instr: number; worst: SimResult; best: SimResult; random: SimResult[]; notes: Record<string, number> }
+interface Row { variant: Variant; rev: Rev; mhz: number; wiring: Wiring; instr: number; worst: SimResult; best: SimResult; random: SimResult[]; notes: Record<string, number> }
 const rows: Row[] = [];
-const configs: [Variant, Rev, number][] = [];
+const configs: [Variant, Rev, number, Wiring?][] = [];
 for (const mhz of [100, 125, 150, 200]) for (const rev of ["A", "B"] as Rev[]) configs.push(["romWindow", rev, mhz]);
 configs.push(["speculative", "A", 150], ["decodeFirst", "A", 150], ["decodeFirst", "A", 200], ["decodeFirst", "A", 250]);
-for (const [variant, rev, mhz] of configs) {
+// the board as built (hardware/cart): Croco pin map, no /WR, address lines straight into the RP2350
+for (const mhz of [125, 150, 200]) configs.push(["romWindow", "A", mhz, "croco"]);
+for (const [variant, rev, mhz, wiring = "kagiboy"] of configs) {
   let d;
   try {
-    d = buildDesign(variant, rev, mhz);
+    d = buildDesign(variant, rev, mhz, wiring);
   } catch (e) {
     log(`  ${variant}/${rev} @${mhz}: ${(e as Error).message}`);
     continue;
@@ -104,7 +106,7 @@ for (const [variant, rev, mhz] of configs) {
   const r = rng(1234 + mhz);
   const trials = variant === "romWindow" ? TRIALS : 3;
   const row: Row = {
-    variant, rev, mhz, instr: d.driveBlock, notes: d.notes,
+    variant, rev, mhz, wiring, instr: d.driveBlock, notes: d.notes,
     worst: simulate(w, d, sampleTrial(d, "worst", r)),
     best: simulate(w, d, sampleTrial(d, "best", r)),
     random: Array.from({ length: trials }, (_, i) => simulate(w, d, sampleTrial(d, "random", r, `random ${i}`))),
@@ -114,7 +116,7 @@ for (const [variant, rev, mhz] of configs) {
   const minE = Math.min(...all.map((x) => (x.errorsEarly ? -Infinity : x.marginEarly)));
   const minL = Math.min(...all.map((x) => (x.errorsLate ? -Infinity : x.marginLate)));
   const bad = all.reduce((a, x) => a + x.contention + x.spurious + x.holdViolations + x.writeErrors, 0);
-  log(`  ${`${variant}/${rev} @${mhz} MHz`.padEnd(26)} ${String(d.driveBlock).padStart(2)}/32 instr   margin to CLK-fall latch ${Number.isFinite(minE) ? `${minE.toFixed(1)} ns` : "FAILS"}   to next-CLK latch ${Number.isFinite(minL) ? `${minL.toFixed(1)} ns` : "FAILS"}   contention/spurious/hold/write errors ${bad}${row.worst.firstError && !Number.isFinite(minE) ? `   (${row.worst.firstError})` : ""}`);
+  log(`  ${`${variant}/${rev}${wiring === "croco" ? " croco" : ""} @${mhz} MHz`.padEnd(26)} ${String(d.driveBlock).padStart(2)}/32 instr   margin to CLK-fall latch ${Number.isFinite(minE) ? `${minE.toFixed(1)} ns` : "FAILS"}   to next-CLK latch ${Number.isFinite(minL) ? `${minL.toFixed(1)} ns` : "FAILS"}   contention/spurious/hold/write errors ${bad}${row.worst.firstError && !Number.isFinite(minE) ? `   (${row.worst.firstError})` : ""}`);
 }
 
 // how much slower could the DMA be before the conservative latch fails? (the datasheet gives no figure)

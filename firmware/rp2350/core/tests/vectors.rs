@@ -4,6 +4,7 @@
 
 use std::collections::VecDeque;
 
+use kagiboy_core::bus::{encode_write, Mailbox, ROM_WINDOW};
 use kagiboy_core::chip::mb;
 use kagiboy_core::{Chain, Chip, Persisted, Platform, SignRequest, SignResult, Store, SwapRequest};
 use serde_json::Value;
@@ -62,12 +63,16 @@ fn request(op: &Value) -> SignRequest {
     }
 }
 
-fn run(name: &str) {
+/// `via_bus`: drive the Game Boy side as the cartridge sees it (captured write cycles in, the ROM window out),
+/// with work-RAM and chip-half writes mixed in that must be ignored.
+fn run(name: &str, via_bus: bool) {
     let path = format!("{}/tests/vectors/{name}.json", env!("CARGO_MANIFEST_DIR"));
     let doc: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     let mut chip = Chip::new(Mem(None));
     let mut p = Replay { rng: VecDeque::new(), now: doc["start"].as_u64().unwrap(), draws: 0 };
     let mut mem = [0u8; 256];
+    let mut bus = Mailbox::default();
+    let mut image = vec![0u8; 0x8000];
     let mut unused_draws = 0;
     let mut checked = 0;
 
@@ -82,13 +87,31 @@ fn run(name: &str) {
             "clock" => p.now = op["now"].as_u64().unwrap(),
             "gb" => {
                 let data = hex::decode(s(op, "data")).unwrap();
-                mem[mb::CMD] = op["cmd"].as_u64().unwrap() as u8;
-                mem[mb::ARG] = op["arg"].as_u64().unwrap() as u8;
-                mem[mb::REQ_LEN] = data.len() as u8;
-                mem[mb::REQ..mb::REQ + data.len()].copy_from_slice(&data);
-                mem[mb::REQ_SEQ] = op["seq"].as_u64().unwrap() as u8;
-                chip.tick(&mut mem, &mut p);
-                chip.tick(&mut mem, &mut p); // the next frame's status bytes, as recorded
+                let (cmd, arg, seq) = (op["cmd"].as_u64().unwrap() as u8, op["arg"].as_u64().unwrap() as u8, op["seq"].as_u64().unwrap() as u8);
+                if via_bus {
+                    // the ROM's order (rom/src/main.c chip_call): data, length, arg, cmd, then the sequence number
+                    let mut writes: Vec<(u16, u8)> = data.iter().enumerate().map(|(i, &b)| (0xa000 + (mb::REQ + i) as u16, b)).collect();
+                    writes.extend([(0xa000 + mb::REQ_LEN as u16, data.len() as u8), (0xa000 + mb::ARG as u16, arg), (0xa000 + mb::CMD as u16, cmd)]);
+                    for (k, (a, v)) in writes.iter().enumerate() {
+                        bus.on_write(encode_write(*a, *v));
+                        // decoys the cartridge must ignore: work RAM, the chip-owned half, a ROM-area write, a mirror
+                        bus.on_write(encode_write(0xc000 + k as u16, 0x5a));
+                        bus.on_write(encode_write(0xa040 + k as u16, 0xee));
+                        bus.on_write(encode_write(0x2000, 0x01));
+                    }
+                    bus.on_write(encode_write(0xbf00 + mb::REQ_SEQ as u16, seq)); // a mirror of 0xA000
+                    bus.service(&mut chip, &mut p, &mut image);
+                    bus.service(&mut chip, &mut p, &mut image); // the next frame's status bytes, as recorded
+                    mem[mb::RESP_SEQ..].copy_from_slice(&image[ROM_WINDOW + mb::RESP_SEQ..ROM_WINDOW + 256]);
+                } else {
+                    mem[mb::CMD] = cmd;
+                    mem[mb::ARG] = arg;
+                    mem[mb::REQ_LEN] = data.len() as u8;
+                    mem[mb::REQ..mb::REQ + data.len()].copy_from_slice(&data);
+                    mem[mb::REQ_SEQ] = seq;
+                    chip.tick(&mut mem, &mut p);
+                    chip.tick(&mut mem, &mut p); // the next frame's status bytes, as recorded
+                }
                 let resp = &mem[mb::RESP..mb::RESP + mem[mb::RESP_LEN] as usize];
                 assert_eq!(mem[mb::STATUS] as u64, op["status"].as_u64().unwrap(), "{at}: status");
                 assert_eq!(hex::encode(resp), s(op, "resp"), "{at}: reply bytes");
@@ -144,6 +167,8 @@ fn run(name: &str) {
             "reset" => {
                 chip.reset();
                 mem = [0; 256];
+                bus.clear();
+                image = vec![0u8; 0x8000];
             }
             other => panic!("{at}: unknown op {other}"),
         }
@@ -152,20 +177,35 @@ fn run(name: &str) {
         unused_draws += p.rng.len();
         p.rng.clear();
     }
-    println!("{name}: {checked} ops identical, {} random draws used, {unused_draws} browser-only draws skipped", p.draws);
+    println!("{name}{}: {checked} ops identical, {} random draws used, {unused_draws} browser-only draws skipped", if via_bus { " (via the bus)" } else { "" }, p.draws);
 }
 
 #[test]
 fn session_create() {
-    run("session-create");
+    run("session-create", false);
+}
+
+#[test]
+fn session_create_via_bus() {
+    run("session-create", true);
 }
 
 #[test]
 fn session_restore() {
-    run("session-restore");
+    run("session-restore", false);
+}
+
+#[test]
+fn session_restore_via_bus() {
+    run("session-restore", true);
 }
 
 #[test]
 fn session_power() {
-    run("session-power");
+    run("session-power", false);
+}
+
+#[test]
+fn session_power_via_bus() {
+    run("session-power", true);
 }

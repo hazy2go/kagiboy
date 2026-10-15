@@ -9,7 +9,7 @@
 
 import { readFileSync } from "node:fs";
 import { StateMachine, type Pads } from "./pio";
-import { PIN, type Design } from "./programs";
+import type { Design } from "./programs";
 import { BUS, RP2350, SHIFTER, hi, lo, type Source } from "./params";
 import type { Kind } from "./tracer";
 
@@ -76,6 +76,9 @@ export function sampleTrial(design: Design, mode: Mode, r: () => number, label: 
   const dmaR = rr(RP2350.dmaHop);
   const conR = rr(RP2350.sramContention);
   const T = 1000 / design.mhz;
+  const PIN = design.pins;
+  // Croco wiring: only D0-D7 pass the shifter; address and control go straight to the RP2350 pins
+  const shifted = (pin: number) => design.wiring !== "croco" || (pin >= PIN.D0 && pin < PIN.D0 + 8);
   return {
     addrValid: pick(rr(BUS.addrValid)),
     selectLow: pick(rr(BUS.selectLow)),
@@ -85,7 +88,7 @@ export function sampleTrial(design: Design, mode: Mode, r: () => number, label: 
     wrHigh: pick(rr(BUS.wrHigh), false),
     writeData: pick(rr(BUS.writeDataValid)),
     // worst case: the edges the PIO triggers on (PHI, /WR) arrive early, everything it samples arrives late
-    dIn: Array.from({ length: 32 }, (_, pin) => pick(rr(sh.bToA), pin !== PIN.PHI && pin !== PIN.WR)),
+    dIn: Array.from({ length: 32 }, (_, pin) => (shifted(pin) ? pick(rr(sh.bToA), pin !== PIN.PHI && pin !== PIN.WR) : 0)),
     dOut: Array.from({ length: 8 }, () => pick(rr(sh.aToB))),
     pad: pick(rr(RP2350.padOut)),
     enB: design.rev === "B" ? pick(rr(SHIFTER.lvc8t245.enableB)) : 0,
@@ -130,15 +133,18 @@ const rom = () => (ROM ??= new Uint8Array(readFileSync(new URL("../../rom/build/
 type InEv = { t: number; pin: number; level: number };
 type OutEv = { t: number; bit: number; what: "val" | "drv" | "dir"; v: number };
 
+const TRACE = process.env.SIM_TRACE ? process.env.SIM_TRACE.split("-").map(Number) : null;
+
 export function simulate(win: Window, design: Design, trial: Trial, limit = win.kinds.length): SimResult {
   const T = 1000 / design.mhz;
+  const PIN = design.pins;
   const setup = BUS.readSetup.value as number;
   const hold = BUS.readHold.value as number;
   const romImg = rom();
   const mailbox = new Uint8Array(256);
 
   // Rev B: DIR's output latch is held at 1 (set once at boot); a pull-down makes it 0 when released
-  const drivePads: Pads = { val: design.rev === "B" ? 1 << PIN.DIR : 0, dir: 0 };
+  const drivePads: Pads = { val: design.rev === "B" && PIN.DIR >= 0 ? 1 << PIN.DIR : 0, dir: 0 };
   const sms = design.sms.map((s) => {
     const sm = new StateMachine(s.prog, s.cfg, s.table === "ring" ? { val: 0, dir: 0 } : drivePads);
     if (s.x !== undefined) sm.x = s.x;
@@ -157,7 +163,7 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
   };
 
   // ---- inputs ----
-  let word = (1 << PIN.A15) | (1 << PIN.CS) | (1 << PIN.WR); // PHI low, /RD low
+  let word = (1 << PIN.A15) | (1 << PIN.CS) | (PIN.WR >= 0 ? 1 << PIN.WR : 0); // PHI low, /RD low
   let sync1 = word;
   let sync2 = word;
   let pending: InEv[] = [];
@@ -270,7 +276,7 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
     push(t0, PIN.PHI, 1);
     push(t0 + trial.clkFall, PIN.PHI, 0);
     if (kind !== "none") {
-      for (let b = 0; b < 15; b++) if (((addr ^ curAddr) >> b) & 1) push(t0 + trial.addrValid, b, (addr >> b) & 1);
+      for (let b = 0; b < 15; b++) if (((addr ^ curAddr) >> b) & 1) push(t0 + trial.addrValid, PIN.A0 + b, (addr >> b) & 1);
       curAddr = addr;
     }
     if (kind === "romR" || kind === "romW") {
@@ -283,9 +289,14 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
     }
     if (WRITE[kind]) {
       push(t0 + trial.addrValid, PIN.RD, 1);
-      push(t0 + CYC + lo(BUS.addrValid as never), PIN.RD, 0);
-      push(t0 + trial.wrLow, PIN.WR, 0);
-      push(t0 + trial.wrHigh, PIN.WR, 1);
+      // the next cycle's start computed exactly as that cycle computes it, so a following write's /RD rise at the
+      // same instant ties exactly and stays in push order (was t0 + CYC: a last-bit float difference put the
+      // release after the next write's rise and left /RD low through it)
+      push((i + 1) * CYC + lo(BUS.addrValid as never), PIN.RD, 0);
+      if (PIN.WR >= 0) {
+        push(t0 + trial.wrLow, PIN.WR, 0);
+        push(t0 + trial.wrHigh, PIN.WR, 1);
+      }
       for (let b = 0; b < 8; b++) push(t0 + trial.writeData, PIN.D0 + b, (value >> b) & 1);
       others.push([t0 + lo(BUS.writeDataValid as never), t0 + CYC + lo(BUS.addrValid as never)]);
       expectedWrites.push({ addr, value, i });
@@ -328,6 +339,10 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
       sync2 = sync1;
       sync1 = word >>> 0;
       for (const { sm } of sms) sm.step(seen);
+      if (TRACE && i >= TRACE[0] && i <= TRACE[1]) {
+        const w = sms[sms.length - 1].sm;
+        console.log(`cyc ${i} t+${(tm - t0).toFixed(1)} PHI ${(seen >>> PIN.PHI) & 1} RD ${(seen >>> PIN.RD) & 1} write-pc ${w.pc}`);
+      }
       // DMA: DREQs, then one hop at a time (a conservative serial engine)
       sms.forEach(({ sm, spec }, n) => {
         while (sm.rx.length) queue.push({ kind: spec.table === "ring" ? "ring" : "addr", sm: n, v: sm.rx.shift()! });
@@ -340,13 +355,15 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
         if (f.kind === "addr") queue.unshift({ kind: "read", sm: f.sm, v: f.v });
         else if (f.kind === "read") target.sm.tx.push(lookup(target.spec.table, f.v));
         else {
-          const w = f.v >>> 6;
+          // the write program pushes a right-shifted ISR: the sampled pins sit in its top bits
+          const bits = design.wiring === "croco" ? 28 : 26;
+          const w = f.v >>> (32 - bits);
           const exp = expectedWrites.shift();
-          const a = w & 0xffff;
+          const a = (w >>> PIN.A0) & 0xffff;
           const d = (w >>> PIN.D0) & 0xff;
           if (!exp || exp.addr !== a || exp.value !== d) {
             res.writeErrors++;
-            err(`write captured ${a.toString(16)}=${d.toString(16)}, expected ${exp ? `${exp.addr.toString(16)}=${exp.value.toString(16)}` : "none"}`);
+            err(`write captured ${a.toString(16)}=${d.toString(16)}, expected ${exp ? `${exp.addr.toString(16)}=${exp.value.toString(16)} (cycle ${exp.i})` : "none"}`);
           }
         }
       }
@@ -357,7 +374,7 @@ export function simulate(win: Window, design: Design, trial: Trial, limit = win.
       // pad changes reach the connector after the pad and shifter delays
       const val = (drivePads.val >>> PIN.D0) & 0xff;
       const dir = (drivePads.dir >>> PIN.D0) & 0xff;
-      const dirPin = (drivePads.dir >>> PIN.DIR) & 1;
+      const dirPin = PIN.DIR >= 0 ? (drivePads.dir >>> PIN.DIR) & 1 : 0;
       const tOut = tm + T + trial.pad;
       for (let b = 0; b < 8; b++) {
         if (((val ^ prevVal) >> b) & 1) insertOut({ t: tOut + trial.dOut[b], bit: b, what: "val", v: (val >> b) & 1 });
