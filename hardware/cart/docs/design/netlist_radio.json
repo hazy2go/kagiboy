@@ -14,7 +14,13 @@
   "USB_RP_D+",
   "USB_RP_D-",
   "VLIM",
-  "VRES"
+  "VRES",
+  "SE_SDA",
+  "SE_SCL",
+  "SE_ENA",
+  "ACC_SDA",
+  "ACC_SCL",
+  "ACC_INT1"
  ],
  "croco_edits": [
   {
@@ -52,6 +58,136 @@
    "ref": "R11",
    "action": "dnp",
    "why": "Series resistor to the removed J3, same reason"
+  },
+  {
+   "ref": "U4",
+   "action": "dnp",
+   "why": "Wallet: HyperRAM removed, a 32 KB wallet ROM is served from RP2350 SRAM (kagiboy docs/hardware-sim.md). Its pins become the secure-element and accelerometer buses."
+  },
+  {
+   "ref": "C22",
+   "action": "dnp",
+   "why": "U4 decoupling"
+  },
+  {
+   "ref": "C23",
+   "action": "dnp",
+   "why": "U4 decoupling"
+  },
+  {
+   "ref": "R12",
+   "action": "dnp",
+   "why": "U4 CS pull-up"
+  },
+  {
+   "ref": "TP2",
+   "action": "dnp",
+   "why": "HyperRAM CLK test point"
+  },
+  {
+   "ref": "TP3",
+   "action": "dnp",
+   "why": "HyperRAM CS test point"
+  },
+  {
+   "ref": "TP4",
+   "action": "dnp",
+   "why": "HyperRAM RWDS test point"
+  },
+  {
+   "ref": "J2",
+   "action": "dnp",
+   "why": "Wallet: microSD removed (no game library or saves on a wallet)"
+  },
+  {
+   "ref": "R6",
+   "action": "dnp",
+   "why": "microSD CS pull-up"
+  },
+  {
+   "ref": "U5",
+   "action": "dnp",
+   "why": "Wallet: RTC removed (a wallet needs no clock)"
+  },
+  {
+   "ref": "C24",
+   "action": "dnp",
+   "why": "U5 decoupling"
+  },
+  {
+   "ref": "R15",
+   "action": "dnp",
+   "why": "U5 CS pull-up"
+  },
+  {
+   "ref": "TP1",
+   "action": "dnp",
+   "why": "U5 MFP test point"
+  },
+  {
+   "ref": "C27",
+   "action": "dnp",
+   "why": "RTC crystal load"
+  },
+  {
+   "ref": "C28",
+   "action": "dnp",
+   "why": "RTC crystal load"
+  },
+  {
+   "ref": "Y2",
+   "action": "dnp",
+   "why": "RTC crystal"
+  },
+  {
+   "ref": "R17",
+   "action": "dnp",
+   "why": "RTC MFP pull-up (already DNP in Croco); off the board with U5"
+  },
+  {
+   "ref": "U3",
+   "pin": "3",
+   "from": "HYPERRAM_RWDS",
+   "to": "SE_SDA",
+   "why": "GPIO6 = I2C1 SDA (RP2350 GPIO function F3), SE050 bus"
+  },
+  {
+   "ref": "U3",
+   "pin": "4",
+   "from": "HYPERRAM_CLK",
+   "to": "SE_SCL",
+   "why": "GPIO7 = I2C1 SCL"
+  },
+  {
+   "ref": "U3",
+   "pin": "6",
+   "from": "HYPERRAM_CS",
+   "to": "ACC_SDA",
+   "why": "GPIO8 = I2C0 SDA, LIS3DH bus"
+  },
+  {
+   "ref": "U3",
+   "pin": "7",
+   "action": "relabel_bus_pin",
+   "from": "HYPERRAM_DQ0",
+   "to": "ACC_SCL",
+   "why": "GPIO9 = I2C0 SCL"
+  },
+  {
+   "ref": "U3",
+   "pin": "8",
+   "action": "relabel_bus_pin",
+   "from": "HYPERRAM_DQ1",
+   "to": "SE_ENA",
+   "why": "GPIO10 drives SE050 ENA (Deep Power-down when low)"
+  },
+  {
+   "ref": "U3",
+   "pin": "9",
+   "action": "relabel_bus_pin",
+   "from": "HYPERRAM_DQ2",
+   "to": "ACC_INT1",
+   "why": "GPIO11 <- LIS3DH INT1 (motion / data-ready)"
   }
  ],
  "external_sources": {
@@ -64,7 +200,8 @@
  "notes": [
   "Refs U101-U108, R101-R125, C101-C122, L101, Y101 do not clash with Croco (U1-U7, R1-R17, C1-C28, L1, Y1-Y2).",
   "Precision input-voltage regulator VLIM -> VRES added 2026-10-14 (U109, Q101-Q102, R126-R132, C123-C124, D101-D104), values from sim/power/inreg.py DESIGN, audit A8 all pass.",
-  "DEBUG_UART_TX (RP2350 GPIO46) becomes the ESP chip select; Croco's R11 + J3 debug header are DNP / off board (croco_edits)."
+  "DEBUG_UART_TX (RP2350 GPIO46) becomes the ESP chip select; Croco's R11 + J3 debug header are DNP / off board (croco_edits).",
+  "Wallet variant (kagiboy, 2026-10-15): HyperRAM, microSD and RTC removed (DNP, off board); SE050E2 U110 on I2C1 (GPIO6/7, ENA GPIO10) and LIS3DH U111 on I2C0 (GPIO8/9, INT1 GPIO11) added. New refs U110-U111, R133-R137, C125-C128."
  ],
  "parts": [
   {
@@ -1024,6 +1161,182 @@
     "2": "REG_RSS"
    },
    "why": "Power-on hold pull-down on REF"
+  },
+  {
+   "ref": "U110",
+   "symbol": "radio:SE050_HX2QFN20",
+   "value": "SE050E2HQ1/Z01Z3Z",
+   "footprint": "radio:NXP_HX2QFN-20-1EP_3x3mm_P0.4mm_EP1.9x1.9mm",
+   "lcsc": "C5190917",
+   "pins": {
+    "1": "GND",
+    "2": "NC",
+    "3": "NC",
+    "4": "NC",
+    "5": "NC",
+    "6": "NC",
+    "7": "NC",
+    "8": "NC",
+    "9": "SE_SDA",
+    "10": "SE_SCL",
+    "11": "SE_ENA",
+    "12": "+3V3",
+    "13": "NC",
+    "14": "GND",
+    "15": "SE_VCC",
+    "16": "NC",
+    "17": "GND",
+    "18": "SE_VCC",
+    "19": "GND",
+    "20": "NC",
+    "21": "GND"
+   },
+   "why": "Secure element: seed, sign-only keys, PIN retry counter. E2 variant signs Ed25519 (Solana) and secp256k1 (EVM) (AN12436 Table 1). Wired for Deep Power-down per SE050 DS Rev 3.8 sec 5.2: supply on VIN, VOUT tied to VCC, ENA from the RP2350. Unused ISO14443 LA/LB to VSS, RST_N to VSS, IO1/IO2/CLK n.c. (Table 5). Centre pad to GND for thermal reasons (Table 5 note).",
+   "datasheet": "https://cache.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf"
+  },
+  {
+   "ref": "C125",
+   "symbol": "Device:C",
+   "value": "100nF 16V X7R",
+   "footprint": "Capacitor_SMD:C_0402_1005Metric",
+   "lcsc": "C1525",
+   "pins": {
+    "1": "+3V3",
+    "2": "GND"
+   },
+   "why": "U110 VIN decoupling, at the pin",
+   "datasheet": ""
+  },
+  {
+   "ref": "C126",
+   "symbol": "Device:C",
+   "value": "100nF 16V X7R",
+   "footprint": "Capacitor_SMD:C_0402_1005Metric",
+   "lcsc": "C1525",
+   "pins": {
+    "1": "SE_VCC",
+    "2": "GND"
+   },
+   "why": "U110 VCC/VOUT node decoupling",
+   "datasheet": ""
+  },
+  {
+   "ref": "R133",
+   "symbol": "Device:R",
+   "value": "2.2k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25879",
+   "pins": {
+    "1": "+3V3",
+    "2": "SE_SDA"
+   },
+   "why": "I2C1 pull-up for the SE050 bus. The SE050 runs at up to 1 MHz (Fm+) here; 2.2k x ~30 pF gives ~60 ns rise, inside the 120 ns Fm+ limit. The SE050 has its own weak pull-up (DS Table 11, IWPU 70-265 uA) but not enough for 1 MHz.",
+   "datasheet": ""
+  },
+  {
+   "ref": "R134",
+   "symbol": "Device:R",
+   "value": "2.2k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25879",
+   "pins": {
+    "1": "+3V3",
+    "2": "SE_SCL"
+   },
+   "why": "I2C1 pull-up, SCL (see R133)",
+   "datasheet": ""
+  },
+  {
+   "ref": "R135",
+   "symbol": "Device:R",
+   "value": "100k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25741",
+   "pins": {
+    "1": "SE_ENA",
+    "2": "GND"
+   },
+   "why": "Holds the SE050 in Deep Power-down (3 uA, DS Table 12) until the firmware drives ENA high, also while the RP2350 is in reset (its pins reset as inputs)",
+   "datasheet": ""
+  },
+  {
+   "ref": "U111",
+   "symbol": "Sensor_Motion:LIS3DH",
+   "value": "LIS3DHTR",
+   "footprint": "Package_LGA:LGA-16_3x3mm_P0.5mm_LayoutBorder3x5y",
+   "lcsc": "C15134",
+   "pins": {
+    "1": "+3V3",
+    "2": "NC",
+    "3": "NC",
+    "4": "ACC_SCL",
+    "5": "GND",
+    "6": "ACC_SDA",
+    "7": "GND",
+    "8": "+3V3",
+    "9": "NC",
+    "10": "GND",
+    "11": "ACC_INT1",
+    "12": "GND",
+    "13": "NC",
+    "14": "+3V3",
+    "15": "NC",
+    "16": "NC"
+   },
+   "why": "Accelerometer: shake entropy (hashed in on top of the SE050 TRNG, can only add randomness) and tilt-to-scroll. I2C mode with CS high, SDO/SA0 low = address 0x18. Pin 10 (RES) to GND. On its own I2C0 bus because it is a 400 kHz part and the SE050 bus runs at 1 MHz; this also keeps the secure element alone on its bus. Pinout: KiCad Sensor_Motion:LIS3DH and the JLC record for C15134 agree pin by pin.",
+   "datasheet": "https://www.st.com/resource/en/datasheet/lis3dh.pdf"
+  },
+  {
+   "ref": "C127",
+   "symbol": "Device:C",
+   "value": "100nF 16V X7R",
+   "footprint": "Capacitor_SMD:C_0402_1005Metric",
+   "lcsc": "C1525",
+   "pins": {
+    "1": "+3V3",
+    "2": "GND"
+   },
+   "why": "U111 VDD/VDD_IO decoupling",
+   "datasheet": ""
+  },
+  {
+   "ref": "C128",
+   "symbol": "Device:C",
+   "value": "10uF 10V X5R",
+   "footprint": "Capacitor_SMD:C_0603_1608Metric",
+   "lcsc": "C19702",
+   "pins": {
+    "1": "+3V3",
+    "2": "GND"
+   },
+   "why": "U111 bulk decoupling (10 uF + 100 nF on VDD, LIS3DH application hint)",
+   "datasheet": ""
+  },
+  {
+   "ref": "R136",
+   "symbol": "Device:R",
+   "value": "4.7k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25900",
+   "pins": {
+    "1": "+3V3",
+    "2": "ACC_SDA"
+   },
+   "why": "I2C0 pull-up for the LIS3DH (400 kHz)",
+   "datasheet": ""
+  },
+  {
+   "ref": "R137",
+   "symbol": "Device:R",
+   "value": "4.7k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25900",
+   "pins": {
+    "1": "+3V3",
+    "2": "ACC_SCL"
+   },
+   "why": "I2C0 pull-up, SCL",
+   "datasheet": ""
   }
  ],
  "power_flags": [

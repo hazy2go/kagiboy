@@ -1,0 +1,96 @@
+# Wallet cartridge logbook
+
+Decisions, checks and results, in order. Board: `hw/wallet/` (WiFi cart Rev B + wallet changes).
+
+## 2026-10-15 Import
+WiFi Game Boy Cartridge Rev B imported unmodified from hazy2go/wifi-game-boy-cartridge `326be60`
+(`hw/rev-b` → `hw/wallet`, `verify/`, `docs/design/`, `sim/power/`, `sim/models/`). Gate paths changed from
+`hw/rev-b` to `hw/wallet`. All four gates pass on the unmodified copy (commit `5086bb6`).
+
+## 2026-10-15 Wallet variant: remove HyperRAM, microSD, RTC; add SE050E2 + LIS3DH
+Hazy's choices: keep the RP2350B and its external flash; remove the microSD and the RTC; add the LIS3DH.
+
+**Removed** (DNP, off the board, kept in the schematic so they can be restored; `croco_edits` in
+`docs/design/netlist_radio.json`):
+- HyperRAM U4 with C22, C23, R12, TP2-TP4. A 32 KB wallet ROM is served from RP2350 SRAM
+  (kagiboy `docs/hardware-sim.md`), so the 8 MB PSRAM has no job.
+- microSD J2 with R6.
+- RTC U5 with Y2, C24, C27, C28, R15, R17, TP1 (BT1 was already gone in the WiFi cart).
+
+**Added** (generated sheet `radio.kicad_sch`, from the same JSON):
+
+| Ref | Part | LCSC (stock 2026-10-15) | Job |
+|---|---|---|---|
+| U110 | NXP SE050E2HQ1/Z01Z3Z | C5190917 (594) | Secure element. E2 = Ed25519 + secp256k1 |
+| C125, C126 | 100 nF | C1525 | SE050 VIN and VCC/VOUT |
+| R133, R134 | 2.2k | C25879 | I2C1 pull-ups |
+| R135 | 100k | C25741 | ENA pull-down: SE050 in Deep Power-down until firmware enables it |
+| U111 | ST LIS3DHTR | C15134 (1708) | Accelerometer, I2C address 0x18 |
+| C127, C128 | 100 nF, 10 uF | C1525, C19702 | LIS3DH decoupling |
+| R136, R137 | 4.7k | C25900 | I2C0 pull-ups |
+
+**RP2350 pins** (the old HyperRAM pins, GPIO function table F3):
+
+| GPIO | Pad | Was | Now |
+|---|---|---|---|
+| 6 | 3 | HYPERRAM_RWDS | SE_SDA (I2C1 SDA) |
+| 7 | 4 | HYPERRAM_CLK | SE_SCL (I2C1 SCL) |
+| 8 | 6 | HYPERRAM_CS | ACC_SDA (I2C0 SDA) |
+| 9 | 7 | HYPERRAM_DQ0 | ACC_SCL (I2C0 SCL) |
+| 10 | 8 | HYPERRAM_DQ1 | SE_ENA |
+| 11 | 9 | HYPERRAM_DQ2 | ACC_INT1 |
+
+GPIO1 (SD CS), GPIO5 (RTC CS) and GPIO12-16 are now free. SPI0 (GPIO0/2/3) only carries the ESP32-C3.
+
+**Why two I2C buses:** the LIS3DH is a 400 kHz part, the SE050 runs at up to 1 MHz here (kagiboy firmware
+timing assumes 1 MHz). Separate buses also keep the secure element alone on its bus.
+
+**SE050 wiring** (data sheet Rev 3.8, Table 5 and sec 5.2): supply on VIN (+3V3), VOUT tied to VCC, ENA from
+GPIO10. That is the wiring Deep Power-down needs (3 uA while locked vs 0.45 mA in Power-down, Table 12).
+ISO14443 LA/LB and RST_N to GND, IO1/IO2/CLK not connected, centre pad to GND.
+
+**SE050 footprint** (`tools/gen_wallet_footprints.py`): from NXP's SOT1969-1 package information, Figures 3-5:
+pads 0.725 x 0.2 at 0.4 pitch, 1.538 from centre, 1.9 mm centre pad, 0.05 mask margin, centre paste as
+4 x 0.75 squares. Independently confirmed by `make_cpl.py`: JLC's own footprint for C5190917 lands on ours with
+matching pad numbers at 0.012 mm.
+
+**Layout:** both chips in the former HyperRAM area left of the RP2350 (`docs/design/placement.json`).
+- The copper of every changed net (HyperRAM, SD CS, RTC) was ripped up (`update_pcb.py --rip`).
+- Stubs left on SPI, GND and +3V3 were pruned (`prune_dangling.py`).
+- Pads were stitched to the In1 GND and In4 +3V3 planes (`stitch_planes.py`). Three duplicate vias it
+  made were removed by hand.
+- Signals were routed with `finish_route.py` / `route_pair.py`. SE_ENA had to go first, because the other
+  five lines otherwise took the only inner-layer corridor from GPIO10.
+- The ESP32-C3 ADC divider trace (ADC_VCC, R118-R119) crossed the SE050 corner. It was ripped and re-routed.
+- Hand-placed links (`tools/add_track.py`): SE050 VIN to C125, VOUT to VCC to C126, ENA to R135,
+  SDA to R133, R134 supply.
+- Silk: new parts' reference fields are on F.Fab, as for the WiFi parts. C7 and C19 reference fields moved to
+  F.Fab because the area got denser. `update_pcb.py` now hides the LCSC field it adds: it was landing visible
+  on the silkscreen.
+
+**Gates** (all PASS):
+- `kicad_check`: ERC 70 vs 71 baseline, 0 new; DRC 308 vs 454, 0 new; unconnected 0; parity 0.
+- `netlist_check`, `design_calcs` and `sim_vs_netlist`.
+
+Five reviewed exceptions were added to `verify/baseline/accepted.json`:
+- 3 isolated labels HYPERRAM_DQ0-2, on the DNP U4 side only.
+- 2 `lib_footprint_mismatch` for U110/U111, from the clipped silk (same as U104).
+
+**Fab check** (`make_bom.py`, live JLC stock, 5 boards): 128 placed parts, all new parts in stock.
+**1 FAIL: L1** (Croco's RP2350 regulator inductor AOTA-B201610S3R3-101-T, C42411119): stock 4 < 10.
+Not changed yet: Raspberry Pi specifies this part for the RP2350 core regulator, so a substitute needs that
+datasheet checked first. In-stock 3.3 uH 2016 candidates: FHD201610S-3R3MT C601997, CMLW201610S3R3MST C411344,
+LVC201B10-3R3M-N C285877. Same problem for the WiFi cart's order.
+
+**Pin audit** (`pin_audit.py` vs the JLC records): U110 and U111 agree pin by pin. The listed differences are
+names only; LIS3DH pin 10 is "RES" in JLC's record, which the data sheet says to tie to GND.
+
+**Power:** the SE050 peaks at 19 mA, the LIS3DH draws µA, both on Croco's AP2112 +3V3. The removed HyperRAM
+and microSD drew more than that, so the console-side load goes down.
+
+**Not done / next:**
+- L1 decision.
+- Firmware for this board: RP2350 bus + wallet logic (port of `web/src/chip/chip.ts`), ESP32-C3 BLE.
+- `sim/system` (the WiFi cart's full-system sim) was not copied; kagiboy's own `hardware/sim` covers the bus.
+- The kagiboy hardware sim still models the earlier design (RP2354B, CYW43439, TXB0108 x4) and should be
+  pointed at this board.

@@ -5042,6 +5042,844 @@
 				)
 			)
 		)
+		(symbol "radio:SE050_HX2QFN20"
+			(pin_names
+				(offset 1.016)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 17.779999999999998 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SE050_HX2QFN20"
+				(at 0 -17.78 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "radio:NXP_HX2QFN-20-1EP_3x3mm_P0.4mm_EP1.9x1.9mm"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://cache.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "NXP SE050 Plug & Trust secure element, HX2QFN20 (SOT1969-1)"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SE050_HX2QFN20_0_1"
+				(rectangle
+					(start -20.32 15.239999999999998)
+					(end 20.32 -15.240000000000002)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "SE050_HX2QFN20_1_1"
+				(pin passive line
+					(at -22.86 12.7 0)
+					(length 2.54)
+					(name "ISO14443_LB"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 10.16 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -22.86 7.62 0)
+					(length 2.54)
+					(name "IO1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 5.08 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 2.54 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 0.0 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 -2.54 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -22.86 -5.08 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -22.86 -7.62 0)
+					(length 2.54)
+					(name "I2C_SDA"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -22.86 -10.16 0)
+					(length 2.54)
+					(name "I2C_SCL"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -22.86 -12.7 0)
+					(length 2.54)
+					(name "ENA"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 22.86 12.7 180)
+					(length 2.54)
+					(name "VIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 22.86 10.16 180)
+					(length 2.54)
+					(name "ISO7816_CLK"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 22.86 7.62 180)
+					(length 2.54)
+					(name "ISO7816_RST_N"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 22.86 5.08 180)
+					(length 2.54)
+					(name "VOUT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 22.86 2.54 180)
+					(length 2.54)
+					(name "IO2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 0.0 180)
+					(length 2.54)
+					(name "ISO14443_LA"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "17"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 22.86 -2.54 180)
+					(length 2.54)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "18"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 22.86 -5.08 180)
+					(length 2.54)
+					(name "VSS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "19"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at 22.86 -7.62 180)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "20"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 -10.16 180)
+					(length 2.54)
+					(name "EP"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "21"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
+		(symbol "Sensor_Motion:LIS3DH"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U"
+				(at -7.62 11.43 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "LIS3DH"
+				(at 6.35 11.43 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Package_LGA:LGA-16_3x3mm_P0.5mm_LayoutBorder3x5y"
+				(at 2.54 -26.67 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" "https://www.st.com/resource/en/datasheet/cd00274221.pdf"
+				(at -5.08 -2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "3-Axis Accelerometer, 2/4/8/16g range, I2C/SPI interface, LGA-16"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "3-axis accelerometer i2c spi mems"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "LGA*3x3mm*P0.5mm*LayoutBorder3x5y*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "LIS3DH_0_1"
+				(rectangle
+					(start -10.16 10.16)
+					(end 10.16 -12.7)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "LIS3DH_1_1"
+				(pin power_in line
+					(at -2.54 12.7 270)
+					(length 2.54)
+					(name "VDD_IO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at 10.16 5.08 180)
+					(length 2.54)
+					(hide yes)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at 10.16 7.62 180)
+					(length 2.54)
+					(hide yes)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input clock
+					(at -12.7 -5.08 0)
+					(length 2.54)
+					(name "SPC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(alternate "SCL" input clock)
+				)
+				(pin power_in line
+					(at 0 -15.24 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -12.7 -2.54 0)
+					(length 2.54)
+					(name "SDI"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(alternate "SDA" bidirectional line)
+					(alternate "SDO" output line)
+				)
+				(pin output line
+					(at -12.7 0 0)
+					(length 2.54)
+					(name "SDO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(alternate "SA0" input line)
+				)
+				(pin input line
+					(at -12.7 -7.62 0)
+					(length 2.54)
+					(name "CS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -12.7 2.54 0)
+					(length 2.54)
+					(name "INT2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 90)
+					(length 2.54)
+					(hide yes)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -12.7 5.08 0)
+					(length 2.54)
+					(name "INT1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "11"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 90)
+					(length 2.54)
+					(hide yes)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "12"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 12.7 -2.54 180)
+					(length 2.54)
+					(name "ADC3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "13"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 2.54 12.7 270)
+					(length 2.54)
+					(name "VDD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 12.7 0 180)
+					(length 2.54)
+					(name "ADC2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "15"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 12.7 2.54 180)
+					(length 2.54)
+					(name "ADC1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "16"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:PWR_FLAG"
 			(power global)
 			(pin_numbers
@@ -18173,16 +19011,16 @@
 		)
 	)
 	(symbol
-		(lib_id "power:PWR_FLAG")
-		(at 25.4 467.36 0)
+		(lib_id "power:GND")
+		(at 383.54 429.26 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "c16d2663-5758-5c4c-b44e-daa06df55473")
-		(property "Reference" "#FLG0100"
-			(at 25.4 462.36 0)
+		(uuid "14f03be0-8ff7-5b35-a585-bc90efe97702")
+		(property "Reference" "#PWR01081"
+			(at 383.54 434.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18190,16 +19028,17 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "PWR_FLAG"
-			(at 25.4 464.36 0)
+		(property "Value" "GND"
+			(at 383.54 432.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" ""
-			(at 25.4 467.36 0)
+			(at 383.54 429.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18208,7 +19047,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 25.4 467.36 0)
+			(at 383.54 429.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18217,7 +19056,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 25.4 467.36 0)
+			(at 383.54 429.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18226,7 +19065,2919 @@
 			)
 		)
 		(pin "1"
-			(uuid "14f03be0-8ff7-5b35-a585-bc90efe97702")
+			(uuid "f02afa62-0aaf-5a5f-b28e-c48838f42e05")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01081")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 383.54 431.8)
+		(uuid "e84f33df-ac16-5928-9e4c-8c3dd0e6a568")
+	)
+	(no_connect
+		(at 383.54 434.34)
+		(uuid "a9926667-2210-5131-be52-c05a18fe6a6a")
+	)
+	(no_connect
+		(at 383.54 436.88)
+		(uuid "7fed5baa-b333-5100-b3a4-eb04feffccc1")
+	)
+	(no_connect
+		(at 383.54 439.42)
+		(uuid "9c906b02-2637-5752-bdb0-1577091004a3")
+	)
+	(no_connect
+		(at 383.54 441.96)
+		(uuid "4cbf456a-301e-5166-b2db-b22076f66fb3")
+	)
+	(no_connect
+		(at 383.54 444.5)
+		(uuid "3ae13c62-57fa-5c5b-91f8-eb7a2a9bf06f")
+	)
+	(no_connect
+		(at 383.54 447.04)
+		(uuid "bc73b040-f1da-5aa7-ba3c-18d2e837024f")
+	)
+	(global_label "SE_SDA"
+		(shape passive)
+		(at 383.54 449.58 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "8962fe13-f2a9-590c-af98-dea13d5bc7bd")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 383.54 449.58 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "SE_SCL"
+		(shape passive)
+		(at 383.54 452.12 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "36090b86-c08a-57e1-9aa5-a0ae4d3b13c9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 383.54 452.12 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "SE_ENA"
+		(shape passive)
+		(at 383.54 454.66 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "443f4a60-2728-5d18-aafa-0a6a9a63d866")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 383.54 454.66 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 429.26 429.26 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "361d9cdc-a758-5ac9-979d-de75c131f38d")
+		(property "Reference" "#PWR01082"
+			(at 429.26 434.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 429.26 432.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 429.26 429.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 429.26 429.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 429.26 429.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "20fbbb95-bd83-552e-8576-962b9d55e59e")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01082")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 429.26 431.8)
+		(uuid "91418ce9-a3b0-574a-ab4b-db4d053bc8de")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 429.26 434.34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a38a6153-74bc-5f0f-b682-54df8e823d4f")
+		(property "Reference" "#PWR01083"
+			(at 429.26 439.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 429.26 437.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 429.26 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 429.26 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 429.26 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e86afeff-e13d-52e2-9b38-ee7101a722ab")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01083")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(label "SE_VCC"
+		(at 429.26 436.88 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "ebaf93ea-6f1e-5848-83f1-54f5a2683a5f")
+	)
+	(no_connect
+		(at 429.26 439.42)
+		(uuid "0b2576ed-66ff-5a07-9eef-489fd2e8e669")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 429.26 441.96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d000408e-6e04-5f2c-a7b2-b7cc5d730346")
+		(property "Reference" "#PWR01084"
+			(at 429.26 446.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 429.26 444.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 429.26 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 429.26 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 429.26 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "51d0c0bf-1480-51bc-a4e6-4a6ba00fc49b")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01084")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(label "SE_VCC"
+		(at 429.26 444.5 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "ed532ece-3a04-55b8-84c2-4919876a561c")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 429.26 447.04 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "dc18083d-b32e-5890-8de9-223d5fb55633")
+		(property "Reference" "#PWR01085"
+			(at 429.26 452.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 429.26 450.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 429.26 447.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 429.26 447.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 429.26 447.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "090279d7-a776-5cf0-a8b0-f13b2edbb297")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01085")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 429.26 449.58)
+		(uuid "edfef059-81ff-5a81-9e19-f68d1e8614c0")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 429.26 452.12 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "00423f39-0426-507e-ad33-8325d24bb2e7")
+		(property "Reference" "#PWR01086"
+			(at 429.26 457.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 429.26 455.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 429.26 452.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 429.26 452.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 429.26 452.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5f875392-b9aa-5dc9-aa74-aee022262a27")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01086")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "radio:SE050_HX2QFN20")
+		(at 406.4 441.96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f03cb1d8-8476-5f2b-9849-ddb3755e0c6e")
+		(property "Reference" "U110"
+			(at 406.4 429.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "SE050E2HQ1/Z01Z3Z"
+			(at 406.4 453.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "radio:NXP_HX2QFN-20-1EP_3x3mm_P0.4mm_EP1.9x1.9mm"
+			(at 406.4 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://cache.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf"
+			(at 406.4 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 406.4 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C5190917"
+			(at 406.4 441.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c16d2663-5758-5c4c-b44e-daa06df55473")
+		)
+		(pin "2"
+			(uuid "f0c06e7b-4bd5-5a37-8ad0-34d065fdbd9b")
+		)
+		(pin "3"
+			(uuid "07b5dd0e-539e-5f6a-85dc-cde6b067ca10")
+		)
+		(pin "4"
+			(uuid "dee2f727-5215-5f6c-ac53-a00fef21d97d")
+		)
+		(pin "5"
+			(uuid "693155ab-964c-5a40-a8ec-8e4939be38f7")
+		)
+		(pin "6"
+			(uuid "01b2ed6d-fd1e-5f6c-a083-ae4c9d3b7440")
+		)
+		(pin "7"
+			(uuid "93644566-de84-50a0-98a5-6c1d10e1509b")
+		)
+		(pin "8"
+			(uuid "055026e9-2246-567d-8107-ba4bbd5857be")
+		)
+		(pin "9"
+			(uuid "6273b557-f8fa-56da-ae46-66057a5b5a04")
+		)
+		(pin "10"
+			(uuid "29e56df0-7171-51b8-95f4-4dea2f1889e5")
+		)
+		(pin "11"
+			(uuid "89037332-cd4c-5185-a26d-1ab003aa7b1e")
+		)
+		(pin "12"
+			(uuid "d23fe8e8-2995-5691-bec3-b5bd654bc318")
+		)
+		(pin "13"
+			(uuid "a057faf4-7824-5d66-af80-4291530ec586")
+		)
+		(pin "14"
+			(uuid "47b9ba70-2348-522a-a6ef-9ed801993135")
+		)
+		(pin "15"
+			(uuid "05d7499c-4a67-58d7-a8cf-089d46b83967")
+		)
+		(pin "16"
+			(uuid "816b3658-a8b3-50df-a7f4-8ef8ce87c695")
+		)
+		(pin "17"
+			(uuid "66db446e-79a1-5456-9083-ff68a35dc55d")
+		)
+		(pin "18"
+			(uuid "abb2ce3f-d8d3-5527-b382-5369bc0494eb")
+		)
+		(pin "19"
+			(uuid "e3e5c5a7-28c2-5f0f-94fd-d344ce5f17e4")
+		)
+		(pin "20"
+			(uuid "e08ba7af-6866-58d9-9c70-27b2fe07dd92")
+		)
+		(pin "21"
+			(uuid "57c3ac0a-ed1c-51d5-98a2-89e27da48717")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "U110")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 469.9 430.53 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "934a2753-0a80-5424-9481-9538eec177fa")
+		(property "Reference" "#PWR01087"
+			(at 469.9 435.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 469.9 433.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 469.9 430.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 469.9 430.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 469.9 430.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6d2a3ac2-acef-517a-8474-07af9ef7c49f")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01087")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 469.9 438.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0c238ee2-ca17-5d0c-9553-89b6f62302c2")
+		(property "Reference" "#PWR01088"
+			(at 469.9 443.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 469.9 441.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 469.9 438.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 469.9 438.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 469.9 438.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "dcac745b-ab8d-5526-9f89-3baa2c3a0244")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01088")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 469.9 434.34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9f2100d2-675d-5c14-897a-2decb0d5b32b")
+		(property "Reference" "C125"
+			(at 469.9 422.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF 16V X7R"
+			(at 469.9 446.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 469.9 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 469.9 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 469.9 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C1525"
+			(at 469.9 434.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0e08c3ad-700b-55a9-84c2-29222d9d185e")
+		)
+		(pin "2"
+			(uuid "18874c5d-f464-5098-a39c-30b507b98fd2")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "C125")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(label "SE_VCC"
+		(at 25.4 486.41 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "19b30cd2-2c93-5d62-93bb-ac05a27982fa")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 25.4 494.03 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e72a4e25-ef46-53e5-8abf-aaf8dae6a7fb")
+		(property "Reference" "#PWR01089"
+			(at 25.4 499.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 25.4 497.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 25.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "986d60dc-9f9a-5772-b543-122ab12d3eb0")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01089")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 25.4 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c219bac1-1a1b-5778-a2b3-f6879f389a8e")
+		(property "Reference" "C126"
+			(at 25.4 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF 16V X7R"
+			(at 25.4 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 25.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C1525"
+			(at 25.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ff1d40e5-c9b4-50bc-aa9d-12de37b15fd9")
+		)
+		(pin "2"
+			(uuid "00f058e1-0241-57d5-a178-9f52b1c5ac34")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "C126")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 88.9 486.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ba2e1a74-a547-534f-8d93-80331534176f")
+		(property "Reference" "#PWR01090"
+			(at 88.9 491.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 88.9 489.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 88.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 88.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 88.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "248cfd15-6be9-5855-b3c6-4e6cc5157b78")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01090")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "SE_SDA"
+		(shape passive)
+		(at 88.9 494.03 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "71b5d89b-9b88-51f8-88e1-e8413ae25c2c")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 88.9 494.03 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 88.9 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "26154a27-b9f8-5841-99bc-d71d124b567c")
+		(property "Reference" "R133"
+			(at 88.9 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "2.2k"
+			(at 88.9 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 88.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 88.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 88.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25879"
+			(at 88.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2bd622e4-6cde-5ca4-80ca-127e0c5c139c")
+		)
+		(pin "2"
+			(uuid "f87cc74f-5ab1-5711-b8a4-1be04a37ac1a")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "R133")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 152.4 486.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8b4e2c16-0e1e-5bc1-a693-0e0c3019d540")
+		(property "Reference" "#PWR01091"
+			(at 152.4 491.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 152.4 489.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 152.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 152.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 152.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6faf3dcb-4ff4-5e56-a20a-984efc1fe545")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01091")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "SE_SCL"
+		(shape passive)
+		(at 152.4 494.03 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "442e95bb-1846-536f-9ab7-43d47989e580")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 152.4 494.03 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 152.4 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "df97ec65-ab22-5225-aacf-ab9089fe1624")
+		(property "Reference" "R134"
+			(at 152.4 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "2.2k"
+			(at 152.4 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 152.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 152.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 152.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25879"
+			(at 152.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7b6c1686-5266-5d46-9890-a291021dbfd9")
+		)
+		(pin "2"
+			(uuid "b4bf1a6c-754c-5b1b-80ac-1cc655e164f9")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "R134")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "SE_ENA"
+		(shape passive)
+		(at 215.9 486.41 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify left)
+		)
+		(uuid "847e88be-5fa4-5d52-bcc3-f647759613ee")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 215.9 486.41 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 215.9 494.03 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "82af3ab9-9f5c-5588-b590-a2b1ff0acd36")
+		(property "Reference" "#PWR01092"
+			(at 215.9 499.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 215.9 497.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 215.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 215.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 215.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6d4a5a08-b078-5e76-a9cf-8e3873c44593")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01092")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 215.9 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c0e8c3cc-370a-5744-a732-2a0652ee0561")
+		(property "Reference" "R135"
+			(at 215.9 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 215.9 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 215.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 215.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 215.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25741"
+			(at 215.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c09fc9c1-68a6-53d3-b612-dc83bf1f356e")
+		)
+		(pin "2"
+			(uuid "7e260db2-d0e7-5e78-8bd9-10a4cf730381")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "R135")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 276.86 485.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e957c6fb-0cda-530e-be8e-d7621e7d3926")
+		(property "Reference" "#PWR01093"
+			(at 276.86 490.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 276.86 488.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 276.86 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 276.86 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 276.86 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b53c3cf5-cf41-52a9-8335-5b073c37da7a")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01093")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 289.56 492.76)
+		(uuid "265937d3-e967-5b7d-86d9-9151aeca635f")
+	)
+	(no_connect
+		(at 289.56 490.22)
+		(uuid "5afdb061-94fe-59f8-88a2-70fcc9d9f0f8")
+	)
+	(global_label "ACC_SCL"
+		(shape passive)
+		(at 266.7 502.92 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "5231ab8e-92f8-51c0-ae54-4c4b64d59c0a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 266.7 502.92 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 279.4 513.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "07bb50fc-4891-559b-98b4-3d6379608382")
+		(property "Reference" "#PWR01094"
+			(at 279.4 518.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 279.4 516.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4cbc53d8-4ae6-57ca-8f2b-1c7b2fcaf0b4")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01094")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "ACC_SDA"
+		(shape passive)
+		(at 266.7 500.38 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "1c943a2e-10f7-592a-a55a-c1dc3cc35417")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 266.7 500.38 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 266.7 497.84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a30bb91b-d962-591d-ad77-bea29bd2c536")
+		(property "Reference" "#PWR01095"
+			(at 266.7 502.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 266.7 500.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 266.7 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 266.7 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 266.7 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "365d5359-e64e-57ef-8292-f6d80393958a")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01095")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 266.7 505.46 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "52a47ace-136d-54e2-b2bc-f49a2fef2831")
+		(property "Reference" "#PWR01096"
+			(at 266.7 510.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 266.7 508.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 266.7 505.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 266.7 505.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 266.7 505.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "fb6caba8-2eeb-58aa-a742-2d5df81b2908")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01096")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 266.7 495.3)
+		(uuid "749598c6-1a84-5d88-b4b9-7196c28f2532")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 279.4 513.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "dfe40d9e-fb6f-57f2-b7dc-68328ec696f7")
+		(property "Reference" "#PWR01097"
+			(at 279.4 518.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 279.4 516.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ecdf9b70-4008-5b7e-9ec2-a5021c760c54")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01097")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "ACC_INT1"
+		(shape passive)
+		(at 266.7 492.76 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "ef93bf79-88b5-52c6-bced-3d1278c3a20a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 266.7 492.76 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 279.4 513.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b927c43f-6ee8-5baa-b426-f80e86276496")
+		(property "Reference" "#PWR01098"
+			(at 279.4 518.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 279.4 516.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 513.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "616358c7-e4d3-5d33-8a8d-47ef2f9df659")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01098")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 292.1 500.38)
+		(uuid "fa57696c-48ea-58c5-a25d-4ad60bd9918f")
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 281.94 485.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "43f1b6d9-3298-5348-b744-adff48e625d4")
+		(property "Reference" "#PWR01099"
+			(at 281.94 490.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 281.94 488.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 281.94 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 281.94 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 281.94 485.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3a5692a2-f291-549a-993e-8a10891cf245")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01099")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 292.1 497.84)
+		(uuid "28572c98-a10a-5743-a137-9d3643d95beb")
+	)
+	(no_connect
+		(at 292.1 495.3)
+		(uuid "aba91194-f6b3-5c71-8593-32b6edf939e9")
+	)
+	(symbol
+		(lib_id "Sensor_Motion:LIS3DH")
+		(at 279.4 497.84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b4795661-28e2-5dde-8ee2-813bf4ba82cc")
+		(property "Reference" "U111"
+			(at 279.4 485.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LIS3DHTR"
+			(at 279.4 509.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_LGA:LGA-16_3x3mm_P0.5mm_LayoutBorder3x5y"
+			(at 279.4 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.st.com/resource/en/datasheet/lis3dh.pdf"
+			(at 279.4 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C15134"
+			(at 279.4 497.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6e37fcbf-d09b-5712-99c2-5121e605ce21")
+		)
+		(pin "2"
+			(uuid "3b3c66c5-e554-5208-a1de-5cf100738b76")
+		)
+		(pin "3"
+			(uuid "d31f4fdf-3546-58da-b6cd-5735d089a42d")
+		)
+		(pin "4"
+			(uuid "61d8e113-e240-5b23-bd4d-a19782ce7de4")
+		)
+		(pin "5"
+			(uuid "cd735b27-68ca-516b-ab52-4108c7fc003e")
+		)
+		(pin "6"
+			(uuid "d5962d60-2b73-536d-a79b-ca24922a4d2f")
+		)
+		(pin "7"
+			(uuid "4cf2c240-7e70-50ca-8131-42f3c021ca48")
+		)
+		(pin "8"
+			(uuid "bd04cdb8-0bcc-5429-942b-4f211798e8c1")
+		)
+		(pin "9"
+			(uuid "56f9a62b-a804-5b81-9361-33450ac2ee00")
+		)
+		(pin "10"
+			(uuid "a8d038a8-1b46-5cf5-b998-016c093850a0")
+		)
+		(pin "11"
+			(uuid "601ea00b-4426-5450-8c2e-cd474c726470")
+		)
+		(pin "12"
+			(uuid "9cb82171-673c-5fe4-b6be-0314bf5a1952")
+		)
+		(pin "13"
+			(uuid "58094cf5-1fc5-5d9e-b071-3abd67baf6a5")
+		)
+		(pin "14"
+			(uuid "ee32b41b-dbdb-5bb3-b34b-1e91191598ea")
+		)
+		(pin "15"
+			(uuid "0f903e89-2c7a-5a6b-96ac-2c80e2bc0430")
+		)
+		(pin "16"
+			(uuid "ebde021f-aa47-50bd-b464-c34b999eeb2f")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "U111")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 342.9 486.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a1d301cb-3304-50a7-9dd0-b859a341ccdc")
+		(property "Reference" "#PWR01100"
+			(at 342.9 491.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 342.9 489.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 342.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 342.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 342.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4a8234b5-659c-5b5b-843d-4f794341f91a")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01100")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 342.9 494.03 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d45c2f2f-fd47-56a9-8dc5-6b43046977ab")
+		(property "Reference" "#PWR01101"
+			(at 342.9 499.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 342.9 497.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 342.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 342.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 342.9 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4c732b3f-967c-5d33-9cca-413ee98087bf")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 342.9 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "99366b58-5ac9-5888-a6fc-f4463f8868a4")
+		(property "Reference" "C127"
+			(at 342.9 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF 16V X7R"
+			(at 342.9 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 342.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 342.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 342.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C1525"
+			(at 342.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "aa6b1124-6f58-5b21-905d-9b753f200594")
+		)
+		(pin "2"
+			(uuid "6cb96de7-86c3-52d4-a65d-320b5a8c647a")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "C127")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 406.4 486.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5605fadb-adcb-597e-a012-5b833012f23d")
+		(property "Reference" "#PWR01102"
+			(at 406.4 491.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 406.4 489.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 406.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 406.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 406.4 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6b1faa75-8ea8-5645-930e-9c6e62be8006")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 406.4 494.03 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1893eca1-f358-5f1d-a000-1bbe223fcc13")
+		(property "Reference" "#PWR01103"
+			(at 406.4 499.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 406.4 497.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 406.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 406.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 406.4 494.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ab3241af-a026-5ca5-b4d7-2d6e5c92c9ec")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01103")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 406.4 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "97f14e40-a559-5280-9a37-f67a4aceebac")
+		(property "Reference" "C128"
+			(at 406.4 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10uF 10V X5R"
+			(at 406.4 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 406.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 406.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 406.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C19702"
+			(at 406.4 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "848a17c7-5848-5bae-b174-e66688e23412")
+		)
+		(pin "2"
+			(uuid "97facc20-100c-5cc2-b821-c6bea4edf148")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "C128")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 469.9 486.41 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "da9699f4-1c50-59b9-8c41-37d182382808")
+		(property "Reference" "#PWR01104"
+			(at 469.9 491.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 469.9 489.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 469.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 469.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 469.9 486.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b44517a3-daaa-5a7e-99b8-a2aba7a82749")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01104")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "ACC_SDA"
+		(shape passive)
+		(at 469.9 494.03 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "e2ba3aa8-6ce5-59af-b48a-473575c2ace8")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 469.9 494.03 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 469.9 490.22 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1a2bf6f3-5ac5-5dd6-a1e4-4558168ed25a")
+		(property "Reference" "R136"
+			(at 469.9 478.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "4.7k"
+			(at 469.9 502.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 469.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 469.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 469.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25900"
+			(at 469.9 490.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "62f926b9-efa2-5dfe-aacb-f1e458c80957")
+		)
+		(pin "2"
+			(uuid "46260520-ff48-5df7-89be-e6dd6fd5e2c9")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "R136")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 25.4 544.83 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a7adc0f3-e02d-5280-8c44-d589b5197fbc")
+		(property "Reference" "#PWR01105"
+			(at 25.4 549.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 25.4 547.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 25.4 544.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 544.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25.4 544.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "02657b4d-11c7-5984-9eac-fea2af864a89")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "#PWR01105")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "ACC_SCL"
+		(shape passive)
+		(at 25.4 552.45 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.0 1.0)
+			)
+			(justify right)
+		)
+		(uuid "2d08b9f6-a135-56fc-a3f7-ce974619816e")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 25.4 552.45 0)
+			(effects
+				(font
+					(size 1.0 1.0)
+				)
+				(hide yes)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 25.4 548.64 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d76d975b-103a-5c26-8a0e-48630fb188af")
+		(property "Reference" "R137"
+			(at 25.4 536.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "4.7k"
+			(at 25.4 560.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 25.4 548.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 548.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25.4 548.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C25900"
+			(at 25.4 548.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6a9327a2-bb3c-5440-bd2e-d195b132f518")
+		)
+		(pin "2"
+			(uuid "0ba15eb2-4338-5563-9a76-374a65a8bb61")
+		)
+		(instances
+			(project "GameboyCartridgeV2.1"
+				(path "/ec16e1da-c950-4911-941a-a1ab0200cc01/5f3a9c2e-7b1d-4e6a-9c0f-1a2b3c4d5e60"
+					(reference "R137")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 25.4 579.12 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "afb2f2e7-6245-5ad6-bdf6-d7dcfdc894b6")
+		(property "Reference" "#FLG0100"
+			(at 25.4 574.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 25.4 576.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 25.4 579.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 579.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25.4 579.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "abb3933b-d066-5bf0-b535-6bc0e0f95a10")
 		)
 		(instances
 			(project "GameboyCartridgeV2.1"
@@ -18239,7 +21990,7 @@
 	)
 	(global_label "VRES"
 		(shape passive)
-		(at 25.4 467.36 270)
+		(at 25.4 579.12 270)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -18247,9 +21998,9 @@
 			)
 			(justify right)
 		)
-		(uuid "f02afa62-0aaf-5a5f-b28e-c48838f42e05")
+		(uuid "4162db40-8e84-5cbd-832a-278014a47867")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 25.4 467.36 0)
+			(at 25.4 579.12 0)
 			(effects
 				(font
 					(size 1.0 1.0)

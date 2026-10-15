@@ -1,9 +1,12 @@
-# JLCPCB order: WiFi Game Boy cartridge Rev B
+# JLCPCB order: kagiboy wallet cartridge (wallet variant of WiFi cart Rev B)
 
-**Not ordered yet.** Hold points (LOGBOOK 18:20-19:05):
-1. ESP32-C3 partial-calibration time on a dev board (A7: <= 5 ms at 50 % TX duty, else firmware falls back to stored calibration data).
-2. FPC antenna over copper / inside a shell / in a console (RSSI).
-3. **OPTIONAL: the real console 5 V.** The DMG power-board schematics put it at about 4.9-5.5 V, typically 5.1-5.2 V (LOGBOOK 2026-10-14), so measuring is not required. To confirm, use a multimeter on the link port while a game runs, or the XIAO ADC through a 2:1 divider. The power stage keeps the console >= 4.588 V (R126 27.0k); in simulation WiFi works down to ~4.8 V on a 1.2 ohm console (slower) and ~4.75 V on a 0.7 ohm one, and stays off (console safe) below that. A lower floor (26.7k) was tried and rejected: burst-after-idle dips below 4.5 V (audit A8.5).
+**NOT READY TO ORDER.** Work in progress on branch `cart-hw`; see `../../../LOGBOOK.md`.
+Open before any order:
+1. **L1 out of stock**: Croco's RP2350 core-regulator inductor AOTA-B201610S3R3-101-T (C42411119) is down to 4 at JLC (need 10 for 5 boards). Raspberry Pi specifies this part for the RP2350 regulator, so a substitute needs a datasheet check first. The WiFi cart's order has the same problem.
+2. The WiFi cart's own hold points still apply to the shared radio and power stage: ESP32-C3 calibration time, antenna RSSI in the shell (see the WiFi repo's ORDER.md).
+3. Firmware: none of the wallet firmware (RP2350 bus + wallet logic, ESP32-C3 BLE) exists for this board yet.
+
+Below: the WiFi cart's order notes, kept for the settings (stackup, finish, preview checks). The file names are the same; the BOM/CPL/Gerbers in this folder are the wallet board's. No zip has been made yet.
 
 ## Files (this folder)
 | file | upload as |

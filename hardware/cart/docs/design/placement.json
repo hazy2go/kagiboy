@@ -530,5 +530,104 @@
   "y": 95.23,
   "rot": 270,
   "why": "autoplace.py: legal (courtyard + copper clearance), min wirelength 8.8 mm"
+ },
+ {
+  "ref": "U110",
+  "x": 134.25,
+  "y": 94.0,
+  "rot": 0,
+  "why": "Wallet group in the former HyperRAM (U4) area left of the RP2350, beside its GPIO6-11 pads; SE050 right side (ENA/VIN) faces the RP2350",
+  "rip": {
+   "nets": [
+    "GND"
+   ],
+   "box": [
+    126.8,
+    90.4,
+    137.6,
+    98.2
+   ]
+  }
+ },
+ {
+  "ref": "C126",
+  "x": 134.25,
+  "y": 91.3,
+  "rot": 0,
+  "why": "SE050 VCC/VOUT cap, on the VOUT-VCC corner"
+ },
+ {
+  "ref": "C125",
+  "x": 136.95,
+  "y": 94.4,
+  "rot": 90,
+  "why": "SE050 VIN cap, next to pin 12"
+ },
+ {
+  "ref": "R133",
+  "x": 134.65,
+  "y": 97.15,
+  "rot": 90,
+  "why": "SE_SDA pull-up straight under pin 9"
+ },
+ {
+  "ref": "R134",
+  "x": 135.65,
+  "y": 97.15,
+  "rot": 90,
+  "why": "SE_SCL pull-up under pin 10"
+ },
+ {
+  "ref": "R135",
+  "x": 136.95,
+  "y": 96.6,
+  "rot": 90,
+  "why": "SE_ENA pull-down next to pin 11; the ESP ADC divider trace (R118-R119 -> via) that ran here is ripped and re-routed",
+  "rip": {
+   "nets": [
+    "/Radio/ADC_VCC"
+   ],
+   "box": [
+    136.3,
+    95.0,
+    137.8,
+    99.6
+   ]
+  }
+ },
+ {
+  "ref": "U111",
+  "x": 130.25,
+  "y": 94.0,
+  "rot": 0,
+  "why": "Wallet group in the former HyperRAM (U4) area left of the RP2350, beside its GPIO6-11 pads; LIS3DH"
+ },
+ {
+  "ref": "C127",
+  "x": 130.25,
+  "y": 91.7,
+  "rot": 0,
+  "why": "LIS3DH 100 nF"
+ },
+ {
+  "ref": "C128",
+  "x": 127.7,
+  "y": 94.0,
+  "rot": 90,
+  "why": "LIS3DH 10 uF"
+ },
+ {
+  "ref": "R136",
+  "x": 129.75,
+  "y": 97.15,
+  "rot": 90,
+  "why": "ACC_SDA pull-up"
+ },
+ {
+  "ref": "R137",
+  "x": 130.85,
+  "y": 97.15,
+  "rot": 90,
+  "why": "ACC_SCL pull-up"
  }
 ]

@@ -458,5 +458,97 @@
     "type": "passive"
    }
   }
+ },
+ "SE050_HX2QFN20": {
+  "description": "NXP SE050 Plug & Trust secure element, HX2QFN20 (SOT1969-1)",
+  "footprint": "radio:NXP_HX2QFN-20-1EP_3x3mm_P0.4mm_EP1.9x1.9mm",
+  "datasheet": "https://cache.nxp.com/docs/en/data-sheet/SE050-DATASHEET.pdf",
+  "pinout_source": "NXP SE050 data sheet Rev 3.8, Figure 4 (pin configuration, transparent top view) and Table 5 (pin description), p11-12. Cross-checked against the JLC/EasyEDA record for C5190917: same names on every pin.",
+  "pins": {
+   "1": {
+    "name": "ISO14443_LB",
+    "type": "passive"
+   },
+   "2": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "3": {
+    "name": "IO1",
+    "type": "bidirectional"
+   },
+   "4": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "5": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "6": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "7": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "8": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "9": {
+    "name": "I2C_SDA",
+    "type": "bidirectional"
+   },
+   "10": {
+    "name": "I2C_SCL",
+    "type": "input"
+   },
+   "11": {
+    "name": "ENA",
+    "type": "input"
+   },
+   "12": {
+    "name": "VIN",
+    "type": "power_in"
+   },
+   "13": {
+    "name": "ISO7816_CLK",
+    "type": "input"
+   },
+   "14": {
+    "name": "ISO7816_RST_N",
+    "type": "input"
+   },
+   "15": {
+    "name": "VOUT",
+    "type": "power_out"
+   },
+   "16": {
+    "name": "IO2",
+    "type": "bidirectional"
+   },
+   "17": {
+    "name": "ISO14443_LA",
+    "type": "passive"
+   },
+   "18": {
+    "name": "VCC",
+    "type": "power_in"
+   },
+   "19": {
+    "name": "VSS",
+    "type": "power_in"
+   },
+   "20": {
+    "name": "NC",
+    "type": "no_connect"
+   },
+   "21": {
+    "name": "EP",
+    "type": "passive"
+   }
+  }
  }
 }

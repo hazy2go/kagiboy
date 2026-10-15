@@ -11,7 +11,7 @@ edit whose label already reads 'to' is reported and skipped.
 Usage: apply_croco_edits.py PROJECT_DIR NETLIST.json
 Verify afterwards with verify/netlist_check.py (exports the Croco netlist and checks every edit).
 """
-import glob, json, math, os, re, sys
+import glob, json, math, os, re, sys, uuid
 
 EPS = 0.01
 
@@ -81,9 +81,65 @@ def dnp(pdir, ref):
     sys.exit(f'{ref} not found')
 
 
+def relabel_bus_pin(pdir, edit):
+    """Take one pin off a schematic bus: the pin's wire runs straight to a bus entry and carries one local label
+    'from'. Remove that wire, its bus entry and the label, and put a global label 'to' on the pin itself.
+    Anything else on the wire (a junction, a second label, a wire continuing elsewhere) is a hard error."""
+    ref, pin, src, dst = edit['ref'], edit['pin'], edit['from'], edit['to']
+    for path in glob.glob(os.path.join(pdir, '*.kicad_sch')):
+        text = open(path).read()
+        pos = pin_position(text, ref, pin)
+        if pos is None:
+            continue
+        for s, e, b in blocks(text, 'global_label'):
+            at = re.search(r'\(at ([-\d.]+) ([-\d.]+)', b)
+            if same(pos, tuple(map(float, at.groups()))):
+                name = re.match(r'\(global_label "([^"]+)"', b).group(1)
+                if name == dst:
+                    print(f'{ref}.{pin}: already on {dst}, skipped')
+                    return
+                sys.exit(f'{ref}.{pin}: global label {name!r} already on the pin')
+        wires = [(s, e, [tuple(map(float, m)) for m in re.findall(r'\(xy ([-\d.]+) ([-\d.]+)\)', b)])
+                 for s, e, b in blocks(text, 'wire')]
+        mine = [w for w in wires if same(w[2][0], pos) or same(w[2][1], pos)]
+        if len(mine) != 1:
+            sys.exit(f'{ref}.{pin}: expected one wire on the pin, found {len(mine)}')
+        ws, we, pts = mine[0]
+        far = pts[1] if same(pts[0], pos) else pts[0]
+        if any(w is not mine[0] and (same(w[2][0], far) or same(w[2][1], far)) for w in wires):
+            sys.exit(f'{ref}.{pin}: the wire continues past {far}, not a plain bus stub')
+        entries = [(s, e) for s, e, b in blocks(text, 'bus_entry')
+                   if same(far, tuple(map(float, re.search(r'\(at ([-\d.]+) ([-\d.]+)', b).groups())))]
+        lo, hi = sorted((pos[0], far[0])), sorted((pos[1], far[1]))
+        labels = []
+        for s, e, b in blocks(text, 'label'):
+            x, y = map(float, re.search(r'\(at ([-\d.]+) ([-\d.]+)', b).groups())
+            if lo[0] - EPS <= x <= lo[1] + EPS and hi[0] - EPS <= y <= hi[1] + EPS:
+                labels.append((s, e, re.match(r'\(label "([^"]+)"', b).group(1)))
+        if len(entries) != 1 or [l[2] for l in labels] != [src]:
+            sys.exit(f'{ref}.{pin}: expected one bus entry and one label {src!r}, found {len(entries)} entries, '
+                     f'labels {[l[2] for l in labels]}')
+        if any(re.search(r'\(junction\s*\(at ' + f'{x:g} {y:g}', text) for x, y in (pos, far)):
+            sys.exit(f'{ref}.{pin}: junction on the bus stub')
+        new = (f'(global_label "{dst}"\n\t\t(shape bidirectional)\n\t\t(at {pos[0]:g} {pos[1]:g} 0)\n'
+               f'\t\t(fields_autoplaced yes)\n\t\t(effects\n\t\t\t(font\n\t\t\t\t(size 1.27 1.27)\n\t\t\t)\n'
+               f'\t\t\t(justify left)\n\t\t)\n\t\t(uuid "{uuid.uuid4()}")\n\t)')
+        cuts = sorted([(ws, we), entries[0], labels[0][:2]], reverse=True)
+        for s, e in cuts:
+            text = text[:s] + text[e:]
+        i = text.rstrip().rfind(')')                 # before the sheet's closing paren
+        text = text[:i] + '\n\t' + new + text[i:]
+        open(path, 'w').write(text)
+        print(f'{ref}.{pin} in {os.path.basename(path)}: off the bus ({src}), global label {dst} on the pin')
+        return
+    sys.exit(f'{ref} not found in any sheet of {pdir}')
+
+
 def apply(pdir, edit):
     if edit.get('action') == 'dnp':
         return dnp(pdir, edit['ref'])
+    if edit.get('action') == 'relabel_bus_pin':
+        return relabel_bus_pin(pdir, edit)
     ref, pin, src, dst = edit['ref'], edit['pin'], edit['from'], edit['to']
     for path in glob.glob(os.path.join(pdir, '*.kicad_sch')):
         text = open(path).read()

@@ -7,6 +7,18 @@
   {
    "fp": "power_pin_not_driven | Symbol #PWR054 Pin 1 [Power input, Line]",
    "why": "+BATT power symbol of the removed (DNP) coin-cell holder BT1: the net now only holds BT1's own pin; kept so the holder can be restored by flipping its DNP flag (LOGBOOK 09:10)"
+  },
+  {
+   "fp": "isolated_pin_label | Label 'HYPERRAM_DQ0'",
+   "why": "HyperRAM U4 is DNP and off the board in the wallet variant; its data pins 0-2 were taken off the RP2350 bus (GPIO9-11 now ACC_SCL, SE_ENA, ACC_INT1, croco_edits relabel_bus_pin), so these labels only touch the DNP U4 pin. Kept so U4 can be restored."
+  },
+  {
+   "fp": "isolated_pin_label | Label 'HYPERRAM_DQ1'",
+   "why": "HyperRAM U4 is DNP and off the board in the wallet variant; its data pins 0-2 were taken off the RP2350 bus (GPIO9-11 now ACC_SCL, SE_ENA, ACC_INT1, croco_edits relabel_bus_pin), so these labels only touch the DNP U4 pin. Kept so U4 can be restored."
+  },
+  {
+   "fp": "isolated_pin_label | Label 'HYPERRAM_DQ2'",
+   "why": "HyperRAM U4 is DNP and off the board in the wallet variant; its data pins 0-2 were taken off the RP2350 bus (GPIO9-11 now ACC_SCL, SE_ENA, ACC_INT1, croco_edits relabel_bus_pin), so these labels only touch the DNP U4 pin. Kept so U4 can be restored."
   }
  ],
  "drc": [
@@ -97,6 +109,14 @@
   {
    "fp": "solder_mask_bridge | Pad 7 [GB_A1] of J5 on F.Cu || Polygon of J5 on F.Mask",
    "why": "Croco's J5 edge-connector footprint: one common mask opening over all gold fingers, by design. Same item class is in the baseline; KiCad reports at most 199 per type, so which J5 fingers get listed shifts when other mask items change"
+  },
+  {
+   "fp": "lib_footprint_mismatch | Footprint U110",
+   "why": "silkscreen outline clipped on the board (tools/silk_clip.py) so it clears pads and neighbouring silk; reference and LCSC fields moved to F.Fab; copper/pads identical to the library footprint"
+  },
+  {
+   "fp": "lib_footprint_mismatch | Footprint U111",
+   "why": "silkscreen outline clipped on the board (tools/silk_clip.py) so it clears pads and neighbouring silk; reference and LCSC fields moved to F.Fab; copper/pads identical to the library footprint"
   }
  ]
 }
