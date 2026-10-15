@@ -12,6 +12,7 @@ pub mod chip;
 pub mod eth;
 pub mod fmt;
 pub mod keys;
+pub mod lis3dh;
 pub mod link;
 pub mod persist;
 pub mod phone;

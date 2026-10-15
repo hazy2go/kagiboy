@@ -5,7 +5,7 @@ MIT. Work in progress: the board isn't built yet.
 | Crate | What | Status |
 |---|---|---|
 | `core/` (`kagiboy-core`) | The wallet logic: the Game Boy mailbox, PIN and wipe rules, BIP-39 words, Solana and EVM keys, transaction decoding and signing, swaps, pairing, QR codes; the bus-side mailbox (`bus.rs`) and the stored-wallet format (`persist.rs`). `no_std`, so the same code runs on the RP2350 and in host tests | done, matches the browser chip byte for byte |
-| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` with the keys in the SE050 | bus, mailbox, wallet, SE050 and the phone link (ESP32-C3 on SPI0) done, builds; LIS3DH next |
+| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` with the keys in the SE050 | bus, mailbox, wallet, SE050, the phone link (ESP32-C3 on SPI0) and the LIS3DH done, builds; not run on hardware yet |
 
 ## How the bus is served (`cart/`)
 - `gb_read` (PIO0 SM0) answers every ROM read from a 32 KB image in SRAM: two chained DMA channels turn the address it
@@ -61,10 +61,16 @@ cartridge polls every millisecond (`link::LinkMaster`, the WiFi cart's SPI frami
   Planted bugs in either half are caught: no duplicate filter, no ack, no CRC, an ack crossing an ESP restart, a
   resent reply passed on twice.
 
+## The accelerometer (`core/src/lis3dh.rs`)
+The LIS3DH on I2C0 (GPIO8/9, 0x18) runs at 100 Hz, high resolution, ±2 g. Each X/Y reading goes into the
+mailbox's ACCEL_X / ACCEL_Y at the browser demo's scale (12 per m/s², ±127). A test checks all 4,096 possible
+readings against the demo's formula. The ROM turns the changes into shake entropy. If the part doesn't answer, the
+firmware writes zeros and tries again every second.
+
 ## Not done yet
 - **The SE050 on hardware:** the board isn't built. Also still to add: platform SCP03 (an encrypted I2C link, keys
   in RP2350 OTP) and Deep Power-down while locked.
-- **LIS3DH** for shake entropy and tilt.
+- **LIS3DH extras:** its INT1 line (GPIO11) is unused; wake-on-motion while asleep could use it.
 - Running on hardware: the board isn't built.
 
 ## The browser chip is the reference

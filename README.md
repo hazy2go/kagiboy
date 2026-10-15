@@ -54,7 +54,11 @@ sees a key or a PIN. Spec: [docs/phone-link.md](docs/phone-link.md). Every phone
 through the whole chain in the tests: the web app's bytes, the ESP's C code and the RP2350's Rust code, with damaged
 and missed transfers and restarts on both chips. Every reply matches the browser chip's. Not yet run on hardware.
 
-Next: the accelerometer.
+**2026-10-15: the accelerometer.** The LIS3DH is read at 100 Hz into the Game Boy's mailbox, at the same scale the
+browser demo gets from the phone's motion sensor, so the ROM's "shake it" step works the same on the real cartridge.
+With that, every part of the board has firmware.
+
+Next: building the board. It waits for one inductor to come back in stock at JLC. Then firmware on real hardware.
 
 <p align="center">
   <img src="hardware/cart/docs/img/board_top.png" alt="kagiboy cartridge board, top: RP2350B, SE050E2 secure element, LIS3DH, ESP32-C3 module and power stage" width="49%">

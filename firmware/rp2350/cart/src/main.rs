@@ -11,7 +11,8 @@
 //! Keys and PIN live in the SE050 (I2C1 on GPIO6/7, enable on GPIO10) through `Se050Vault`; the flash record holds
 //! no secret. The phone reaches the wallet through the ESP32-C3 (Bluetooth), which offers its messages on SPI0
 //! (GPIO0 MISO, GPIO2 SCK, GPIO3 MOSI, CS GPIO46): `link::LinkMaster` polls it every millisecond and
-//! `phone::PhoneServer` answers (docs/phone-link.md). Not yet here (next step): the LIS3DH.
+//! `phone::PhoneServer` answers (docs/phone-link.md). The LIS3DH (I2C0 on GPIO8/9) is read at 100 Hz into the
+//! mailbox's ACCEL_X / ACCEL_Y, which the ROM turns into shake entropy.
 #![no_std]
 #![no_main]
 
@@ -27,13 +28,14 @@ use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pac;
 use embassy_rp::pac::dma::vals::{DataSize, TransCountMode, TreqSel};
 use embassy_rp::i2c::{self, I2c};
-use embassy_rp::peripherals::{FLASH, I2C1, PIO0, SPI0, TRNG};
+use embassy_rp::peripherals::{FLASH, I2C0, I2C1, PIO0, SPI0, TRNG};
 use embassy_rp::spi::{self, Spi};
 use embassy_rp::pio::{Config as PioConfig, Direction, FifoJoin, InterruptHandler, Pio, ShiftConfig, ShiftDirection};
 use embassy_rp::trng::Trng;
 use embassy_rp::{bind_interrupts, trng};
 use embassy_time::{Instant, Timer};
 use kagiboy_core::bus::Mailbox;
+use kagiboy_core::lis3dh::{self, Lis3dh};
 use kagiboy_core::link::{LinkMaster, MAX_XFER};
 use kagiboy_core::phone::PhoneServer;
 use kagiboy_core::vault::Se050Vault;
@@ -93,6 +95,18 @@ impl se050::I2c for SeBus<'_> {
     }
     fn delay_ms(&mut self, ms: u32) {
         embassy_time::block_for(embassy_time::Duration::from_millis(ms as u64));
+    }
+}
+
+/// The LIS3DH on I2C0 (its own bus: a stuck accelerometer can't hold up the SE050).
+struct AccelBus<'d>(I2c<'d, I2C0, i2c::Blocking>);
+
+impl lis3dh::Bus for AccelBus<'_> {
+    fn write(&mut self, bytes: &[u8]) -> bool {
+        self.0.blocking_write(lis3dh::ADDR, bytes).is_ok()
+    }
+    fn write_read(&mut self, w: &[u8], r: &mut [u8]) -> bool {
+        self.0.blocking_write_read(lis3dh::ADDR, w, r).is_ok()
     }
 }
 
@@ -286,11 +300,23 @@ async fn main(_spawner: Spawner) {
         rx: [0; MAX_XFER],
     };
 
+    // the accelerometer: 400 kHz, the board's 4.7k pull-ups (R136/R137); if it doesn't answer, retried every second
+    let mut acc_cfg = i2c::Config::default();
+    acc_cfg.frequency = 400_000;
+    acc_cfg.sda_pullup = false;
+    acc_cfg.scl_pullup = false;
+    let mut accel = Lis3dh::new(AccelBus(I2c::new_blocking(p.I2C0, p.PIN_9, p.PIN_8, acc_cfg)));
+    if !accel.init() {
+        warn!("LIS3DH not answering");
+    }
+
     gb_reset.set_low(); // let the Game Boy boot
     info!("Game Boy released from reset");
 
     let mut next = 0usize;
     let mut last_link = Instant::now();
+    let mut last_accel = Instant::now();
+    let mut last_accel_init = Instant::now();
     loop {
         // drain the captured write cycles in bus order
         let written = (pac::DMA.ch(CH_RING).write_addr().read().wrapping_sub(ring_base) / 4) as usize % RING_LEN;
@@ -300,6 +326,19 @@ async fn main(_spawner: Spawner) {
             next = (next + 1) % RING_LEN;
         }
         mailbox.service(&mut chip, &mut hw, image);
+        if last_accel.elapsed().as_millis() >= 10 {
+            last_accel = Instant::now();
+            match accel.read() {
+                Some(xy) => chip.accel = xy,
+                None => {
+                    chip.accel = (0, 0);
+                    if last_accel_init.elapsed().as_millis() >= 1000 {
+                        last_accel_init = Instant::now();
+                        accel.init();
+                    }
+                }
+            }
+        }
         if last_link.elapsed().as_micros() >= 1000 {
             last_link = Instant::now();
             radio.poll(&mut chip, &mut hw).await;
