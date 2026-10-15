@@ -23,7 +23,8 @@ Wallet changes (done 2026-10-15, details in `LOGBOOK.md`):
   wiring). LIS3DH accelerometer (U111) on I2C0, GPIO8/9, INT1 on GPIO11.
 - Radio and power stage unchanged: the ESP32-C3 does Bluetooth LE to the phone, isolated from the wallet logic
   on its own chip.
-- All gates pass. Not ready to order: L1 is out of stock at JLC, and there is no firmware yet
+- All gates pass, including a JLC manufacturability check at JLC's 6-layer limits. Firmware for every part:
+  `firmware/rp2350` and `firmware/esp32c3`. Not ready to order: L1 is out of stock at JLC
   (`hw/wallet/fab/ORDER.md`).
 
 ## Checks and simulations (run from this folder)
@@ -31,6 +32,7 @@ Wallet changes (done 2026-10-15, details in `LOGBOOK.md`):
 | Check | Command | Result 2026-10-15 |
 |---|---|---|
 | ERC, DRC, unconnected, schematic/board parity vs the WiFi cart baseline | `python3 verify/kicad_check.py` | PASS, 0 new |
+| JLC manufacturability: KiCad DRC at JLC's 6-layer limits (0.09 mm trace/space, 0.15/0.25 mm vias, 0.2 mm copper to edge) | `python3 verify/jlc_check.py` | PASS |
 | Design netlist vs schematic | `python3 verify/netlist_check.py` | PASS |
 | Design calculations (incl. both I2C buses) | `python3 verify/design_calcs.py` | all limits PASS |
 | Power simulation parts vs schematic | `python3 verify/sim_vs_netlist.py` | PASS |

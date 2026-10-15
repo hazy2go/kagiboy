@@ -58,6 +58,14 @@ and missed transfers and restarts on both chips. Every reply matches the browser
 browser demo gets from the phone's motion sensor, so the ROM's "shake it" step works the same on the real cartridge.
 With that, every part of the board has firmware.
 
+**2026-10-16: JLC manufacturability check.** A new gate runs KiCad's DRC at JLCPCB's published 6-layer limits
+instead of comparing against the WiFi board. It found three things the WiFi board also has, now fixed:
+- a row of ground vias 0.01 mm too close to the top edge;
+- ground planes that came within 0.12 mm of the edge;
+- the repo URL on the back at 0.8 mm text (JLC's minimum is 1 mm).
+
+The board passes, and the gerbers are regenerated. Every other check, simulation and test was re-run and passes.
+
 Next: building the board. It waits for one inductor to come back in stock at JLC. Then firmware on real hardware.
 
 <p align="center">

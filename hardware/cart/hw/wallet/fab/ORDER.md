@@ -35,6 +35,8 @@ Regenerate (from `hw/wallet`):
 | Impedance control / stackup | **Yes, JLC06081H-7628** | the stackup the layout was designed on (F.Cu-In1 0.2104 mm), so the USB and QSPI routing keeps its impedance |
 | Via covering | **Epoxy filled & capped** (POFV) | 49 vias touch or sit inside SMD pads (RP2350 exposed pad, SE050 centre pad, LIS3DH and 0402 pads, plane stitching); they must be filled or solder wicks away. Free on JLC 6-layer |
 | Min via hole / diameter | 0.15 mm / 0.25 mm (board minimum used: 0.15 / 0.30) | |
+| Min trace / space | 0.09 / 0.09 mm (board minimum used: 0.10 / 0.15) | |
+| Copper to board edge | 0.2 mm everywhere except the edge-connector fingers, which run to the edge | `verify/jlc_check.py` |
 | Surface finish | **ENIG** | edge-connector fingers and fine-pitch parts |
 | Gold fingers | No (ENIG covers them) | |
 | Remove order number | **Specify a location** (the `JLCJLCJLCJLC` marker on the back) | keeps the number off the front |

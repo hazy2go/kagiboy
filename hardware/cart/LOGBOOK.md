@@ -167,3 +167,24 @@ Hazy: the base design is already credited in the WiFi cart repo, so the kagiboy 
   GPIOBASE=16 that would make the programs test A14 instead of /RD, so the firmware sets EXECCTRL itself.
 - **Assembler check:** the PIO programs assemble to identical words with pio-parser (the firmware's) and Adafruit's
   pioasm.
+
+## 2026-10-16: JLC manufacturability check
+
+The gates compared DRC against the WiFi board's baseline ("0 new"), which hid anything inherited. New gate
+`verify/jlc_check.py` runs KiCad's DRC with JLC's published 6-layer limits instead. Before the fixes it found:
+- 24 GND stitching vias along the top edge at 0.190 mm from the outline (JLC: 0.2 mm). Moved 0.06 mm inward -> 0.25 mm.
+- The GND planes on B.Cu and In1 came within 0.116 mm of the bottom-left corner: the board's edge-clearance rule was
+  0.025 mm. Rule set to 0.2 mm, planes refilled (kicad-cli --refill-zones). The edge connector's fingers must reach
+  the edge: `GameboyCartridgeV2.1.kicad_dru` exempts J5.
+- The repo URL on the back was 0.8 mm text (JLC minimum 1.0 mm). Now 1.0 mm.
+All three came from the imported WiFi Rev B board (the via row and the rule) or from us (the URL). The WiFi board
+has the same via row and edge rule.
+
+What remains at JLC limits sits only inside three footprints kept from Croco V2.1, checked geometrically:
+- J5: each no-net copper shape is the finger of exactly one pin (no shape touches two nets).
+- SW1: the printed button is two separate combs (BUTTON: 9 pieces, GND: 11 pieces) with no copper joining them.
+- J1: GCT's USB-C land pattern (0.19 mm pad to NPTH peg).
+The 199 mask "bridges" are all on J5 and SW1, which are exposed contacts. Silkscreen text under 1.0 mm: Croco's pin
+labels (0.6 mm) and the JLC order-number field. Gerbers regenerated, renders updated.
+Re-run after the fixes: kicad_check, netlist_check, design_calcs, sim_vs_netlist, height, route audit, pin audit,
+CPL (unchanged), power audits, bus simulation.
