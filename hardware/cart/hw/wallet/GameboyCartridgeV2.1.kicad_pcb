@@ -38261,18 +38261,6 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "based on Croco Cartridge\nV2.1 by shilga"
-		(at 135.3 108.4 0)
-		(layer "B.SilkS")
-		(uuid "0a4e94ee-5fa0-423d-8db6-0faa7cde7ea3")
-		(effects
-			(font
-				(size 0.8 0.8)
-				(thickness 0.15)
-			)
-			(justify left bottom mirror)
-		)
-	)
 	(gr_text "JLCJLCJLCJLC"
 		(at 114.3 112.9 -90)
 		(layer "B.SilkS")

@@ -138,3 +138,15 @@ datasheet 0.33 mm (OVERRIDE): PASS.
 **Fab outputs regenerated** (BOM, CPL, Gerbers). BOM: 1 FAIL = L1 stock (above). Pin audit and placement fits agree.
 **Gates after everything:** kicad_check (ERC/DRC 0 new, unconnected 0, parity 0), netlist_check, design_calcs,
 sim_vs_netlist, height: all PASS. kagiboy software loop (ROM build, tsc, web build, smoke): all PASS.
+
+## 2026-10-15 No Croco credit on the board (Hazy)
+Hazy: the base design is already credited in the WiFi cart repo, so the kagiboy board and docs don't repeat it.
+- Back silk: "based on Croco Cartridge V2.1 by shilga" removed. The back now carries only the kagiboy logo,
+  "kagiboy wallet / Rev A 10/2026 / RP2350B+SE050E2", `github.com/hazy2go/kagiboy` and JLC's order-number marker.
+- Docs: README, `docs/hardware.md`, `hardware/cart/README.md`, `hw/wallet/README.md` point to the WiFi cart repo.
+- `fab/ORDER.md` rewritten for this board: hold points, the wallet parts in the preview checklist (U110, U111,
+  L1 polarity), and the HyperRAM, microSD and RTC lines dropped.
+- Kept, as CERN-OHL-P v2 requires: the licence file and the upstream notices inside the design source
+  (schematic sheets). Internal footprint-library names (`CrocoV2:`) are not printed and stay.
+- Gerbers regenerated and zipped (`fab/kagiboy-cart-RevA-gerbers.zip`, 16 files). Gate: PASS (0 new).
+- The submitted Colosseum state is tagged `colosseum-submission` (c20ffd3) on GitHub.

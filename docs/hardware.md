@@ -1,7 +1,7 @@
 # The cartridge
 
 > **Update 2026-10-15:** the board now exists as a design: [`hardware/cart`](../hardware/cart/README.md), built on our
-> WiFi Game Boy Cartridge (Croco Cartridge V2.1 + ESP32-C3 + a console-safe power stage). It differs from the plan
+> WiFi Game Boy Cartridge (RP2350B core, ESP32-C3 radio, console-safe power stage). It differs from the plan
 > below in three places:
 > - **RP2350B with external flash, not RP2354B.** The flash-in-package swap is still planned for a later revision.
 > - **ESP32-C3 for Bluetooth, not a CYW43439/RM2.** The radio sits on its own chip, which is the isolation the

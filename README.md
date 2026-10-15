@@ -27,7 +27,7 @@ This repo has all of it: the Game Boy ROM, the cartridge's chip (simulated for n
 
 ## Updates
 
-**2026-10-15: the cartridge board.** kagiboy now has its own board, in [`hardware/cart`](hardware/cart/README.md). It's built on our open [WiFi Game Boy Cartridge](https://github.com/hazy2go/wifi-game-boy-cartridge), which is itself based on [Croco Cartridge V2.1](https://github.com/shilga/rp-gameboy-cartridge-hw):
+**2026-10-15: the cartridge board.** kagiboy now has its own board, in [`hardware/cart`](hardware/cart/README.md). It's built on our open [WiFi Game Boy Cartridge](https://github.com/hazy2go/wifi-game-boy-cartridge):
 - an RP2350B serves the Game Boy's bus;
 - an NXP SE050E2 secure element holds the keys and signs;
 - a LIS3DH accelerometer adds shake entropy;

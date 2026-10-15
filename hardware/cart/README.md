@@ -11,8 +11,8 @@ Status (2026-10-15): designed, placed and routed, every check and simulation pas
 Base: the WiFi Game Boy Cartridge Rev B board, imported unmodified from
 [hazy2go/wifi-game-boy-cartridge](https://github.com/hazy2go/wifi-game-boy-cartridge) at commit `326be60`
 (`hw/rev-b` → `hw/wallet`, plus `verify/`, `docs/design/`, `sim/power/`, `sim/models/`).
-That board is itself [Croco Cartridge V2.1](https://github.com/shilga/rp-gameboy-cartridge-hw) by shilga
-(CERN-OHL-P v2, `hw/wallet/LICENSE-CERN-OHL-P.md`) plus an ESP32-C3 radio and a console-safe power stage.
+That repo documents where its own design comes from. Hardware licence: CERN-OHL-P v2
+(`hw/wallet/LICENSE-CERN-OHL-P.md`), inherited from it.
 
 The first commit of this folder is the untouched import, so every later diff is the wallet change.
 
@@ -30,7 +30,7 @@ Wallet changes (done 2026-10-15, details in `LOGBOOK.md`):
 
 | Check | Command | Result 2026-10-15 |
 |---|---|---|
-| ERC, DRC, unconnected, schematic/board parity vs the WiFi/Croco baseline | `python3 verify/kicad_check.py` | PASS, 0 new |
+| ERC, DRC, unconnected, schematic/board parity vs the WiFi cart baseline | `python3 verify/kicad_check.py` | PASS, 0 new |
 | Design netlist vs schematic | `python3 verify/netlist_check.py` | PASS |
 | Design calculations (incl. both I2C buses) | `python3 verify/design_calcs.py` | all limits PASS |
 | Power simulation parts vs schematic | `python3 verify/sim_vs_netlist.py` | PASS |
