@@ -5,7 +5,7 @@ MIT. Work in progress: the board isn't built yet.
 | Crate | What | Status |
 |---|---|---|
 | `core/` (`kagiboy-core`) | The wallet logic: the Game Boy mailbox, PIN and wipe rules, BIP-39 words, Solana and EVM keys, transaction decoding and signing, swaps, pairing, QR codes; the bus-side mailbox (`bus.rs`) and the stored-wallet format (`persist.rs`). `no_std`, so the same code runs on the RP2350 and in host tests | done, matches the browser chip byte for byte |
-| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` | bus, mailbox and wallet done, builds; SE050, phone link (ESP32-C3) and LIS3DH next |
+| `cart/` (`kagiboy-cart`) | The firmware for the board in `hardware/cart` (Embassy, RP2350B at 150 MHz): serves the wallet ROM and the mailbox on the Game Boy bus with PIO + DMA, runs `kagiboy-core` with the keys in the SE050 | bus, mailbox, wallet and SE050 done, builds; phone link (ESP32-C3) and LIS3DH next |
 
 ## How the bus is served (`cart/`)
 - `gb_read` (PIO0 SM0) answers every ROM read from a 32 KB image in SRAM: two chained DMA channels turn the address it
@@ -19,9 +19,40 @@ MIT. Work in progress: the board isn't built yet.
   0 contention, hold or write errors; see `docs/hardware-sim.md`). Two independent assemblers (pio-parser, which the
   firmware uses, and Adafruit's pioasm) give identical instruction words.
 
+## Keys and PIN in the SE050 (`core/src/se050.rs`, `core/src/vault.rs`)
+- **At SET_PIN:**
+  - the two account keys are imported into the SE050: Ed25519 for Solana, secp256k1 for EVM;
+  - the PIN becomes an SE050 UserID object with a 5-attempt limit;
+  - the recovery words aren't kept anywhere.
+- **Policies:** a key signs only inside a session opened with that PIN. Everyone else may only read the public key
+  or delete it, so a locked-out cartridge can still be wiped.
+- **The PIN on the wire:** the UserID value is 16 bytes of SHA-256 over a per-wallet salt and the digits, so the
+  digits never cross the I2C bus.
+- **Two counters, two jobs:**
+  - The SE050 doesn't report UserID failures, so the firmware keeps the browser chip's counter in flash (a try is
+    spent before the check, and five failures wipe). That counter drives the screen.
+  - The SE050 enforces its own limit of 5 regardless. Firmware that reset its counter still couldn't guess further.
+- **What the flash record holds:** the salt, the try counter, the pairing and the public keys. No secret.
+- **ECDSA:** the SE050 signs with a random nonce and may return a high S. The firmware normalises to low S and
+  finds the parity by recovering its own address.
+- **Ed25519:** the SE050 wants public keys and returns r and s byte-reversed (AN12413 chapter 7).
+- **The driver** is written from AN12413 (APDUs) and NXP's Plug & Trust middleware (T=1 framing, CRC, read
+  polling, BSD-3-Clause), not linked to either. Nitrokey's `se05x` crate wasn't used: it's LGPL-3.0, which doesn't
+  fit MIT firmware that's statically linked.
+- **How it's tested** without a chip (`core/tests/se050.rs`, `core/tests/se050_model/`):
+  - A behavioural SE050 model: T=1 with busy NACKs, WTX, chained blocks and damaged frames, plus the applet subset
+    with real cryptography, AN12413's policy rules and the attempt limit.
+  - All recorded browser sessions replay through `Se050Vault` and the model byte for byte, also with a difficult
+    SE050 (busy, WTX on every response, 16-byte response blocks).
+  - Further tests: no secret in the store, no signing without the PIN session, five wrong PINs wipe, the SE050's
+    own limit holds, recovery from a damaged frame, a 600-byte chained command.
+  - Frame CRCs are checked against NXP's own CRC code.
+  - Planted bugs (Ed25519 byte order, S normalisation, a permissive policy, signing outside the session) are all
+    caught.
+
 ## Not done yet
-- **SE050:** keys and the PIN move into the secure element. Until then `FlashStore` keeps the wallet in flash:
-  development only.
+- **The SE050 on hardware:** the board isn't built. Also still to add: platform SCP03 (an encrypted I2C link, keys
+  in RP2350 OTP) and Deep Power-down while locked.
 - **Phone link:** the ESP32-C3 over SPI (the WiFi cart's protocol v1), with Bluetooth LE on the ESP side.
 - **LIS3DH** for shake entropy and tilt.
 - Running on hardware: the board isn't built.

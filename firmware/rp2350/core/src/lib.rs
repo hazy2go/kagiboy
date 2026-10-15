@@ -14,10 +14,12 @@ pub mod fmt;
 pub mod keys;
 pub mod persist;
 pub mod qr;
+pub mod se050;
 pub mod sol;
 pub mod tables;
+pub mod vault;
 
-pub use chip::{Chain, Chip, Persisted, Phone, Platform, SignRequest, SignResult, Store, SwapRequest};
+pub use chip::{Chain, Chip, Persisted, Phone, Platform, Public, SignRequest, SignResult, Store, SwapRequest};
 
 use alloc::string::String;
 

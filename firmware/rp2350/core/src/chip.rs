@@ -5,12 +5,12 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-use ed25519_dalek::Signer;
 use sha2::{Digest, Sha256};
 use zeroize::Zeroize;
 
 use crate::fmt::{balance_text, ceil_decimals, exact, fit_ceil, fit_floor};
 use crate::keys::{entropy_to_mnemonic, mnemonic_from_indices, suggest_words, Wallet};
+use crate::vault::{pin_value, SoftVault, Vault};
 use crate::tables::{EVM_NETWORKS, PARTNER_FEE_BPS, PARTNER_WALLET, SODAX_EVM, SOLVER_FEE_BPS, SWAP_TOKENS};
 use crate::{eth, qr, sol, Error};
 
@@ -93,12 +93,35 @@ pub struct Phone {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Persisted {
+    /// the recovery words: kept only by the software vault (the browser model); empty with a secure element
     pub mnemonic: String,
     pub pin_salt: String,
     pub pin_hash: String,
     pub tries_left: i32,
     pub paired: bool,
     pub phone: Option<Phone>,
+    /// public keys (what the home screen shows), so a secure-element wallet needs no secret to name its addresses
+    pub sol_public: [u8; 32],
+    pub evm_address: [u8; 20],
+}
+
+/// The wallet's public side: what the chip shows and checks requests against.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Public {
+    pub sol: [u8; 32],
+    pub evm: [u8; 20],
+}
+
+impl Public {
+    pub fn of(w: &Wallet) -> Public {
+        Public { sol: w.sol_public, evm: w.evm_address }
+    }
+    pub fn sol_address(&self) -> String {
+        bs58::encode(self.sol).into_string()
+    }
+    pub fn evm_address_text(&self) -> String {
+        eth::checksum_address(&self.evm)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -179,9 +202,13 @@ impl Reply {
     }
 }
 
-pub struct Chip<S: Store> {
+pub struct Chip<S: Store, V: Vault = SoftVault> {
     store: S,
+    vault: V,
+    /// the keys in RAM: from CREATE/RESTORE until SET_PIN, and while unlocked with the software vault
     wallet: Option<Wallet>,
+    /// set while unlocked
+    public: Option<Public>,
     persisted: Option<Persisted>,
     unlocked: bool,
     pool: [u8; 32],
@@ -280,12 +307,21 @@ fn side_name(side: u64) -> Result<String, Error> {
     Ok(EVM_NETWORKS[i].1.to_uppercase())
 }
 
-impl<S: Store> Chip<S> {
-    pub fn new(mut store: S) -> Chip<S> {
+impl<S: Store> Chip<S, SoftVault> {
+    /// The browser chip's model: keys derived from words kept in the store.
+    pub fn new(store: S) -> Chip<S, SoftVault> {
+        Chip::with_vault(store, SoftVault)
+    }
+}
+
+impl<S: Store, V: Vault> Chip<S, V> {
+    pub fn with_vault(mut store: S, vault: V) -> Chip<S, V> {
         let persisted = store.load();
         Chip {
             store,
+            vault,
             wallet: None,
+            public: None,
             persisted,
             unlocked: false,
             pool: [0; 32],
@@ -309,6 +345,10 @@ impl<S: Store> Chip<S> {
         &self.store
     }
 
+    pub fn vault(&mut self) -> &mut V {
+        &mut self.vault
+    }
+
     // ------------------------------------------------------------ phone-facing API
 
     pub fn state(&self) -> u8 {
@@ -329,7 +369,7 @@ impl<S: Store> Chip<S> {
 
     /// Public addresses only; keys never leave the chip.
     pub fn addresses(&self) -> Option<(String, String)> {
-        let w = self.wallet.as_ref().filter(|_| self.unlocked)?;
+        let w = self.public.filter(|_| self.unlocked)?;
         Some((w.sol_address(), w.evm_address_text()))
     }
 
@@ -441,7 +481,7 @@ impl<S: Store> Chip<S> {
     /// Snapshots and decodes the request now; refused with the browser chip's message if it can't be shown in full.
     pub fn request_signature(&mut self, req: &SignRequest, p: &mut impl Platform) -> Result<u32, Error> {
         self.expire(p);
-        let Some(wallet) = self.wallet.as_ref().filter(|_| self.unlocked) else {
+        let Some(public) = self.public.filter(|_| self.unlocked) else {
             return Err("unlock the cartridge first".into());
         };
         if !self.paired() {
@@ -450,7 +490,7 @@ impl<S: Store> Chip<S> {
         if self.pending.is_some() || self.pairing.is_some() {
             return Err("a request is already waiting on the Game Boy".into());
         }
-        let (snap, shown, chain) = decode_request(req, wallet, p.now_ms())?;
+        let (snap, shown, chain) = decode_request(req, &public, p.now_ms())?;
         if shown.amount.len() > 36 || shown.fee.len() > 16 || shown.network.len() > 16 || shown.to.len() > 48 {
             return Err("this transaction can't be shown in full on the Game Boy".into());
         }
@@ -470,8 +510,10 @@ impl<S: Store> Chip<S> {
 
     /// Power cycle: RAM state goes, the stored wallet stays.
     pub fn reset(&mut self) {
+        self.vault.reset();
         self.unlocked = false;
         self.wallet = None;
+        self.public = None;
         self.last_seq = 0;
         self.pool.zeroize();
         self.balances = [None, None];
@@ -487,9 +529,11 @@ impl<S: Store> Chip<S> {
     }
 
     fn wipe(&mut self) {
+        self.vault.erase();
         self.store.clear();
         self.persisted = None;
         self.wallet = None;
+        self.public = None;
         self.unlocked = false;
         self.balances = [None, None];
         self.drop_pending("locked");
@@ -603,15 +647,29 @@ impl<S: Store> Chip<S> {
                 let mut salt = [0u8; 16];
                 p.random(&mut salt);
                 let pin_salt = hex_spaced(&salt);
+                let public = Public::of(w);
+                let (mnemonic, hash) = if self.vault.soft() {
+                    (w.mnemonic.clone(), pin_hash(&pin_salt, data))
+                } else {
+                    // keys and PIN into the secure element; the words are not kept anywhere
+                    self.vault.provision(w, &pin_value(&pin_salt, data))?;
+                    (String::new(), String::new())
+                };
                 self.persisted = Some(Persisted {
-                    mnemonic: w.mnemonic.clone(),
-                    pin_hash: pin_hash(&pin_salt, data),
+                    mnemonic,
+                    pin_hash: hash,
                     pin_salt,
                     tries_left: MAX_TRIES,
                     paired: false,
                     phone: None,
+                    sol_public: public.sol,
+                    evm_address: public.evm,
                 });
                 self.save();
+                if !self.vault.soft() {
+                    self.wallet = None; // zeroized on drop
+                }
+                self.public = Some(public);
                 self.unlocked = true;
                 Reply::st(0)
             }
@@ -620,15 +678,27 @@ impl<S: Store> Chip<S> {
                 let Some(per) = self.persisted.as_mut() else { return Ok(Reply::st(3)) };
                 // spend the try before checking, like a secure element: pulling power mid-check can't save a guess
                 per.tries_left -= 1;
-                let ok = pin_hash(&per.pin_salt, data) == per.pin_hash;
                 let tries = per.tries_left;
+                let (salt, hash, public) = (per.pin_salt.clone(), per.pin_hash.clone(), Public { sol: per.sol_public, evm: per.evm_address });
                 self.save();
+                let ok = if self.vault.soft() {
+                    pin_hash(&salt, data) == hash
+                } else {
+                    // the SE050 compares and counts too: its own limit holds even if this counter were reset
+                    self.vault.open(&pin_value(&salt, data))?
+                };
                 if ok {
                     let per = self.persisted.as_mut().unwrap();
                     per.tries_left = MAX_TRIES;
                     let mnemonic = per.mnemonic.clone();
                     self.save();
-                    self.wallet = Some(Wallet::from_mnemonic(&mnemonic));
+                    if self.vault.soft() {
+                        let w = Wallet::from_mnemonic(&mnemonic);
+                        self.public = Some(Public::of(&w));
+                        self.wallet = Some(w);
+                    } else {
+                        self.public = Some(public);
+                    }
                     self.unlocked = true;
                     return Ok(Reply::st(0));
                 }
@@ -734,7 +804,7 @@ impl<S: Store> Chip<S> {
             }
 
             cmd::SIGN => {
-                if !self.unlocked || self.wallet.is_none() || self.pending.is_none() {
+                if !self.unlocked || self.public.is_none() || self.pending.is_none() {
                     return Ok(Reply::st(1));
                 }
                 let pe = self.pending.take().unwrap();
@@ -758,8 +828,10 @@ impl<S: Store> Chip<S> {
             cmd::TXSTATUS => Reply::ok(ascii(&format!("{}\0{}\0", self.tx_status.state, self.tx_status.detail))),
 
             cmd::LOCK => {
+                self.vault.close();
                 self.unlocked = false;
                 self.wallet = None;
+                self.public = None;
                 self.balances = [None, None];
                 self.drop_pending("locked");
                 self.drop_pairing();
@@ -781,45 +853,63 @@ impl<S: Store> Chip<S> {
 
     /// Signs the snapshot taken at request time.
     fn sign(&mut self, pe: Pending) -> Reply {
-        let w = self.wallet.as_ref().unwrap();
+        match self.sign_with_vault(&pe) {
+            Ok(reply) => reply,
+            Err(_) => {
+                // the browser chip's catch: nothing was signed, the phone hears "error"
+                self.results.push((pe.id, SignResult::Refused("error")));
+                Reply::st(1)
+            }
+        }
+    }
+
+    /// Signs the snapshot through the vault (RAM keys or the SE050 session).
+    fn sign_with_vault(&mut self, pe: &Pending) -> Result<Reply, Error> {
+        let public = self.public.ok_or("locked")?;
         let (result, hash) = match &pe.snap {
             Snap::Sol { message, signers } => {
-                let sk = ed25519_dalek::SigningKey::from_bytes(&w.sol_secret);
-                let sig = sk.sign(message).to_bytes();
+                let sig = self.vault.sign_ed25519(self.wallet.as_ref(), message)?;
                 (SignResult::Sol(sol::signed_transaction(*signers, &sig, message)), bs58::encode(sig).into_string())
             }
             Snap::Evm(tx) => {
-                let signed = tx.sign(&w.evm_secret);
+                let digest = tx.signing_hash();
+                let (r, s) = self.vault.sign_secp256k1(self.wallet.as_ref(), &digest)?;
+                let (sig, odd) = eth::normalize(&digest, &r, &s, &public.evm).ok_or("the signature doesn't match this wallet")?;
+                let signed = tx.encode_signed(&sig, odd);
                 let h = format!("0x{}", eth::hex_lower(&eth::keccak(&signed)));
                 (SignResult::Evm(signed), h)
             }
             Snap::Swap { src_sol, digest } => {
                 let signature = if *src_sol {
-                    let sk = ed25519_dalek::SigningKey::from_bytes(&w.sol_secret);
-                    bs58::encode(sk.sign(digest).to_bytes()).into_string()
+                    bs58::encode(self.vault.sign_ed25519(self.wallet.as_ref(), digest)?).into_string()
                 } else {
-                    format!("0x{}", eth::hex_lower(&eth::sign_message(&w.evm_secret, digest)))
+                    let h = eth::personal_hash(digest);
+                    let (r, s) = self.vault.sign_secp256k1(self.wallet.as_ref(), &h)?;
+                    let (sig, odd) = eth::normalize(&h, &r, &s, &public.evm).ok_or("the signature doesn't match this wallet")?;
+                    let mut out = sig.to_vec();
+                    out.push(27 + odd as u8);
+                    format!("0x{}", eth::hex_lower(&out))
                 };
                 self.results.push((pe.id, SignResult::Swap { signature, digest: eth::hex_lower(digest) }));
                 // demo build: nothing is broadcast, and the Game Boy says so instead of waiting for a network
                 let chain = self.tx_status.chain;
                 self.tx_status = TxStatus { id: pe.id, chain, state: "DEMO", detail: SWAP_DEMO_NOTE.to_string(), hash: None };
-                return Reply::st(0);
+                return Ok(Reply::st(0));
             }
         };
         self.results.push((pe.id, result));
         let chain = if pe.chain_byte == 0 { Chain::Sol } else { Chain::Evm };
         self.tx_status = TxStatus { id: pe.id, chain: Some(chain), state: "SIGNED", detail: String::new(), hash: Some(hash) };
-        Reply::st(0)
+        Ok(Reply::st(0))
     }
 }
 
 /// Freezes the request into bytes the chip owns and decodes those; anything the Game Boy can't show is refused.
-fn decode_request(req: &SignRequest, w: &Wallet, now_ms: u64) -> Result<(Snap, Shown, Chain), Error> {
+fn decode_request(req: &SignRequest, w: &Public, now_ms: u64) -> Result<(Snap, Shown, Chain), Error> {
     match req {
         SignRequest::Sol(message) => {
             let m = sol::Message::parse(message)?;
-            let (to, lamports) = sol::plain_transfer(&m, &w.sol_public)?;
+            let (to, lamports) = sol::plain_transfer(&m, &w.sol)?;
             let shown = Shown {
                 to: bs58::encode(to).into_string(),
                 amount: format!("{} SOL", exact(lamports as u128, 9)?),
@@ -862,7 +952,7 @@ fn decode_request(req: &SignRequest, w: &Wallet, now_ms: u64) -> Result<(Snap, S
 }
 
 /// Checks a swap field by field (the phone is untrusted) and lays it out for the sign screen.
-fn decode_swap(i: &SwapRequest, w: &Wallet, now_ms: u64) -> Result<(Snap, Shown, Chain), Error> {
+fn decode_swap(i: &SwapRequest, w: &Public, now_ms: u64) -> Result<(Snap, Shown, Chain), Error> {
     let (Some(src_key), Some(dst_key)) = (sodax_chain(i.src), sodax_chain(i.dst)) else {
         return Err("this cartridge doesn't swap on that network".into());
     };

@@ -1,15 +1,15 @@
 //! The stored wallet as bytes, for the cartridge's flash: a magic, the fields length-prefixed, and a CRC-32 so a
 //! torn or blank sector reads as "no wallet" instead of garbage.
 //!
-//! DEVELOPMENT ONLY: this keeps the recovery words in the RP2350's external flash. On the finished cartridge they
-//! live in the SE050 (keys imported as sign-only objects, the PIN as an SE050 auth object), never in flash.
+//! With the software vault this keeps the recovery words in flash (development only). With the SE050 vault the record
+//! holds no secret: the salt, the try counter, the pairing and the public keys; keys and PIN live in the SE050.
 
 use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::chip::{Persisted, Phone};
 
-const MAGIC: &[u8; 4] = b"KGB1";
+const MAGIC: &[u8; 4] = b"KGB2"; // 2: public keys added
 
 fn crc32(data: &[u8]) -> u32 {
     let mut c = !0u32;
@@ -60,6 +60,8 @@ pub fn encode(p: &Persisted) -> Vec<u8> {
         }
         None => body.push(0),
     }
+    body.extend_from_slice(&p.sol_public);
+    body.extend_from_slice(&p.evm_address);
     let mut out = Vec::from(&MAGIC[..]);
     out.extend_from_slice(&(body.len() as u32).to_le_bytes());
     out.extend_from_slice(&body);
@@ -87,7 +89,9 @@ pub fn decode(b: &[u8]) -> Option<Persisted> {
         0 => None,
         _ => Some(Phone { name: r.str()?, id: r.str()?, since_ms: u64::from_le_bytes(r.take(8)?.try_into().ok()?) }),
     };
-    Some(Persisted { mnemonic, pin_salt, pin_hash, tries_left, paired, phone })
+    let sol_public = r.take(32)?.try_into().ok()?;
+    let evm_address = r.take(20)?.try_into().ok()?;
+    Some(Persisted { mnemonic, pin_salt, pin_hash, tries_left, paired, phone, sol_public, evm_address })
 }
 
 #[cfg(test)]
@@ -105,6 +109,8 @@ mod tests {
             tries_left: 3,
             paired: true,
             phone: Some(Phone { name: "PIXEL".to_string(), id: "735E".to_string(), since_ms: 1_792_056_600_000 }),
+            sol_public: [7; 32],
+            evm_address: [9; 20],
         };
         let b = encode(&p);
         assert_eq!(decode(&b), Some(p.clone()));

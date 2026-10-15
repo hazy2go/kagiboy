@@ -8,8 +8,8 @@
 //! The CPU drains the ring into the Game Boy's half of the mailbox and runs the wallet (`kagiboy-core`), whose
 //! replies appear in the ROM window at 0x7F00 for the next Game Boy read.
 //!
-//! Not yet here (next steps): the SE050 (keys and PIN move into it; until then `FlashStore` keeps the wallet in
-//! flash, development only), the ESP32-C3 link to the phone, the LIS3DH.
+//! Keys and PIN live in the SE050 (I2C1 on GPIO6/7, enable on GPIO10) through `Se050Vault`; the flash record holds
+//! no secret. Not yet here (next steps): the ESP32-C3 link to the phone, the LIS3DH.
 #![no_std]
 #![no_main]
 
@@ -24,13 +24,15 @@ use embassy_rp::flash::{Blocking, Flash};
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pac;
 use embassy_rp::pac::dma::vals::{DataSize, TransCountMode, TreqSel};
-use embassy_rp::peripherals::{FLASH, PIO0, TRNG};
+use embassy_rp::i2c::{self, I2c};
+use embassy_rp::peripherals::{FLASH, I2C1, PIO0, TRNG};
 use embassy_rp::pio::{Config as PioConfig, Direction, FifoJoin, InterruptHandler, Pio, ShiftConfig, ShiftDirection};
 use embassy_rp::trng::Trng;
 use embassy_rp::{bind_interrupts, trng};
 use embassy_time::{Instant, Timer};
 use kagiboy_core::bus::Mailbox;
-use kagiboy_core::{persist, Chip, Persisted, Platform, Store};
+use kagiboy_core::vault::Se050Vault;
+use kagiboy_core::{persist, se050, Chip, Persisted, Platform, Store};
 use {defmt_rtt as _, panic_probe as _};
 
 #[unsafe(link_section = ".start_block")]
@@ -71,7 +73,25 @@ const CH_ADDR: usize = 0;
 const CH_DATA: usize = 1;
 const CH_RING: usize = 2;
 
-/// DEVELOPMENT ONLY: the wallet in the last flash sector (see `kagiboy_core::persist`).
+/// The SE050 on I2C1. The enable line is held high while the wallet may need it (Deep Power-down when low).
+struct SeBus<'d> {
+    i2c: I2c<'d, I2C1, i2c::Blocking>,
+    _ena: Output<'d>,
+}
+
+impl se050::I2c for SeBus<'_> {
+    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), ()> {
+        self.i2c.blocking_write(addr, bytes).map_err(|_| ())
+    }
+    fn read(&mut self, addr: u8, buf: &mut [u8]) -> Result<(), ()> {
+        self.i2c.blocking_read(addr, buf).map_err(|_| ())
+    }
+    fn delay_ms(&mut self, ms: u32) {
+        embassy_time::block_for(embassy_time::Duration::from_millis(ms as u64));
+    }
+}
+
+/// The wallet record in the last flash sector (`kagiboy_core::persist`): with the SE050 vault it holds no secret.
 struct FlashStore<'d> {
     flash: Flash<'d, FLASH, Blocking, FLASH_SIZE>,
 }
@@ -124,7 +144,6 @@ async fn main(_spawner: Spawner) {
     let mut gb_reset = Output::new(p.PIN_45, Level::High);
     let _bus_enable = Output::new(p.PIN_44, Level::High); // TXB0108 OE
     let _esp_cs = Output::new(p.PIN_46, Level::High); // ESP32-C3 chip select idles high (no pull-up on the board)
-    let _se_ena = Output::new(p.PIN_10, Level::Low); // SE050 in Deep Power-down until it is used
 
     let image = unsafe { &mut *addr_of_mut!(IMAGE.0) };
     image.fill(0xff);
@@ -196,7 +215,15 @@ async fn main(_spawner: Spawner) {
     wr.set_enable(true);
     info!("bus served from SRAM at {:x}, write ring at {:x}", image_base, ring_base);
 
-    let mut chip = Chip::new(FlashStore { flash: Flash::new_blocking(p.FLASH) });
+    // SE050: enable, let it boot, then the vault opens T=1 and selects the applet on first use
+    let se_ena = Output::new(p.PIN_10, Level::High);
+    Timer::after_millis(10).await;
+    let mut i2c_cfg = i2c::Config::default();
+    i2c_cfg.frequency = 1_000_000; // Fm+; the board's 2.2k pull-ups (R133/R134) are sized for it
+    i2c_cfg.sda_pullup = false;
+    i2c_cfg.scl_pullup = false;
+    let se_bus = SeBus { i2c: I2c::new_blocking(p.I2C1, p.PIN_7, p.PIN_6, i2c_cfg), _ena: se_ena };
+    let mut chip = Chip::with_vault(FlashStore { flash: Flash::new_blocking(p.FLASH) }, Se050Vault::new(se_bus));
     let mut hw = Hw { trng: Trng::new(p.TRNG, Irqs, trng::Config::default()), epoch_at_boot_ms: 0 };
     let mut mailbox = Mailbox::default();
     mailbox.service(&mut chip, &mut hw, image); // presence byte and status before the first read

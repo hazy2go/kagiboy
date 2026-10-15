@@ -210,17 +210,56 @@ impl Tx1559 {
         out
     }
 
-    /// Signed wire bytes, as viem's `signTransaction` returns them.
-    pub fn sign(&self, secret: &[u8; 32]) -> Vec<u8> {
-        let digest = keccak(&Self::encode(self.fields()));
-        let (sig, rec) = sign_prehash(secret, &digest);
+    /// The digest that gets signed: keccak256(0x02 || rlp(unsigned fields)).
+    pub fn signing_hash(&self) -> [u8; 32] {
+        keccak(&Self::encode(self.fields()))
+    }
+
+    /// Signed wire bytes, as viem's `signTransaction` returns them, from a low-S signature and its parity.
+    pub fn encode_signed(&self, sig: &[u8; 64], y_odd: bool) -> Vec<u8> {
         let mut f = self.fields();
-        let rs = sig.to_bytes();
-        f.push(uint(rec.is_y_odd() as u128));
-        f.push(Rlp::Bytes(strip(&rs[..32])));
-        f.push(Rlp::Bytes(strip(&rs[32..])));
+        f.push(uint(y_odd as u128));
+        f.push(Rlp::Bytes(strip(&sig[..32])));
+        f.push(Rlp::Bytes(strip(&sig[32..])));
         Self::encode(f)
     }
+
+    /// Signed with a key held here (tests and the software vault).
+    pub fn sign(&self, secret: &[u8; 32]) -> Vec<u8> {
+        let (sig, rec) = sign_prehash(secret, &self.signing_hash());
+        self.encode_signed(&sig.to_bytes().into(), rec.is_y_odd())
+    }
+}
+
+/// Any (r, s) for `digest` made with the key behind `address` (a secure element signs with a random nonce and may
+/// return a high S): normalised to low S as Ethereum requires, with the y parity found by recovering the address.
+pub fn normalize(digest: &[u8; 32], r: &[u8; 32], s: &[u8; 32], address: &[u8; 20]) -> Option<([u8; 64], bool)> {
+    use k256::ecdsa::VerifyingKey;
+    let mut rs = [0u8; 64];
+    rs[..32].copy_from_slice(r);
+    rs[32..].copy_from_slice(s);
+    let mut sig = Signature::from_slice(&rs).ok()?;
+    if let Some(low) = sig.normalize_s() {
+        sig = low;
+    }
+    for odd in [false, true] {
+        let rec = RecoveryId::new(odd, false);
+        if let Ok(vk) = VerifyingKey::recover_from_prehash(digest, &sig, rec) {
+            let point = vk.to_encoded_point(false);
+            if keccak(&point.as_bytes()[1..])[12..] == address[..] {
+                return Some((sig.to_bytes().into(), odd));
+            }
+        }
+    }
+    None
+}
+
+/// The EIP-191 digest of raw bytes: keccak256("\x19Ethereum Signed Message:\n" || len || raw).
+pub fn personal_hash(raw: &[u8]) -> [u8; 32] {
+    let mut m = Vec::from(&b"\x19Ethereum Signed Message:\n"[..]);
+    m.extend_from_slice(alloc::format!("{}", raw.len()).as_bytes());
+    m.extend_from_slice(raw);
+    keccak(&m)
 }
 
 fn strip(b: &[u8]) -> Vec<u8> {
@@ -229,17 +268,14 @@ fn strip(b: &[u8]) -> Vec<u8> {
 }
 
 /// Deterministic (RFC 6979) secp256k1 signature with low S, the way viem / noble sign.
-fn sign_prehash(secret: &[u8; 32], digest: &[u8; 32]) -> (Signature, RecoveryId) {
+pub fn sign_prehash(secret: &[u8; 32], digest: &[u8; 32]) -> (Signature, RecoveryId) {
     let sk = SigningKey::from_slice(secret).expect("valid secp256k1 key");
     sk.sign_prehash_recoverable(digest).expect("signing a 32-byte digest")
 }
 
 /// EIP-191 `personal_sign` of raw bytes (viem `signMessage({ message: { raw } })`): r || s || v, v = 27 / 28.
 pub fn sign_message(secret: &[u8; 32], raw: &[u8]) -> [u8; 65] {
-    let mut m = Vec::from(&b"\x19Ethereum Signed Message:\n"[..]);
-    m.extend_from_slice(alloc::format!("{}", raw.len()).as_bytes());
-    m.extend_from_slice(raw);
-    let (sig, rec) = sign_prehash(secret, &keccak(&m));
+    let (sig, rec) = sign_prehash(secret, &personal_hash(raw));
     let mut out = [0u8; 65];
     out[..64].copy_from_slice(&sig.to_bytes());
     out[64] = 27 + rec.is_y_odd() as u8;

@@ -6,6 +6,7 @@
 //!   in SRAM by the `gb_read` program.
 
 use crate::chip::{mb, Chip, Platform, Store};
+use crate::vault::Vault;
 
 /// Where the chip's half of the mailbox appears in the ROM image.
 pub const ROM_WINDOW: usize = 0x7f00;
@@ -57,7 +58,7 @@ impl Mailbox {
 
     /// One chip frame: let the chip answer, then publish its half into the ROM window, the reply sequence number
     /// last so the Game Boy never reads a half-written reply.
-    pub fn service<S: Store>(&mut self, chip: &mut Chip<S>, p: &mut impl Platform, rom_image: &mut [u8]) {
+    pub fn service<S: Store, V: Vault>(&mut self, chip: &mut Chip<S, V>, p: &mut impl Platform, rom_image: &mut [u8]) {
         chip.tick(&mut self.mem, p);
         let w = &mut rom_image[ROM_WINDOW..ROM_WINDOW + 256];
         w[..mb::RESP_SEQ].copy_from_slice(&self.mem[..mb::RESP_SEQ]);

@@ -42,7 +42,12 @@ It's placed and routed, and it passes every design check and simulation: ERC/DRC
 - **The firmware that serves the Game Boy bus** with the exact PIO programs the cycle-level simulation validated
   for this board.
 
-Next: the SE050, the Bluetooth link through the ESP32-C3, and the accelerometer.
+**2026-10-15: keys in the secure element.** At setup the firmware imports the two account keys into the NXP SE050
+as keys that can only sign, makes the PIN an SE050 object that allows five attempts, and keeps no recovery words. A
+key signs only inside a session opened with that PIN. The SE050 driver is our own, MIT. Without a chip, it's tested
+against a behavioural SE050 model: every recorded browser session replays through it byte for byte.
+
+Next: the Bluetooth link through the ESP32-C3, and the accelerometer.
 
 <p align="center">
   <img src="hardware/cart/docs/img/board_top.png" alt="kagiboy cartridge board, top: RP2350B, SE050E2 secure element, LIS3DH, ESP32-C3 module and power stage" width="49%">
