@@ -29,7 +29,7 @@ Wallet changes (done 2026-10-15, details in `LOGBOOK.md`):
 
 ## Checks and simulations (run from this folder)
 
-| Check | Command | Result 2026-10-15 |
+| Check | Command | Result 2026-10-16 |
 |---|---|---|
 | ERC, DRC, unconnected, schematic/board parity vs the WiFi cart baseline | `python3 verify/kicad_check.py` | PASS, 0 new |
 | JLC manufacturability: KiCad DRC at JLC's 6-layer limits (0.09 mm trace/space, 0.15/0.25 mm vias, 0.2 mm copper to edge) | `python3 verify/jlc_check.py` | PASS |
@@ -38,9 +38,10 @@ Wallet changes (done 2026-10-15, details in `LOGBOOK.md`):
 | Power simulation parts vs schematic | `python3 verify/sim_vs_netlist.py` | PASS |
 | Power stage, vendor SPICE models, A1-A7 / A8 | `cd sim/power && python3 audit.py` / `audit_inreg.py` | 81 / 114 PASS |
 | Shell height | `hw/wallet/tools/height_check.py` (KiCad Python) | PASS |
-| Routing tidiness vs the WiFi board | `hw/wallet/tools/route_audit.py` | 1 reviewed escape path |
+| Routing tidiness vs the WiFi board | `hw/wallet/tools/route_audit.py` | 1 reviewed escape path; review fixes clean |
 | Pins vs JLC parts / placement vs JLC footprints | `hw/wallet/tools/pin_audit.py`, `make_cpl.py` | agree |
 | Bus timing with the real ROM (repo root) | `cd web && pnpm sim` | 81.8 ns margin, 0 errors |
+| Independent review against the datasheets (a reviewer without these notes) | LOGBOOK 2026-10-16 | 6 fixes made (radio ground, VREG_LX cut-out, R110 part, OE pull-down, Y1 crystal, USB pair); 3 items reviewed and kept |
 
 Tools: KiCad 10 (`kicad-cli` on PATH), ngspice, potrace. KiCad's Python needs numpy. The vendor SPICE models are
 not committed: `python3 sim/models/fetch_models.py`. Decisions and results: `LOGBOOK.md`.

@@ -188,3 +188,56 @@ The 199 mask "bridges" are all on J5 and SW1, which are exposed contacts. Silksc
 labels (0.6 mm) and the JLC order-number field. Gerbers regenerated, renders updated.
 Re-run after the fixes: kicad_check, netlist_check, design_calcs, sim_vs_netlist, height, route audit, pin audit,
 CPL (unchanged), power audits, bus simulation.
+
+## 2026-10-16: Independent review against the datasheets, and fixes
+
+A fresh reviewer (no access to this logbook, the READMEs, `docs/`, `verify/` or `sim/`) checked the schematic and
+board against the datasheets: every IC pin, decoupling, boot straps, regulators, USB-C, back-powering, the 5 V bus,
+footprints, layout guidance, DRC/ERC and the JLC files. Everything below was then checked here before changing it.
+
+**Fixed:**
+- **Radio-area ground (the big one).** Around the ESP32-C3 module and the TPS63802 (x 113-128, y 70-102) there was
+  no top-layer pour and only 3 GND vias: U103's GND pins were 10-11 mm of 0.11-0.15 mm trace from a via, the output
+  caps ~34 mm, and U104's centre pad (9 sub-pads) had no via (TPS63802 sec 12.1, ESP32-C3-MINI-1U land pattern).
+  Our gates missed it: the net was connected, nothing measured how well. Now:
+  - an F.Cu GND pour over the area (lowest priority, solid pad connection; `tools/add_pour.py`);
+  - 60 stitching vias 0.45/0.2 on a 1.5 mm grid where they clear every other-net track, pad and plane
+    (`tools/gnd_stitch.py`, so no other plane gets a new antipad);
+  - 9 vias 0.3/0.15 in U104's centre pads, one per sub-pad (`gnd_stitch.py --pads`, filled and capped: POFV);
+  - a via beside U103 pins 2, 3 and 8, C106, C111, C117 and U106 pin 4 (`pad_to_plane.py`).
+  Worst GND pad to nearest GND via after (was): U103 0.96 mm (10.8), U104 2.9 mm, an edge pad on the pour (33.7),
+  C109-C112 and C117 <= 0.93 mm (up to 35.8). GND vias on the board: 219 -> 296.
+- **VREG_LX cut-out.** RP2350 datasheet 6.3.8 / Figure 27: on 4+ layer boards, no copper immediately under
+  LX / VREG_LX. In1 (GND), In4 (+3V3) and two signal traces were there. A keepout rule area (In1-In4, no tracks,
+  vias or pours) now follows the VREG_LX copper grown by 0.2 mm (`tools/lx_keepout.py`). DEBUG_UART_TX (the ESP32
+  chip select, In2) and LED_DIN (In3) were re-routed around it (`tools/inner_link.py`; `finish_route.py` now treats
+  keepouts as obstacles).
+- **R110 (91k, TPS63802 FB bottom)** C4147 had less stock than JLC's minimum buy; without R110 the radio rail
+  regulates to 0.5 V. Now C453777 (same value, 1 %, 119k in stock).
+- **TXB0108 OE pull-down.** SCES643 sec 9 wants OE held low through a pull-down while the supplies come up; GBBUS_EN
+  only had GPIO44 (and on an A2 RP2350, erratum E9 can latch a pulled-down input near 2.2 V). Added **R138 4.7k**
+  GBBUS_EN to GND beside U7 pin 10 (1.4 mm centre to centre). U7's reference moved to F.Fab to make room.
+- **Y1 crystal.** SJK 7U12000E10UCG has 100 ohm max ESR; Raspberry Pi's hardware design guide specifies
+  ABM8-272-T3 (50 ohm, 10 pF) with the 1k R8 and 15 pF C4/C5 this board already has. Now ABM8-272-T3 C20625731
+  (6171 in stock). Pins 1/3 crystal, 2/4 GND, the same as the footprint; JLC's own footprint lands at 0.000 mm.
+- **USB upstream pair (480 Mb/s, U1 -> U107 hub).** D+ ran on F.Cu, In2 and In3 (3 vias), part of it over In4's
+  split planes; D- on In2 (2 vias). D+ is now on In2 too: both lines on In2 over the solid In1 ground, 2 vias each,
+  12.4 / 11.8 mm (0.6 mm, about 4 ps, apart). They are not a tightly coupled 90 ohm pair; at 12 mm the link is
+  short against USB HS edges.
+
+**Checked and left as they are:**
+- **Radio power threshold** (TLV431 + R126/R127, radio charges only above ~4.59 V). This is the WiFi cart's
+  input-voltage regulation: the radio never pulls the console's 5 V below 4.5 V (`sim/power/README.md`). Lowering it
+  would trade that protection away. The cost is on USB: a host at the bottom of the USB range (4.40 V) never charges
+  the radio reservoir.
+- **D1 (WS2812B) on +3V3**, below its 3.7 V minimum. It's Croco's part and supply on built, working boards, and the
+  wallet firmware doesn't drive it. No stocked addressable LED in this or smaller packages is specified for 3.3 V
+  (XL-2121's absolute range starts at 3.0 V, but its data sheet says it works fully from 4.5 V).
+- **No antenna on the board:** already in `fab/ORDER.md` ("Not on the board"): an MHF III FPC antenna inside the
+  shell.
+- **D4-D8 (bus ESD) DNP**, as in Croco: the RP2350 pins are 5 V tolerant with IOVDD up (datasheet 14.8.2.1, 14.9.1).
+
+**Gates after the fixes:** kicad_check (ERC 70, DRC 308, 0 new, unconnected 0, parity 0), jlc_check PASS,
+netlist_check, design_calcs, sim_vs_netlist, height, pin audit (Y1 now has JLC symbol data: agrees), CPL, route
+audit of the new copper against the pre-review board (clean). BOM: 1 FAIL, still L1 (9 in stock, need 10).
+Gerbers, zip and renders regenerated.

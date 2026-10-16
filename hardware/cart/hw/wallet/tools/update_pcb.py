@@ -98,7 +98,7 @@ def main(pdir, rip=()):
         for fname in ('LCSC', 'Datasheet', 'Description'):     # parity compares these with the symbol
             if c['fields'].get(fname):
                 fp.SetField(fname, c['fields'][fname])
-                fld = fp.GetFieldByName(fname)     # a new field lands visible on F.SilkS: hide it like Croco's
+                fld = fp.GetField(fname)    # a new field lands visible on F.SilkS: hide it like Croco's
                 fld.SetVisible(False)
                 fld.SetLayer(pcbnew.F_Fab)
         k = added

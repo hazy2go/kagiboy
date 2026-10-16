@@ -66,6 +66,19 @@ instead of comparing against the WiFi board. It found three things the WiFi boar
 
 The board passes, and the gerbers are regenerated. Every other check, simulation and test was re-run and passes.
 
+**2026-10-16: an independent review against the datasheets.** A fresh reviewer, without our notes or checks,
+went through the schematic and board pin by pin against every datasheet. It found problems our checks couldn't
+see, and they're fixed:
+- the Bluetooth radio's ground was connected but weak (long thin traces, 3 vias in the whole area): it now has a
+  ground pour and 77 more vias;
+- copper sat under the RP2350's own regulator, which its datasheet forbids on multi-layer boards: cut away, and two
+  traces re-routed around it;
+- one resistor JLC couldn't supply (swapped for the same value in stock), a missing pull-down on the level shifter,
+  and the crystal Raspberry Pi recommends instead of a higher-resistance one;
+- the 480 Mb/s USB lines now run side by side on one layer over solid ground.
+
+Everything else it checked came out right. Details in [the logbook](hardware/cart/LOGBOOK.md).
+
 Next: building the board. It waits for one inductor to come back in stock at JLC. Then firmware on real hardware.
 
 <p align="center">

@@ -1,14 +1,15 @@
 # JLCPCB order: kagiboy wallet cartridge, Rev A
 
 **Not ready to order.** Hold points (details in `../../../LOGBOOK.md`):
-1. **L1 out of stock at JLC** (4 left, need 10): the RP2350 core-regulator inductor AOTA-B201610S3R3-101-T
+1. **L1 out of stock at JLC** (9 left on 2026-10-16, need 10): the RP2350 core-regulator inductor AOTA-B201610S3R3-101-T
    (C42411119), also out at LCSC (2026-10-15). **Keep this exact part:** the RP2350 datasheet (6.3.8.2-6.3.8.3)
    requires a fully shielded, polarity-marked 3.3 uH inductor and recommends this one, because the regulator is
    sensitive to the inductor's orientation and roll-off. Generic 2016 3.3 uH parts have no polarity mark.
    Wait for JLC to restock, or pre-order ~10 through JLC (DigiKey ~26k and Mouser ~14k in stock, about $0.21 each).
 2. The radio and power stage are the WiFi cart's. Its bench tests still apply: ESP32-C3 calibration time and
    antenna RSSI inside the shell (hazy2go/wifi-game-boy-cartridge, `hw/rev-b/fab/ORDER.md`).
-3. Firmware: the wallet firmware (RP2350 bus + wallet, ESP32-C3 Bluetooth) is not written yet.
+3. Firmware: written and tested on the host and in simulation (`firmware/rp2350`, `firmware/esp32c3`), not yet run on
+   hardware.
 
 ## Files (this folder)
 | file | upload as |
@@ -74,3 +75,8 @@ pin 1 / polarity marks:
 - R101/R102 PR1 divider: 5.1k/2.0k -> **1.3k C25866 / 510 C25123**: same USB threshold, tolerates 1.78 mA of
   D3 leakage instead of 453 uA
 - Wallet: HyperRAM, microSD and RTC removed; SE050E2 C5190917 and LIS3DHTR C15134 added with their passives
+- Independent review (2026-10-16, LOGBOOK):
+  - R110 91k 1% (TPS63802 FB bottom): C4147 (stock below JLC's minimum buy) -> **C453777** RC-02K9102FT, same value.
+  - Y1 12 MHz (RP2350): SJK 7U12000E10UCG (100 ohm ESR) -> **ABM8-272-T3 C20625731**, the crystal Raspberry Pi's
+    hardware design guide specifies (50 ohm, 10 pF). Same 3225 4-pad footprint.
+  - **R138 4.7k C25900 added:** pull-down on the TXB0108 OE (GBBUS_EN), next to U7 pin 10.

@@ -1,12 +1,12 @@
 G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,10.0.6*
-G04 #@! TF.CreationDate,2026-10-16T00:05:17+09:00*
+G04 #@! TF.CreationDate,2026-10-16T09:40:50+09:00*
 G04 #@! TF.ProjectId,GameboyCartridgeV2.1,47616d65-626f-4794-9361-727472696467,rev?*
 G04 #@! TF.SameCoordinates,Original*
 G04 #@! TF.FileFunction,Soldermask,Top*
 G04 #@! TF.FilePolarity,Negative*
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW 10.0.6) date 2026-10-16 00:05:17*
+G04 Created by KiCad (PCBNEW 10.0.6) date 2026-10-16 09:40:50*
 %MOMM*%
 %LPD*%
 G01*
@@ -1293,6 +1293,9 @@ X115500000Y-92975000D03*
 D27*
 X134610000Y-100990000D03*
 X134610000Y-100030000D03*
+D21*
+X149800000Y-104490000D03*
+X149800000Y-105510000D03*
 D76*
 X132712000Y-93200000D03*
 X132712000Y-93600000D03*

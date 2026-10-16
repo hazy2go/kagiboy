@@ -20,7 +20,8 @@
   "SE_ENA",
   "ACC_SDA",
   "ACC_SCL",
-  "ACC_INT1"
+  "ACC_INT1",
+  "GBBUS_EN"
  ],
  "croco_edits": [
   {
@@ -538,12 +539,12 @@
    "symbol": "Device:R",
    "value": "91k 1%",
    "footprint": "Resistor_SMD:R_0402_1005Metric",
-   "lcsc": "C4147",
+   "lcsc": "C453777",
    "pins": {
     "1": "RF_FB",
     "2": "GND"
    },
-   "why": "FB bottom (<=100k required, 10.2.2.5 p19)"
+   "why": "FB bottom (<=100k required, 10.2.2.5 p19); LCSC C453777 (RC-02K9102FT): C4147 had stock below JLC's minimum buy (independent review 2026-10-16)"
   },
   {
    "ref": "C110",
@@ -1336,6 +1337,19 @@
     "2": "ACC_SCL"
    },
    "why": "I2C0 pull-up, SCL",
+   "datasheet": ""
+  },
+  {
+   "ref": "R138",
+   "symbol": "Device:R",
+   "value": "4.7k",
+   "footprint": "Resistor_SMD:R_0402_1005Metric",
+   "lcsc": "C25900",
+   "pins": {
+    "1": "GBBUS_EN",
+    "2": "GND"
+   },
+   "why": "TXB0108 OE pull-down: SCES643 sec 9 (Power Supply Recommendations) wants OE tied to GND through a pull-down during power-up and power-down. 4.7k (<= 8.2k) so it also wins against an RP2350 A2 pad stuck high by erratum E9; 0.7 mA while GPIO44 drives it high",
    "datasheet": ""
   }
  ],
