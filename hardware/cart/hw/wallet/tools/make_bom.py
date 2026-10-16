@@ -7,7 +7,7 @@
 - Every part is looked up live: must exist, package must match the footprint size (0402/0603/...), stock must
   cover BOARDS x qty + 10 % attrition (min +5). Basic vs extended is reported (extended = feeder fee per part).
 Writes fab/<name>-BOM-JLC.csv and fab/bom_check.txt. Exit 1 on any FAIL.
-Usage: make_bom.py SCH OUTDIR [--boards 5]"""
+Usage: make_bom.py SCH OUTDIR [--boards 2]"""
 import csv, json, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from jlc_parts import lookup
@@ -36,7 +36,7 @@ def desc_value(d, refs):
 
 
 sch, out = sys.argv[1], sys.argv[2]
-boards = int(sys.argv[sys.argv.index('--boards') + 1]) if '--boards' in sys.argv else 5
+boards = int(sys.argv[sys.argv.index('--boards') + 1]) if '--boards' in sys.argv else 2
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 fill = json.load(open(os.path.join(root, 'docs', 'design', 'croco_lcsc.json')))['parts']
 tmp = tempfile.mktemp(suffix='.csv')

@@ -79,6 +79,10 @@ see, and they're fixed:
 
 Everything else it checked came out right. Details in [the logbook](hardware/cart/LOGBOOK.md).
 
+**2026-10-16: the first order is 2 boards.** The parts check now counts stock for 2 assembled boards. Everything
+is in stock except the RP2350's regulator inductor (4 left at JLC, we need 7 with spares). We're keeping that exact
+part and waiting for a restock.
+
 Next: building the board. It waits for one inductor to come back in stock at JLC. Then firmware on real hardware.
 
 <p align="center">

@@ -241,3 +241,9 @@ footprints, layout guidance, DRC/ERC and the JLC files. Everything below was the
 netlist_check, design_calcs, sim_vs_netlist, height, pin audit (Y1 now has JLC symbol data: agrees), CPL, route
 audit of the new copper against the pre-review board (clean). BOM: 1 FAIL, still L1 (9 in stock, need 10).
 Gerbers, zip and renders regenerated.
+
+## 2026-10-16: Order size is 2 boards
+
+The order is 2 assembled boards (JLC's PCBA minimum; the bare-PCB run stays at JLC's minimum of 5). `make_bom.py`
+now checks stock for 2 boards by default (`--boards N` to change): each line needs 2 x qty + 5 attrition.
+Everything passes except L1, which has dropped to 4 at JLC (need 7). L1 stays on hold with the same part.

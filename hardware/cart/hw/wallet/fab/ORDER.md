@@ -1,7 +1,7 @@
 # JLCPCB order: kagiboy wallet cartridge, Rev A
 
 **Not ready to order.** Hold points (details in `../../../LOGBOOK.md`):
-1. **L1 out of stock at JLC** (9 left on 2026-10-16, need 10): the RP2350 core-regulator inductor AOTA-B201610S3R3-101-T
+1. **L1 out of stock at JLC** (4 left on 2026-10-16 evening, need 7: 2 boards + attrition): the RP2350 core-regulator inductor AOTA-B201610S3R3-101-T
    (C42411119), also out at LCSC (2026-10-15). **Keep this exact part:** the RP2350 datasheet (6.3.8.2-6.3.8.3)
    requires a fully shielded, polarity-marked 3.3 uH inductor and recommends this one, because the regulator is
    sensitive to the inductor's orientation and roll-off. Generic 2016 3.3 uH parts have no polarity mark.
@@ -17,7 +17,7 @@
 | `kagiboy-cart-RevA-gerbers.zip` | Gerber file (13 Gerber layers + PTH/NPTH Excellon drill, mm, absolute origin) |
 | `GameboyCartridgeV2.1-BOM-JLC.csv` | BOM (Comment, Designator, Footprint, LCSC Part #); DNP parts (D4-D8, R1) are left out |
 | `GameboyCartridgeV2.1-CPL-JLC.csv` | CPL / pick and place (Designator, Mid X, Mid Y, Layer, Rotation); all parts on top |
-| `bom_check.txt` | live JLC library check: every part exists, package matches the footprint, value matches, stock covers 5 boards |
+| `bom_check.txt` | live JLC library check: every part exists, package matches the footprint, value matches, stock covers 2 boards (+5 attrition per line) |
 | `cpl_check.txt` | rotation/offset of every part derived from the footprint JLC will place (matched pad by pad) |
 
 Regenerate (from `hw/wallet`):
@@ -31,7 +31,7 @@ Regenerate (from `hw/wallet`):
 |---|---|---|
 | Layers | **6** | |
 | Dimensions | 52.95 x 61.34 mm (read from the Gerbers) | |
-| PCB qty | 5 | |
+| PCB qty | 5 | JLC's minimum; only 2 get assembled |
 | Thickness | **0.8 mm** | fits the cartridge slot |
 | Impedance control / stackup | **Yes, JLC06081H-7628** | the stackup the layout was designed on (F.Cu-In1 0.2104 mm), so the USB and QSPI routing keeps its impedance |
 | Via covering | **Epoxy filled & capped** (POFV) | 49 vias touch or sit inside SMD pads (RP2350 exposed pad, SE050 centre pad, LIS3DH and 0402 pads, plane stitching); they must be filled or solder wicks away. Free on JLC 6-layer |
@@ -48,7 +48,7 @@ Regenerate (from `hw/wallet`):
 |---|---|
 | PCBA type | Standard (0.4 mm QFNs and an LGA need standard, not economic) |
 | Assembly side | Top |
-| PCBA qty | 5 (minimum 2) |
+| PCBA qty | **2** (JLC's minimum) |
 | Tooling holes | added by JLC |
 | Confirm parts placement | **Yes**: check the photos/preview below before production |
 
